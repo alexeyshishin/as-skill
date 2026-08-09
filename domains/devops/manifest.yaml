@@ -1,0 +1,15 @@
+# DevOps / infrastructure domain — Kubernetes, Helm, GitLab CI, ArgoCD.
+# Two kinds of agents: Consilium (architecture, security, SRE, diagnostics — advisory,
+# read-only, never touches code/configs) and Executing (CI, Helm, K8s — writes pipelines,
+# charts, and manifests within its own scope). GitOps: prod changes go through ArgoCD only.
+# Requires nothing from the environment. Agents-only for now — no rules or skills yet.
+
+name: devops
+description: DevOps / infrastructure — Kubernetes, Helm, GitLab CI, ArgoCD: architecture, security, and SRE review, CI pipelines, Helm charts, K8s manifests, incident diagnostics.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
