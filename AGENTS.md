@@ -51,7 +51,8 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-The installer is `tools/cli.go`, CLI name `as-skill` (see `tools/README.md`). It
+The installer entrypoint is `tools/main.go` (dispatcher in `tools/internal/cli`),
+CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.
 
