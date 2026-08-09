@@ -13,7 +13,7 @@ I don't move the file, and I don't do a bulk rework of tags or body text. Heavy 
 
 ## Knowledge base
 
-The vault root (`<vault>/`) is set at install time (`--vault` or the `BEAR_VAULT` env var).
+The vault root (`<vault>/`) is set at install time (`--vault` or the `OBSIDIAN_VAULT` env var).
 Language: Russian, with technical terms in English.
 
 Before acting, read:
