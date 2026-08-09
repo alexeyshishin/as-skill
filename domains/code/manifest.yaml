@@ -1,0 +1,13 @@
+# Work on the task around code: interrogate the plan, competitive review,
+# line-by-line comments on the diff, buuld out the experience layer.
+# No requirements from the environment.
+
+name: code
+description: Code and plans - interrogate the plan to implementation, competitive review, line-by-line comments, last 20%.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
