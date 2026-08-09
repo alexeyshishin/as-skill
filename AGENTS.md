@@ -51,14 +51,27 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-Once the installer (`tools/cli.go`, currently an empty stub — not implemented yet) runs, per each manifest's declared `targets`:
-- `obsidian` rules → `$OBSIDIAN_VAULT/.agents/rules/` (vault-local; its skills reference them as `.agents/rules/<file>.md`)
-- `git`, `content` rules → `${CLAUDE_HOME}/rules/` (global; referenced as `~/.claude/rules/<file>.md`)
-- all skills → `${CLAUDE_HOME}/skills/`
-- all agents → `${CLAUDE_HOME}/agents/`
+The installer is `tools/cli.go`, CLI name `as-skill` (see `tools/README.md`). It
+installs into a target *project's* `.claude/` — not the user's global
+`~/.claude/` — per each manifest's declared `targets`:
+- `${CLAUDE_HOME}` in every manifest resolves to `<project>/.claude/`, where
+  `<project>` is whatever `--project` you pass `as-skill` (default: the
+  current directory)
+- rules, skills, agents for every domain → `${CLAUDE_HOME}/{rules,skills,agents}/`
 - `core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`, `swarm-report`) → `${CLAUDE_HOME}/skills/` always; no manifest, no gating
 
-If a domain's `requires_env` isn't satisfied it's skipped with a warning; the rest still installs. Right now only `obsidian` declares `requires_env`; no domain currently declares a `requires_bin` gate.
+`obsidian` is the one domain gated on `requires_env: OBSIDIAN_VAULT` — an
+opt-in check (install it only for users who actually keep a vault), not a
+path source. Its skills still reference their rules by a path relative to
+the vault root (`.claude/rules/<file>.md`), so install it with `--project`
+pointed at the vault root — otherwise the project's `.claude/` and the vault
+are different directories and that reference won't resolve.
+
+If a domain's `requires_env` isn't satisfied, an explicit `as-skill install
+domain`/`domains`/`skill` request fails outright; `as-skill install all`
+instead skips it with a warning and installs the rest. Right now only
+`obsidian` declares `requires_env`; no domain currently declares a
+`requires_bin` gate.
 
 `code` is a separate case: it also has its own `/code-setup` skill that copies the `code` domain (agents, skills, the `test-gate` hook, `.claude/settings.json`, `AGENTS.md`) into a *target project* directory — a different mechanism from the per-domain installer above, run from a clone of this repo.
 

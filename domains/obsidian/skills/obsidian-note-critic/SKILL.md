@@ -12,7 +12,7 @@ The skill analyzes a note along four axes:
 3. **Contradictions** — where the note diverges from existing knowledge
 4. **Reasoned critique** — weak points in logic, wording, coverage completeness
 
-**Vault root folder (`<vault>/`):** set at install time (`--vault` or the `OBSIDIAN_VAULT` env var). See `.agents/rules/vault-struct.md`.
+**Vault root folder (`<vault>/`):** set at install time (`--vault` or the `OBSIDIAN_VAULT` env var). See `.claude/rules/vault-struct.md`.
 **Output language:** Russian, technical terms in English.
 
 ---
