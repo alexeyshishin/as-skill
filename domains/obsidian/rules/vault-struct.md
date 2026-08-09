@@ -5,7 +5,7 @@
 - **Type**: Personal knowledge base (PKB) built on Obsidian
 - **Content language**: Mostly **Russian** (technical terms in English, formulas in LaTeX)
 - **Methodology**: **PARA** (Projects, Areas, Resources, Archives)
-- **Vault root:** set at install time via `--vault <path>` or the `BEAR_VAULT` env var. Referred to below as `<vault>/`.
+- **Vault root:** set at install time via `--vault <path>` or the `OBSIDIAN_VAULT` env var. Referred to below as `<vault>/`.
 
 ## Vault structure
 

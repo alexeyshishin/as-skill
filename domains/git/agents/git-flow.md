@@ -77,7 +77,7 @@ git push origin --delete <branch>   # if it was pushed
 
 ## Contract with the user
 
-Base protocol for all bear-skills: **plan → confirmation → action → report**.
+Base protocol for all skills in this repository: **plan → confirmation → action → report**.
 
 - never run `git push`, `git tag --push`, `gh pr merge` without explicit confirmation
 - `git reset --hard`, `git push --force`, deleting branches with unmerged commits — only after double confirmation and a warning about the consequences
