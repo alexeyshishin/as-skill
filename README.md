@@ -19,6 +19,26 @@
 
 Требования проверяются на установке: нет `OBSIDIAN_VAULT` — пропускается домен `obsidian`, остальные домены `requires_env` не имеют и ставятся всегда.
 
+### Как задать `OBSIDIAN_VAULT`
+
+Обычная переменная окружения — путь до корня Obsidian-хранилища:
+
+```bash
+export OBSIDIAN_VAULT="$HOME/path/to/vault"
+```
+
+Чтобы не выставлять её в каждой новой сессии, добавьте эту строку в
+`~/.zshrc` (или `~/.bashrc`) и перезапустите шелл / выполните `source
+~/.zshrc`. Проверить, что переменная видна:
+
+```bash
+echo "$OBSIDIAN_VAULT"
+```
+
+Пусто — `as-skill install domain obsidian` / `install all` пропустят домен
+`obsidian` (для `all` — с предупреждением, для явного запроса домена —
+жёсткая ошибка), см. [`tools/README.md`](tools/README.md).
+
 ## Core-скиллы
 
 Вне доменов, в `core/skills/` — не завязаны на конкретную область, ставятся всегда, без `manifest.yaml`:
@@ -53,7 +73,8 @@ claude-harness/
 │       └── swarm-report/
 │
 ├── tools/
-│   ├── cli.go              # Инсталлятор — CLI as-skill, см. tools/README.md
+│   ├── main.go             # Инсталлятор — CLI as-skill, см. tools/README.md
+│   ├── internal/           # cli/installer/registry/lockfile/transfer/health/fsutil
 │   └── README.md
 │
 ├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
@@ -67,7 +88,7 @@ claude-harness/
 
 ## Установка (CLI `as-skill`)
 
-Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/cli.go` (бинарь `as-skill`). Установка копирующая (снэпшот, не symlink).
+Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/` (бинарь `as-skill`). По умолчанию `install` ставит **symlink** — правки в `domains/`/`core/skills/` видны в проекте сразу, без переустановки (для совместной разработки, см. раздел ниже про сам харнесс). `install --copy` вместо этого делает статический снэпшот — для шаринга или проектов, которые не должны зависеть от жизненного цикла этой копии репозитория (так, например, работает `/code-setup`, который всегда ставит себя в чужой проект через `--copy`).
 
 Быстрый старт — из корня репозитория:
 
@@ -91,14 +112,28 @@ go build -o as-skill ./tools
 Режимы установки:
 
 ```
-as-skill install domain  <имя>               один домен
-as-skill install domains <имя> [имя...]      несколько доменов
-as-skill install all                          все домены (у кого выполнен requires_env) + core-скиллы
-as-skill install skill   <имя>               один скилл, доменный или core
+as-skill install domain  <имя>               symlink один домен (по умолчанию)
+as-skill install domains <имя> [имя...]      symlink несколько доменов
+as-skill install all                          symlink все домены (у кого выполнен requires_env) + core-скиллы
+as-skill install skill   <имя>               symlink один скилл, доменный или core
+as-skill install ... --copy                   любая из форм выше — копией-снэпшотом вместо symlink
+as-skill uninstall domain|domains|all|skill ... снести то, что поставил install
+as-skill status / doctor / check              здоровье установки / self-check репозитория
 as-skill list [domains|skills]                что вообще можно установить
 ```
 
-Флаги `--project` (куда ставить, по умолчанию `.`), `--harness-root` (эта копия репозитория, автоопределяется), `--with-core`, `--dry-run`, поведение при незаполненном `requires_env` (сейчас это только `obsidian` → `$OBSIDIAN_VAULT`) в [`tools/README.md`](tools/README.md).
+Флаги `--project` (куда ставить, по умолчанию `.`), `--harness-root` (эта копия репозитория, автоопределяется), `--with-core`, `--copy`, `--dry-run`, `--force`, поведение при незаполненном `requires_env`/`requires_bin` (сейчас `requires_env` есть только у `obsidian` → `$OBSIDIAN_VAULT`) — всё в [`tools/README.md`](tools/README.md).
+
+## Разработка самого харнесса
+
+Корневой `.claude/` этого репозитория (гитигнорится) — не ручная копия `domains/code/*` + части `domains/git/*`, а результат symlink-установки: правки под `domains/` видны в нём сразу, без переустановки. Пересоздать с нуля:
+
+```bash
+rm -rf .claude
+./as-skill install domains code git --project .
+```
+
+(`--project .` — установка в корень самого харнесса; без `--copy`, потому что для совместной разработки нужны именно живые symlink'и на `domains/`, а не отдельный снэпшот).
 
 ## Лицензия
 

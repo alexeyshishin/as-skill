@@ -51,9 +51,23 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-The installer is `tools/cli.go`, CLI name `as-skill` (see `tools/README.md`). It
+The installer entrypoint is `tools/main.go` (dispatcher in `tools/internal/cli`),
+CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
-`~/.claude/` — per each manifest's declared `targets`:
+`~/.claude/` — per each manifest's declared `targets`.
+
+One verb, two modes: `as-skill install ...` defaults to **symlink** — edits under
+`domains/`/`core/skills/` show up in the target immediately, no reinstall; this is
+how this repo's own root `.claude/` stays live (`rm -rf .claude && ./as-skill
+install domains code git --project .`). `as-skill install ... --copy` instead
+writes a static snapshot, independent of this checkout's lifetime — for sharing,
+or for projects that shouldn't depend on a harness checkout sticking around.
+`as-skill uninstall ...` mirrors `install`'s positional shapes and removes only
+what a prior `install`/`install --copy` placed (symlink or files, matching the
+mode it was recorded under), never foreign content. Both modes write to the same
+per-project `<project>/.claude/skills-lock.json`, so `status`/`doctor` can tell
+owned-vs-foreign and mode apart even when a project mixes the two across runs.
+
 - `${CLAUDE_HOME}` in every manifest resolves to `<project>/.claude/`, where
   `<project>` is whatever `--project` you pass `as-skill` (default: the
   current directory)
@@ -73,7 +87,14 @@ instead skips it with a warning and installs the rest. Right now only
 `obsidian` declares `requires_env`; no domain currently declares a
 `requires_bin` gate.
 
-`code` is a separate case: it also has its own `/code-setup` skill that copies the `code` domain (agents, skills, the `test-gate` hook, `.claude/settings.json`, `AGENTS.md`) into a *target project* directory — a different mechanism from the per-domain installer above, run from a clone of this repo.
+`code` is a separate case: it also has its own `/code-setup` skill that installs the
+`code` domain (agents, skills, the `test-gate` hook) plus core skills into a *target
+project* directory, run from a clone of this repo. Under the hood it's the same
+`as-skill install domain code --project <target> --copy --with-core` as above —
+`code-setup` just always passes `--copy` explicitly, on purpose: the target is an
+unrelated project elsewhere on the user's machine, and coupling it to this
+checkout's lifetime via a symlink (the installer's default) would be wrong. See
+`domains/code/skills/code-setup/SKILL.md` for the full recipe.
 
 ## What to do before your first action
 
