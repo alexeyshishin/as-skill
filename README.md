@@ -1,4 +1,4 @@
-# alexey-shishin-skills
+# as-skill
 
 Репозиторий, в котором находятся шаблоны агентов, скиллов и правил. За основу взята мультидоменная архитектура:
 - **Git**
@@ -53,7 +53,7 @@ echo "$OBSIDIAN_VAULT"
 ## Структура репозитория
 
 ```
-claude-harness/
+as-skill/
 ├── domains/                 # ← ЕДИНСТВЕННЫЙ источник правды по доменам
 │   ├── obsidian/
 │   │   ├── manifest.yaml    ← targets, requires_env
