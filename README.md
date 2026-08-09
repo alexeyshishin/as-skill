@@ -53,15 +53,52 @@ claude-harness/
 │       └── swarm-report/
 │
 ├── tools/
-│   └── cli.go              # Инсталлятор — заготовка, ещё не реализован
+│   ├── cli.go              # Инсталлятор — CLI as-skill, см. tools/README.md
+│   └── README.md
 │
-├── install.sh              # Заготовка
+├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
 ├── AGENTS.md               # Точка входа для AI-агента — домены, deploy-таргеты, контракт между доменами
 ├── LICENCE                 # MIT
 └── README.md
 ```
 
-Правится напрямую: `domains/`, `core/skills/` (для скиллов без домена) и `AGENTS.md`. Остальное (`tools/cli.go`, `install.sh`) — заготовки под будущую автоматизацию установки.
+Правится напрямую: `domains/`, `core/skills/` (для скиллов без домена) и `AGENTS.md`.
+
+
+## Установка (CLI `as-skill`)
+
+Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/cli.go` (бинарь `as-skill`). Установка копирующая (снэпшот, не symlink).
+
+Быстрый старт — из корня репозитория:
+
+```bash
+source install.sh
+```
+
+Соберёт `as-skill` и сразу добавит его в `PATH` текущей оболочки (sh/bash/zsh) —
+командой можно пользоваться сразу же, без `./`. Если запустить не через
+`source` (`./install.sh` или `bash install.sh`) — бинарь всё равно соберётся,
+но в PATH родительской оболочки попасть не сможет (так уже работают дочерние
+процессы); скрипт сам это увидит и подскажет запустить `source install.sh`.
+Нужен установленный `go` (на macOS: `brew install go`).
+
+Ручная сборка без `install.sh`, тоже из корня репозитория:
+
+```bash
+go build -o as-skill ./tools
+```
+
+Режимы установки:
+
+```
+as-skill install domain  <имя>               один домен
+as-skill install domains <имя> [имя...]      несколько доменов
+as-skill install all                          все домены (у кого выполнен requires_env) + core-скиллы
+as-skill install skill   <имя>               один скилл, доменный или core
+as-skill list [domains|skills]                что вообще можно установить
+```
+
+Флаги `--project` (куда ставить, по умолчанию `.`), `--harness-root` (эта копия репозитория, автоопределяется), `--with-core`, `--dry-run`, поведение при незаполненном `requires_env` (сейчас это только `obsidian` → `$OBSIDIAN_VAULT`) в [`tools/README.md`](tools/README.md).
 
 ## Лицензия
 
