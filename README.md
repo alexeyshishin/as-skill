@@ -19,6 +19,26 @@
 
 Требования проверяются на установке: нет `OBSIDIAN_VAULT` — пропускается домен `obsidian`, остальные домены `requires_env` не имеют и ставятся всегда.
 
+### Как задать `OBSIDIAN_VAULT`
+
+Обычная переменная окружения — путь до корня Obsidian-хранилища:
+
+```bash
+export OBSIDIAN_VAULT="$HOME/path/to/vault"
+```
+
+Чтобы не выставлять её в каждой новой сессии, добавьте эту строку в
+`~/.zshrc` (или `~/.bashrc`) и перезапустите шелл / выполните `source
+~/.zshrc`. Проверить, что переменная видна:
+
+```bash
+echo "$OBSIDIAN_VAULT"
+```
+
+Пусто — `as-skill install domain obsidian` / `install all` пропустят домен
+`obsidian` (для `all` — с предупреждением, для явного запроса домена —
+жёсткая ошибка), см. [`tools/README.md`](tools/README.md).
+
 ## Core-скиллы
 
 Вне доменов, в `core/skills/` — не завязаны на конкретную область, ставятся всегда, без `manifest.yaml`:
