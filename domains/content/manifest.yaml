@@ -1,0 +1,12 @@
+# Content / writing домен — скиллы для Telegram-постов, статей, технических туториалов.
+# Не требует env. Глобально в ~/.claude/.
+
+name: content
+description: Контент — Telegram-посты, статьи, технические туториалы.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
