@@ -1,147 +1,148 @@
 ---
 name: content-documentation
 description: >
-  Структурирует технический туториал — prerequisites, цель «после прочтения сможешь
-  X», нумерованные шаги с командами и проверками, troubleshooting, cleanup. Не
-  пишет полный текст: создаёт корректный скелет, в который автор досыпает детали.
-  Используй, когда «написать туториал», «оформить пошаговую инструкцию», «how-to»,
-  «tutorial»,«гайд по развёртыванию», «инструкция, как сделать X».
+  Structures a technical tutorial — prerequisites, a "after reading this
+  you'll be able to do X" goal, numbered steps with commands and checks,
+  troubleshooting, cleanup. Doesn't write the full text: it produces a
+  correct skeleton for the author to fill in with details. Use when "write a
+  tutorial," "put together step-by-step instructions," "how-to," "tutorial,"
+  "deployment guide," "instructions for how to do X."
 ---
 
-# content-documentation — Скелет технической документации
+# content-documentation — Technical documentation skeleton
 
-Цель: дать читателю **повторяемый** путь от исходного состояния к цели. Не теория, не эссе — пошаговая инструкция, где каждый шаг проверяем.
+Goal: give the reader a **reproducible** path from their starting state to the goal. Not theory, not an essay — a step-by-step set of instructions where every step is verifiable.
 
-Перед началом прочитай:
+Before starting, read:
 - `~/.claude/rules/content-voice.md`
-- `~/.claude/rules/content-formatting.md` — раздел про туториалы
-- `~/.claude/rules/sre-runbook-template.md` — стиль исполняемых процедур (туториал близок к runbook'у по принципам команд)
+- `~/.claude/rules/content-formatting.md` — the tutorials section
+- `~/.claude/rules/sre-runbook-template.md` — the style for executable procedures (a tutorial is close to a runbook in terms of command conventions)
 
-## Шаг 1. Определи scope
+## Step 1. Define the scope
 
-Спроси:
-- **цель туториала**: «после прочтения читатель сможет _<глагол + результат>_»
-  - примеры: «развернуть Postgres-кластер с replication на 3 нодах», «настроить OAuth-логин через Google в Express-приложении», «измерить heap-аллокации в Go-сервисе»
-- **исходное состояние читателя**: что у него есть, что предполагается
-- **финальное состояние**: что должно работать в конце
-- **платформа / стек**: версии, ОС, облако
+Ask:
+- **the tutorial's goal**: "after reading this, the reader will be able to _<verb + result>_"
+  - examples: "deploy a Postgres cluster with replication across 3 nodes," "set up OAuth login via Google in an Express app," "measure heap allocations in a Go service"
+- **the reader's starting state**: what they have, what's assumed
+- **the final state**: what should be working at the end
+- **the platform / stack**: versions, OS, cloud
 
-Если цель размытая («туториал по k8s») — **остановись и помоги вычленить конкретику**. Туториал «по k8s» невозможен — возможен «развернуть minikube + deploy stateless API + expose via Ingress».
+If the goal is vague ("a tutorial on k8s") — **stop and help narrow it down to specifics**. A tutorial "on k8s" is impossible — "deploy minikube + deploy a stateless API + expose via Ingress" is possible.
 
-## Шаг 2. Сложи скелет
+## Step 2. Build the skeleton
 
 ```markdown
-# <Название: глагол + результат>
+# <Title: verb + result>
 
-> **Цель:** после прохождения туториала ты сможешь _<конкретно>_.
-> **Время:** ~X минут.
-> **Уровень:** новичок / средний / продвинутый.
+> **Goal:** after completing this tutorial you'll be able to _<specifically>_.
+> **Time:** ~X minutes.
+> **Level:** beginner / intermediate / advanced.
 
-## Что понадобится
+## What you'll need
 
-- <тулинг: версия>
-- <тулинг: версия>
-- <доступ: где взять>
-- <облако/окружение, если применимо>
+- <tooling: version>
+- <tooling: version>
+- <access: where to get it>
+- <cloud/environment, if applicable>
 
-## Шаг 1. <Глагол + что>
+## Step 1. <Verb + what>
 
-<1-2 строки контекста: что делаем и зачем.>
+<1-2 lines of context: what we're doing and why.>
 
 ```<lang>
-<команда>
+<command>
 ```
 
-**Проверка:** <ожидаемый результат / команда, подтверждающая успех>
+**Check:** <expected result / a command confirming success>
 
-## Шаг 2. <Глагол + что>
-
-...
-
-## Шаг N. <Глагол + что>
+## Step 2. <Verb + what>
 
 ...
 
-## Проверка финального состояния
+## Step N. <Verb + what>
 
-<команда или сценарий, который проверяет, что всё работает end-to-end>
+...
+
+## Verifying the final state
+
+<a command or scenario that verifies everything works end-to-end>
 
 ## Troubleshooting
 
-### <Симптом 1>
+### <Symptom 1>
 
-**Причина:** ...
-**Решение:** ...
+**Cause:** ...
+**Fix:** ...
 
-### <Симптом 2>
+### <Symptom 2>
 
 ...
 
 ## Cleanup
 
-<команды, чтобы откатить всё созданное — если читатель не хочет оставлять>
+<commands to roll back everything that was created — if the reader doesn't want to keep it>
 
-## Что дальше
+## What's next
 
-<2-3 ссылки: углубление темы, related туториалы, доки>
+<2-3 links: deeper dives, related tutorials, docs>
 ```
 
-## Шаг 3. Согласуй скелет
+## Step 3. Agree on the skeleton
 
-Покажи пользователю **только структуру** (заголовки шагов и краткое описание каждого), без полного текста. Спроси:
-- все ли шаги нужны?
-- ничего не пропущено между шагами?
-- порядок логичный?
+Show the user **only the structure** (step headings and a brief description of each), without the full text. Ask:
+- are all the steps needed?
+- is anything missing between steps?
+- is the order logical?
 
-После подтверждения — переходи к заполнению.
+Once confirmed — move on to filling it in.
 
-## Шаг 4. Заполни шаги
+## Step 4. Fill in the steps
 
-Для каждого шага:
+For each step:
 
-- **Глагол первым** в заголовке: «Установи kubectl», «Создай namespace», «Проверь подключение»
-- **Контекст** — почему делаем (1-2 строки, не лекция)
-- **Команда(ы)** в code block с языком, **готовые к копипасту** (см. `sre-runbook-template.md`)
-- **Проверка** — команда или ожидаемый вывод, чтобы читатель убедился, что шаг прошёл
+- **Verb first** in the heading: "Install kubectl," "Create the namespace," "Verify the connection"
+- **Context** — why we're doing this (1-2 lines, not a lecture)
+- **Command(s)** in a code block with a language tag, **ready to copy-paste** (see `sre-runbook-template.md`)
+- **Check** — a command or expected output so the reader can confirm the step succeeded
 
-Каждый параметр, который читатель должен заменить — объясни **где его взять**:
+For every parameter the reader needs to substitute — explain **where to get it**:
 ```bash
 kubectl apply -f deploy.yaml -n <namespace>
-# <namespace> — имя из шага 2, например "demo-app"
+# <namespace> — the name from step 2, e.g. "demo-app"
 ```
 
-## Шаг 5. Troubleshooting
+## Step 5. Troubleshooting
 
-3-5 типичных проблем, с которыми сталкиваются. Для каждой:
-- **симптом** (как читатель увидит)
-- **причина** (почему случилось)
-- **решение** (что сделать)
+3-5 common problems people run into. For each:
+- **symptom** (how the reader will see it)
+- **cause** (why it happens)
+- **fix** (what to do)
 
-Не пиши troubleshooting на гипотетические проблемы — только на те, которые реально случались.
+Don't write troubleshooting entries for hypothetical problems — only for ones that actually happened.
 
-## Шаг 6. Cleanup
+## Step 6. Cleanup
 
-Команды, чтобы откатить созданное. Это важно — без cleanup читатель боится экспериментировать.
+Commands to roll back what was created. This matters — without cleanup the reader is afraid to experiment.
 
-## Шаг 7. Самопроверка
+## Step 7. Self-check
 
-- **прошёл ли** ты туториал глазами впервые? Каждый шаг ясен без контекста статьи?
-- **команды копипастабельны**? Нет ли `<your-thing>` без объяснения?
-- **версии указаны**? Через 6 месяцев туториал не должен ломаться от того, что вышел новый minor.
-- **проверки после каждого шага**? Иначе читатель не знает, где ошибся.
+- **did you** walk through the tutorial as a first-time reader? Is every step clear without the surrounding article context?
+- **are the commands copy-pasteable**? No unexplained `<your-thing>` placeholders?
+- **are versions specified**? Six months from now, the tutorial shouldn't break just because a new minor version shipped.
+- **is there a check after every step**? Otherwise the reader doesn't know where they went wrong.
 
-## Шаг 8. Покажи и спроси
+## Step 8. Show it and ask
 
-Покажи финальный скелет с заполненными шагами. Спроси:
-1. Принять
-2. Расширить какой-то шаг (нужны детали)
-3. Сжать (туториал получился длинным)
-4. Добавить раздел (security, production-readiness, alternatives)
+Show the final skeleton with the steps filled in. Ask:
+1. Accept
+2. Expand a particular step (needs more detail)
+3. Compress (the tutorial got long)
+4. Add a section (security, production-readiness, alternatives)
 
-## Чего не делать
+## What not to do
 
-- не пиши туториал на сценарий, который сам ни разу не проходил — даже частично выдуманные команды убивают доверие
-- не объясняй основы стека внутри туториала — линкуй внешние доки
-- не делай «всё в одной статье» — туториал на 50+ минут лучше разбить
-- не пиши команды с placeholder'ами вроде `<your-cluster>` без объяснения
-- не пропускай раздел проверки — это то, что отличает туториал от блог-поста
+- don't write a tutorial for a scenario you've never actually walked through yourself — even partially made-up commands kill trust
+- don't explain stack fundamentals inside the tutorial — link to external docs
+- don't cram "everything into one article" — a 50+ minute tutorial is better split up
+- don't write commands with placeholders like `<your-cluster>` without explaining them
+- don't skip the verification section — that's what distinguishes a tutorial from a blog post

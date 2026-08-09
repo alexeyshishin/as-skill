@@ -1,41 +1,41 @@
 ---
 name: obsidian-refactor-lecture
-description: "Рефакторинг конспектов лекций в Obsidian — извлечение концептов, определений и теорем из конспекта в отдельные заметки, превращение лекции в \"оглавление\" со ссылками, обновление связей с дисциплинарным MOC. Используй этот скилл когда пользователь просит обработать, разбить, рефакторить конспект лекции или несколько лекций. Триггеры: \"обработай лекцию\", \"разбей конспект\", \"рефакторинг лекции\", \"вынеси понятия из лекции\", \"обработай конспект\", \"разбей лекцию\", \"лекция слишком большая\". Скилл обрабатывает до 3 конспектов за один запуск."
+description: "Refactor lecture notes in Obsidian — extract concepts, definitions, and theorems from lecture notes into separate notes, turn the lecture into a \"table of contents\" with links, update links to the discipline MOC. Use this skill when the user asks to process, split, or refactor a lecture's notes or several lectures. Triggers: \"process this lecture\", \"split these notes\", \"refactor the lecture\", \"pull the concepts out of this lecture\", \"process these notes\", \"split up the lecture\", \"the lecture is too big\". The skill handles up to 3 sets of notes per run."
 ---
 
-## Обзор
+## Overview
 
-Скилл превращает большой конспект лекции в структурированный граф знаний:
+The skill turns a large set of lecture notes into a structured knowledge graph:
 
-- **оригинальная лекция** становится "оглавлением" — разделы заменяются кратким резюме + `[[wikilink]]`;
-- **извлечённые концепты** создаются как отдельные заметки с именем `<Дисциплина> – <Концепт>.md`;
-- **дисциплинарный MOC** обновляется ссылками на новые заметки.
+- the **original lecture** becomes a "table of contents" — sections are replaced with a short summary + `[[wikilink]]`;
+- **extracted concepts** are created as separate notes named `<Discipline> – <Concept>.md`;
+- the **discipline MOC** is updated with links to the new notes.
 
-**Лимит:** не более **3 конспектов** за один запуск. Если пользователь указал больше — спроси, какие три обработать сейчас, остальные — следующим запуском.
-
----
-
-## Базовые правила
-
-Структура хранилища, таксономия тегов, frontmatter, имена файлов — в `.agents/rules/`:
-`vault-struct.md`, `tags.md` (раздел «Структурные теги»), `note-types-frontmatter.md`, `file-naming.md`.
+**Limit:** no more than **3 sets of notes** per run. If the user names more, ask which three to process now — the rest go in a follow-up run.
 
 ---
 
-## Формат конспекта лекции
+## Base rules
 
-Файл лекции следует паттерну `Lecture – <Дисциплина> – <Дата> – <Тема>.md` и содержит:
+Vault structure, tag taxonomy, frontmatter, file names — in `.agents/rules/`:
+`vault-struct.md`, `tags.md` (the "Structural tags" section), `note-types-frontmatter.md`, `file-naming.md`.
+
+---
+
+## Lecture notes format
+
+A lecture file follows the pattern `Lecture – <Discipline> – <Date> – <Topic>.md` and contains:
 
 ```yaml
 ---
 aliases: [...]
 tags:
   - lecture
-discipline: "[[<Дисциплина>]]"   # ссылка на дисциплинарный MOC в 02. Сферы/04. Образование/МТИ/Предметы/
+discipline: "[[<Discipline>]]"   # link to the discipline MOC in 02. Сферы/04. Образование/МТИ/Предметы/
 up:
-  - "[[<Дисциплина>]]"
+  - "[[<Discipline>]]"
 down:
-  - "[[...]]"                   # заметки, уже выделенные из этой лекции
+  - "[[...]]"                   # notes already extracted from this lecture
 links: []
 other: []
 date: "[[YYYY-MM-DD]]"
@@ -44,79 +44,79 @@ date: "[[YYYY-MM-DD]]"
 
 ---
 
-## Алгоритм обработки
+## Processing algorithm
 
-### Шаг 1. Прочитай и определи кандидатов
+### Step 1. Read and identify candidates
 
-Критерии «выделять / оставить» — `knowledge-structures.md` (раздел «Когда выделять раздел в отдельную заметку»). Особенность лекций: **Q&A-блоки** оставляй в лекции как есть; выноси только если ответ — развёрнутый концепт ≥10 строк.
+Criteria for "extract / keep" — `knowledge-structures.md` (the "When to split a section into its own note" section). One thing specific to lectures: leave **Q&A blocks** in the lecture as-is; extract only if the answer is a full-blown concept ≥10 lines long.
 
-### Шаг 2. Составь план и покажи пользователю
+### Step 2. Draft a plan and show it to the user
 
-Протокол план → подтверждение → действие — `workflows.md`. Формат:
+Plan → confirmation → action protocol — `workflows.md`. Format:
 
 ```
-Лекция: [[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]
-Дисциплина: [[ВышМат]]
+Lecture: [[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]
+Discipline: [[ВышМат]]
 
-Извлечь в 03. Ресурсы/04. Заметки/ (атомарные факты):
+Extract into 03. Ресурсы/04. Заметки/ (atomic facts):
   1. [[ВышМат – Транспонированная матрица]] → #thought + #lecture
   2. [[ВышМат – Определитель матрицы]] → #thought + #lecture
 
-Извлечь в 00. Входящие/ (требуют дальнейшей обработки):
-  3. [[ВышМат – Операции над матрицами]] → сводная концептуальная заметка
-  4. [[ВышМат – Обратная матрица]] → требует связей с другими темами
+Extract into 00. Входящие/ (need further processing):
+  3. [[ВышМат – Операции над матрицами]] → summary concept note
+  4. [[ВышМат – Обратная матрица]] → needs links to other topics
 
-Оставить в лекции (не атомарны / слишком контекстуальны):
-  - Вводный абзац о применении матриц
+Leave in the lecture (not atomic / too contextual):
+  - Introductory paragraph on matrix applications
 ```
 
-Спроси подтверждение, **если пользователь не сказал "делай сразу"** или аналогичное.
+Ask for confirmation **unless the user said "just do it"** or similar.
 
-### Шаг 3. Логика выбора папки для извлечённой заметки
+### Step 3. Logic for choosing the folder for an extracted note
 
-| Куда | Тег | Когда |
-|------|-----|-------|
-| `03. Ресурсы/04. Заметки/` | `#thought` + `#lecture` | Самодостаточный факт: определение, теорема, формула с доказательством. Заметка уже "готова". |
-| `00. Входящие/` | `#inbox/review` + `#lecture` | Концептуальная тема, требующая связей. Всё, что вызывает сомнения. |
+| Where | Tag | When |
+|------|-----|------|
+| `03. Ресурсы/04. Заметки/` | `#thought` + `#lecture` | Self-contained fact: definition, theorem, formula with proof. The note is already "finished". |
+| `00. Входящие/` | `#inbox/review` + `#lecture` | Conceptual topic that needs links. Anything that raises doubts. |
 
-**По умолчанию — inbox**, если не очевидно.
+**Default to inbox** if it's not obvious.
 
-### Шаг 4. Создай извлечённые заметки
+### Step 4. Create the extracted notes
 
-Для каждого выделенного раздела:
+For each extracted section:
 
-1. **Имя файла:** `<Дисциплина> – <Концепт>.md`
-   - Дисциплина берётся из поля `discipline` лекции (без `[[ ]]`)
-   - Пример: `ВышМат – Транспонированная матрица.md`, `ПиАС ИБ – Многофакторная аутентификация.md`
+1. **File name:** `<Discipline> – <Concept>.md`
+   - The discipline comes from the lecture's `discipline` field (without `[[ ]]`)
+   - Example: `ВышМат – Транспонированная матрица.md`, `ПиАС ИБ – Многофакторная аутентификация.md`
 
-2. **Проверь, не существует ли уже такая заметка** (grep по хранилищу). Если существует — не создавай дубликат, только обнови ссылки.
+2. **Check whether such a note already exists** (grep the vault). If it does, don't create a duplicate — only update the links.
 
-3. **Frontmatter новой заметки:**
+3. **Frontmatter of the new note:**
 
 ```yaml
 ---
 aliases:
-  - Транспонированная матрица      # Название концепта
-  - Transposed Matrix               # Английский эквивалент (если применимо)
+  - Транспонированная матрица      # Concept name
+  - Transposed Matrix               # English equivalent (if applicable)
 tags:
-  - thought                         # для 03. Ресурсы/04. Заметки/
+  - thought                         # for 03. Ресурсы/04. Заметки/
   - lecture
-  # для 00. Входящие/ — добавь #inbox/review вместо thought
-discipline: "[[ВышМат]]"           # копируется из лекции
+  # for 00. Входящие/ — add #inbox/review instead of thought
+discipline: "[[ВышМат]]"           # copied from the lecture
 up:
-  - "[[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]"  # родительская лекция
+  - "[[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]"  # the parent lecture
 down: []
 links: []
 other: []
-date: "[[2025-11-20]]"             # дата лекции
+date: "[[2025-11-20]]"             # date of the lecture
 ---
 ```
 
-1. **Тело заметки:** используй заголовок `## Определение` / `## Суть` / `## Теорема` в зависимости от типа контента. Перенеси содержимое раздела **дословно**, включая LaTeX-формулы.
+4. **Note body:** use the heading `## Определение` / `## Суть` / `## Теорема` depending on the type of content. Transfer the section's content **verbatim**, including LaTeX formulas.
 
-### Шаг 5. Обнови оригинальную лекцию
+### Step 5. Update the original lecture
 
-1. Каждый вынесенный раздел **заменяется** на краткое (1-2 предложения) резюме + ссылку:
+1. Each extracted section is **replaced** with a short (1-2 sentence) summary + link:
 
 ```markdown
 ### Транспонированная матрица
@@ -124,53 +124,53 @@ date: "[[2025-11-20]]"             # дата лекции
 Матрица $A^T$, полученная заменой строк на столбцы. Свойства и примеры: [[ВышМат – Транспонированная матрица]]
 ```
 
-1. В frontmatter лекции обнови `down` — добавь wikilinks на все новые заметки.
+2. In the lecture's frontmatter, update `down` — add wikilinks to all the new notes.
 
-2. Если в `down` уже есть ссылки на несуществующие файлы (плейсхолдеры) — замени их ссылками на только что созданные файлы.
+3. If `down` already contains links to nonexistent files (placeholders), replace them with links to the files just created.
 
-### Шаг 6. Обнови дисциплинарный MOC
+### Step 6. Update the discipline MOC
 
-Найди файл дисциплины (`02. Сферы/04. Образование/МТИ/Предметы/<Дисциплина>.md`).
+Find the discipline file (`02. Сферы/04. Образование/МТИ/Предметы/<Discipline>.md`).
 
-Добавь ссылки на новые заметки в соответствующий список. Если в MOC есть Dataview-блок, который автоматически подхватывает связи — ничего делать не нужно, связи появятся сами через поле `discipline` в новых заметках.
+Add links to the new notes in the relevant list. If the MOC has a Dataview block that automatically picks up links, nothing needs doing — the links will appear on their own via the `discipline` field on the new notes.
 
-**Как понять, нужно ли вручную добавлять ссылки:** прочитай MOC — если там Dataview (`FROM ... AND #discipline`), то не добавляй вручную. Если ручной список — добавь.
+**How to tell whether links need to be added manually:** read the MOC — if it has a Dataview query (`FROM ... AND #discipline`), don't add anything manually. If it's a manual list, add them.
 
-### Шаг 7. Проверь связность
+### Step 7. Verify connectivity
 
-- [ ] Все новые файлы созданы в правильных папках.
-- [ ] Frontmatter каждой новой заметки заполнен (tags, aliases, discipline, up, down, date).
-- [ ] Оригинал обновлён: каждый вынесенный раздел → краткое резюме + wikilink.
-- [ ] `down` оригинала содержит wikilinks на все новые заметки.
-- [ ] Нет дублирующих заметок (grep перед созданием).
-- [ ] LaTeX-формулы сохранены дословно (не упрощены и не переписаны).
-- [ ] Дисциплинарный MOC проверен.
-
----
-
-## Что НЕ делать
-
-- **Не удалять** оригинальную лекцию и не переносить её в архив.
-- **Не переписывать** содержимое при извлечении — только переносить дословно.
-- **Не изменять** LaTeX-формулы.
-- **Не дробить слишком мелко** — раздел из 2-3 строк не заслуживает отдельного файла.
-- **Не обрабатывать больше 3 лекций** за один запуск.
-- **Не создавать дубликаты** — всегда grep-проверка перед созданием.
+- [ ] All new files are created in the correct folders.
+- [ ] Every new note's frontmatter is filled in (tags, aliases, discipline, up, down, date).
+- [ ] The original is updated: each extracted section → short summary + wikilink.
+- [ ] The original's `down` contains wikilinks to all the new notes.
+- [ ] No duplicate notes (grep before creating).
+- [ ] LaTeX formulas preserved verbatim (not simplified or rewritten).
+- [ ] The discipline MOC is checked.
 
 ---
 
-## Примеры трансформации
+## What NOT to do
 
-**До (в лекции):**
+- **Don't delete** the original lecture or move it to the archive.
+- **Don't rewrite** content during extraction — only transfer it verbatim.
+- **Don't change** LaTeX formulas.
+- **Don't split too finely** — a 2-3 line section doesn't deserve its own file.
+- **Don't process more than 3** sets of notes per run.
+- **Don't create duplicates** — always grep-check before creating.
+
+---
+
+## Transformation examples
+
+**Before (in the lecture):**
 
 ```markdown
 ### Транспонированная матрица
 
 Транспонированная матрица — это матрица, полученная из исходной путём замены строк на столбцы...
-[100 строк текста + LaTeX]
+[100 lines of text + LaTeX]
 ```
 
-**После (в лекции):**
+**After (in the lecture):**
 
 ```markdown
 ### Транспонированная матрица
@@ -178,7 +178,7 @@ date: "[[2025-11-20]]"             # дата лекции
 Матрица $A^T$, где строки и столбцы поменяны местами; $(A^T)_{ij} = A_{ji}$. Подробнее: [[ВышМат – Транспонированная матрица]]
 ```
 
-**Новый файл** `ВышМат – Транспонированная матрица.md` в `03. Ресурсы/04. Заметки/`:
+**New file** `ВышМат – Транспонированная матрица.md` in `03. Ресурсы/04. Заметки/`:
 
 ```markdown
 ---
@@ -200,5 +200,5 @@ date: "[[2025-11-20]]"
 ## Определение
 
 Транспонированная матрица — это матрица, полученная из исходной путём замены строк на столбцы...
-[полный контент из лекции]
+[full content from the lecture]
 ```

@@ -1,95 +1,95 @@
 ---
 name: obsidian-ingest
 description: >
-  Обрабатывает произвольный markdown-файл (статья, вебклип, транскрипт, конспект, черновая
-  заметка) и превращает его в структурированные знания для Obsidian-базы по методологии PARA.
-  Скилл выделяет атомарные сущности (концепты, инсайты, факты), придумывает логичные названия
-  заметкам, создаёт литературную заметку-источник, выстраивает wikilinks и frontmatter.
-  Используй этот скилл всегда, когда пользователь хочет «добавить в базу знаний», «переработать
-  статью», «обработать конспект», «выжать знания из текста», «ингестировать», «положить в
-  vault», «положить в базу» или приносит markdown-файл для сохранения в Obsidian.
+  Processes an arbitrary markdown file (article, web clip, transcript, notes, draft
+  note) and turns it into structured knowledge for an Obsidian base using the PARA
+  methodology. The skill extracts atomic entities (concepts, insights, facts), invents
+  logical names for notes, creates a source literature note, and builds wikilinks and frontmatter.
+  Use this skill whenever the user wants to "add this to the knowledge base", "rework this
+  article", "process these notes", "extract the knowledge from this text", "ingest this", "put this in
+  the vault", "put this in the base", or brings a markdown file to save into Obsidian.
 ---
 
-# obsidian-ingest — Ингест знаний в Obsidian-vault
+# obsidian-ingest — Knowledge ingest into the Obsidian vault
 
-Этот скилл — координатор пайплайна ингеста. Твоя задача: взять один markdown-файл, понять,
-какие знания в нём скрыты, решить, как их лучше представить в базе, и создать нужные файлы.
-Форматирование, frontmatter и обогащение ссылками ты делаешь сам — это неотъемлемая часть ингеста.
+This skill is the ingest pipeline coordinator. Your job: take a single markdown file, understand
+what knowledge is hidden in it, decide how best to represent it in the base, and create the necessary files.
+You do the formatting, frontmatter, and link enrichment yourself — that's an integral part of ingest.
 
-Перед началом работы прочитай правила хранилища:
-- `AGENTS.md` — общие принципы работы с базой
-- `.agents/rules/note-types-frontmatter.md` — шаблоны и поля frontmatter
-- `.agents/rules/knowledge-structures.md` — атомарные заметки, MOC, синтезы
-- `.agents/rules/content-style.md` — язык, стиль, wikilinks
-- `.agents/rules/tags.md` — таксономия тегов
-
----
-
-## Шаг 1. Прочитай и пойми источник
-
-Прочитай входной файл целиком. Определи:
-
-- **Тип контента**: статья / вебклип, транскрипт, конспект встречи, черновая заметка, произвольный markdown
-- **Главная тема**: одна фраза, о чём этот текст
-- **Домен**: к каким тегам относится (sre, kubernetes, observability, career, concept, и т.д.)
-- **Уровень достоверности**: `medium` если источник один, `high` если ты видишь, что идея многократно подтверждается
+Before starting, read the vault rules:
+- `AGENTS.md` — general principles for working with the base
+- `.agents/rules/note-types-frontmatter.md` — frontmatter templates and fields
+- `.agents/rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
+- `.agents/rules/content-style.md` — language, style, wikilinks
+- `.agents/rules/tags.md` — tag taxonomy
 
 ---
 
-## Шаг 2. Извлеки сущности (knowledge extraction)
+## Step 1. Read and understand the source
 
-Типы:
+Read the input file in full. Determine:
 
-- **Концепты и модели** — абстрактные идеи, фреймворки, паттерны мышления
-- **Инсайты** — нетривиальные выводы, не очевидные из заголовка
-- **Факты** — конкретные утверждения, данные, цифры
-- **Практики** — «как делать», процессы, техники
-
-Критерии атомарности — `knowledge-structures.md` (раздел «Когда выделять раздел в отдельную заметку»). Типичный результат: 3–8 сущностей из одного источника.
+- **Content type**: article / web clip, transcript, meeting notes, draft note, arbitrary markdown
+- **Main topic**: one phrase describing what this text is about
+- **Domain**: which tags it belongs to (sre, kubernetes, observability, career, concept, etc.)
+- **Confidence level**: `medium` if there's a single source, `high` if you see the idea corroborated multiple times
 
 ---
 
-## Шаг 3. Придумай названия заметок
+## Step 2. Extract entities (knowledge extraction)
 
-Стиль (claim-based, не topic-based) и запрещённые символы — `file-naming.md`.
+Types:
 
-Перед именованием — `rg -l "<ключевое слово>"` по хранилищу. Если похожая заметка есть, план включает обновление существующей, а не создание новой.
+- **Concepts and models** — abstract ideas, frameworks, thinking patterns
+- **Insights** — non-trivial conclusions not obvious from the title
+- **Facts** — specific statements, data, figures
+- **Practices** — "how-to"s, processes, techniques
+
+Atomicity criteria — `knowledge-structures.md` (the "When to split a section into its own note" section). Typical result: 3–8 entities from a single source.
 
 ---
 
-## Шаг 4. Составь план ингеста
+## Step 3. Come up with note names
 
-Протокол план → подтверждение → действие — `workflows.md`. Формат плана:
+Style (claim-based, not topic-based) and forbidden characters — `file-naming.md`.
+
+Before naming — run `rg -l "<keyword>"` across the vault. If a similar note already exists, the plan includes updating the existing one instead of creating a new one.
+
+---
+
+## Step 4. Draft the ingest plan
+
+Plan → confirmation → action protocol — `workflows.md`. Plan format:
 
 ```
-📄 Литературная заметка: «Название источника» → 03. Ресурсы/03. Литературные заметки/
-   Тема: ...
+📄 Literature note: "Source title" → 03. Ресурсы/03. Литературные заметки/
+   Topic: ...
 
-📝 Новые атомарные заметки:
-   1. «Название заметки А» → 03. Ресурсы/04. Заметки/
-      Суть: одно предложение
-   2. «Название заметки Б» → 03. Ресурсы/04. Заметки/
-      Суть: одно предложение
+📝 New atomic notes:
+   1. "Note A title" → 03. Ресурсы/04. Заметки/
+      Gist: one sentence
+   2. "Note B title" → 03. Ресурсы/04. Заметки/
+      Gist: one sentence
 
-🔄 Обновить существующие заметки:
-   - [[Существующая заметка]] — добавить источник в sources, уточнить ...
-   - [[Другая заметка]] — добавить wikilink на литературную заметку
+🔄 Update existing notes:
+   - [[Existing note]] — add the source to sources, clarify ...
+   - [[Another note]] — add a wikilink to the literature note
 
-🗺 MOC (если нужен):
-   - [[MOC по теме]] — добавить новые заметки в список
+🗺 MOC (if needed):
+   - [[Topic MOC]] — add the new notes to the list
 ```
 
-Если ты хочешь обновить существующую заметку — прочти её содержимое перед правкой и опиши в плане, что именно меняешь. Не перезаписывай молча.
+If you want to update an existing note — read its content before editing it and describe in the plan exactly what you're changing. Don't overwrite it silently.
 
 ---
 
-## Шаг 5. Создай файлы
+## Step 5. Create the files
 
-После подтверждения плана создавай файлы в следующем порядке:
+After the plan is confirmed, create files in this order:
 
-### 5а. Литературная заметка
+### 5a. Literature note
 
-Создай в `03. Ресурсы/03. Литературные заметки/` по шаблону:
+Create it in `03. Ресурсы/03. Литературные заметки/` from this template:
 
 ```markdown
 ---
@@ -98,34 +98,34 @@ tags:
   - literature-note
 up: []
 links:
-  - "URL источника (если есть)"
+  - "Source URL (if any)"
 sources:
-  - "Название и автор источника"
+  - "Source title and author"
 confidence: medium
 ---
 
-## О чём
+## What it's about
 
-2–3 предложения: что это за текст и зачем его читать.
+2–3 sentences: what this text is and why it's worth reading.
 
-## Ключевые идеи
+## Key ideas
 
-- [[Атомарная заметка А]] — одно предложение о чём
-- [[Атомарная заметка Б]] — одно предложение о чём
+- [[Atomic note A]] — one sentence on what it's about
+- [[Atomic note B]] — one sentence on what it's about
 
-## Цитаты и фрагменты
+## Quotes and excerpts
 
-> Важная цитата или фрагмент, который хочется сохранить дословно
+> An important quote or excerpt worth keeping verbatim
 
-## Вопросы и следующие шаги
+## Questions and next steps
 
-- Что осталось непонятным?
-- Что стоит изучить дальше?
+- What's still unclear?
+- What's worth exploring next?
 ```
 
-### 5б. Атомарные заметки
+### 5b. Atomic notes
 
-Для каждой сущности из плана создай заметку в `03. Ресурсы/04. Заметки/`:
+For each entity from the plan, create a note in `03. Ресурсы/04. Заметки/`:
 
 ```markdown
 ---
@@ -133,88 +133,88 @@ aliases: []
 tags:
   - thought
 up:
-  - "[[Литературная заметка — источник]]"
+  - "[[Literature note — source]]"
 links: []
 sources:
-  - "Название источника"
+  - "Source title"
 confidence: medium
 other: []
 ---
 
-## Суть
+## Gist
 
-1–3 абзаца своими словами. Не копируй дословно из источника — переформулируй.
-Пиши так, чтобы через год было понятно без открытия источника.
+1–3 paragraphs in your own words. Don't copy verbatim from the source — rephrase it.
+Write so it's understandable a year from now without opening the source.
 
-## Контекст
+## Context
 
-Откуда пришла эта идея, в каком контексте она возникла.
+Where this idea came from, in what context it arose.
 
-## Связанные идеи
+## Related ideas
 
-- [[Другая заметка]] — почему связана
+- [[Another note]] — why it's related
 ```
 
-### 5в. Обнови существующие заметки
+### 5c. Update existing notes
 
-Для каждой заметки из плана:
-- Добавь новый источник в поле `sources`
-- Добавь wikilink на новую атомарную заметку или литературную заметку
-- Если информация расширяет или уточняет — добавь абзац с ссылкой на источник
-- Если противоречит — добавь callout:
+For each note in the plan:
+- Add the new source to the `sources` field
+- Add a wikilink to the new atomic note or literature note
+- If the information expands or clarifies — add a paragraph with a reference to the source
+- If it contradicts — add a callout:
   ```
-  > [!warning] Противоречие: эта идея расходится с [[Новая заметка]]
+  > [!warning] Contradiction: this idea conflicts with [[New note]]
   ```
 
-### 5г. Обнови wiki-log.md
+### 5d. Update wiki-log.md
 
-Добавь запись в `_Система/wiki-log.md`:
+Add an entry to `_Система/wiki-log.md`:
 ```
-- [[YYYY-MM-DD]] Ингест: «Название источника» → N заметок создано, M обновлено
-```
-
----
-
-## Шаг 6. Финальный отчёт
-
-После создания файлов дай краткий отчёт:
-
-```
-✅ Создано:
-- [[Литературная заметка]]
-- [[Заметка А]]
-- [[Заметка Б]]
-
-🔄 Обновлено:
-- [[Существующая заметка]] — добавлен источник
-
-⚠️ Решения, которые стоит проверить:
-- «Заметка В» — я не нашёл похожей в базе, создал новую. Возможно, у тебя уже есть что-то
-  похожее под другим названием.
-- confidence выставил medium — у темы один источник
+- [[YYYY-MM-DD]] Ingest: "Source title" → N notes created, M updated
 ```
 
 ---
 
-## Правила, которые нельзя нарушать
+## Step 6. Final report
 
-- **Не удаляй исходный файл** — пользователь сам решит, что с ним делать
-- **Не переписывай существующие заметки с нуля** — только дополняй
-- **Не создавай «мёртвые» wikilinks** — ссылки только на реально существующие (или только
-  что созданные) заметки
-- **Не плоди теги** — используй существующую таксономию из `.agents/rules/tags.md`
-- **Не добавляй фронтматтер-поля, которых нет в шаблонах** — соблюдай консистентность
-- **Сохраняй авторский голос**: если в источнике живой разговорный текст — не превращай
-  заметки в сухую документацию
-- **Поле `sources` никогда не очищай** — только добавляй новые источники
+After creating the files, give a short report:
+
+```
+✅ Created:
+- [[Literature note]]
+- [[Note A]]
+- [[Note B]]
+
+🔄 Updated:
+- [[Existing note]] — source added
+
+⚠️ Decisions worth double-checking:
+- "Note C" — I couldn't find anything similar in the base, so I created a new one. You might
+  already have something similar under a different name.
+- Set confidence to medium — the topic has a single source
+```
 
 ---
 
-## Справка по размещению заметок в PARA
+## Rules that must not be broken
 
-| Тип | Папка |
+- **Don't delete the source file** — the user decides what to do with it
+- **Don't rewrite existing notes from scratch** — only add to them
+- **Don't create "dead" wikilinks** — links only to notes that actually exist (or were
+  just created)
+- **Don't multiply tags** — use the existing taxonomy from `.agents/rules/tags.md`
+- **Don't add frontmatter fields that aren't in the templates** — maintain consistency
+- **Preserve the author's voice**: if the source has a lively, conversational text — don't turn
+  the notes into dry documentation
+- **Never clear the `sources` field** — only add new sources
+
+---
+
+## Reference: where to place notes in PARA
+
+| Type | Folder |
 |-----|-------|
-| Литературная заметка (статья, книга, транскрипт) | `03. Ресурсы/03. Литературные заметки/` |
-| Атомарная мысль / концепт / инсайт | `03. Ресурсы/04. Заметки/` |
-| MOC / карта / синтез | `03. Ресурсы/07. Карты/` |
-| Если тема явно связана с проектом | `01. Проекты/[название проекта]/` |
+| Literature note (article, book, transcript) | `03. Ресурсы/03. Литературные заметки/` |
+| Atomic thought / concept / insight | `03. Ресурсы/04. Заметки/` |
+| MOC / map / synthesis | `03. Ресурсы/07. Карты/` |
+| If the topic is clearly tied to a project | `01. Проекты/[project name]/` |

@@ -1,108 +1,108 @@
 ---
 name: obsidian-inbox-review
-description: Анализ и ревью заметок из входящих (`00. Входящие`) — только осмотр и отчёт, без изменения файлов. Результат — список заметок с рекомендациями по категории и действию. Для фактической обработки (теги, связи, перемещение) используй obsidian-refactor-inbox.
+description: Analyze and review notes from the inbox (`00. Входящие`) — inspection and reporting only, no file changes. The output is a list of notes with recommendations for category and action. For actually processing them (tags, links, moving) use obsidian-refactor-inbox.
 ---
 
 # obsidian-inbox-review
 
-Только чтение и отчёт. Файлы не изменяются. Результат — структурированный список рекомендаций.
+Read-only, report only. Files are not modified. The output is a structured list of recommendations.
 
-Структура хранилища, теги и frontmatter — в `.agents/rules/` (`vault-struct.md`, `tags.md`, `note-types-frontmatter.md`).
+Vault structure, tags, and frontmatter — in `.agents/rules/` (`vault-struct.md`, `tags.md`, `note-types-frontmatter.md`).
 
-**Триггеры:** «разбери входящие», «inbox review», «что у меня в инбоксе», «помоги с #inbox/review», «сделай ревью заметок».
+**Triggers:** "go through the inbox", "inbox review", "what's in my inbox", "help with #inbox/review", "review my notes".
 
 ---
 
-## Алгоритм
+## Algorithm
 
-### 1. Сканирование
+### 1. Scan
 
 ```bash
-# Все заметки во входящих, по дате изменения (старые сначала)
+# All notes in the inbox, by modification date (oldest first)
 ls -t "00. Входящие/" | tac
 
-# Только с тегом #inbox/review
+# Only notes tagged #inbox/review
 rg -l "#inbox/review" "00. Входящие/"
 ```
 
-### 2. По каждой заметке — анализ (без изменений!)
+### 2. Analyze each note (no changes!)
 
-1. Прочитать содержимое
-2. Определить основную тему (одна заметка = одна тема)
-3. Проверить связи: есть ли wikilinks, упомянута ли в каких-то MOC
-4. Принять решение о категории
-5. Сформировать рекомендацию
+1. Read the content
+2. Determine the main topic (one note = one topic)
+3. Check links: are there wikilinks, is it mentioned in any MOC
+4. Decide on the category
+5. Formulate a recommendation
 
-### 3. Категоризация
+### 3. Categorization
 
-Структурный тег и папку выбирай по `.agents/rules/tags.md` (раздел «Структурные теги»). Сводная карта решений:
+Pick the structural tag and folder per `.agents/rules/tags.md` (the "Structural tags" section). Summary decision table:
 
-| Что в заметке | Тег | Папка |
+| What's in the note | Tag | Folder |
 |---------------|-----|-------|
-| Атомарная мысль / концепт | `#thought` | `03. Ресурсы/04. Заметки/` |
-| Карта / навигация | `#moc` | `03. Ресурсы/07. Карты/` |
-| Человек | `#person` | `02. Сферы/01. Люди/` |
-| Книга / статья / видео | `#book` / `#article` / `#video` | `03. Ресурсы/01–05` |
-| Литературная / цитата | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| Проект | `#project` | `01. Проекты/` |
-| Встреча / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
-| Конспект конференции | `#conference` | `02. Сферы/06. Конференции/` |
-| Дневник / рефлексия | `#journal/daily` | `05. Дневник/<год>/<месяц>/` |
-| Контент в канал | + `#telegram` или `#content` | `02. Сферы/05. Медийность/` |
-| Утратило актуальность | `#archive` | `04. Архив/` |
-| Дубль | — | объединить или пометить |
+| Atomic thought / concept | `#thought` | `03. Ресурсы/04. Заметки/` |
+| Map / navigation | `#moc` | `03. Ресурсы/07. Карты/` |
+| Person | `#person` | `02. Сферы/01. Люди/` |
+| Book / article / video | `#book` / `#article` / `#video` | `03. Ресурсы/01–05` |
+| Literature note / quote | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
+| Project | `#project` | `01. Проекты/` |
+| Meeting / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
+| Conference notes | `#conference` | `02. Сферы/06. Конференции/` |
+| Journal / reflection | `#journal/daily` | `05. Дневник/<year>/<month>/` |
+| Content for a channel | + `#telegram` or `#content` | `02. Сферы/05. Медийность/` |
+| No longer relevant | `#archive` | `04. Архив/` |
+| Duplicate | — | merge or flag |
 
-### 4. Приоритизация
+### 4. Prioritization
 
-Сначала разбирай:
-1. Заметки с явным wikilink на активные проекты
-2. Заметки с `TODO` / `#inbox/action`
-3. Свежие (последние 7 дней)
-4. Старые без связей (часто кандидаты в архив)
+Process in this order:
+1. Notes with an explicit wikilink to active projects
+2. Notes with `TODO` / `#inbox/action`
+3. Recent ones (last 7 days)
+4. Old ones with no links (often archive candidates)
 
 ---
 
-## Формат отчёта
+## Report format
 
 ```
-📥 Inbox: N заметок (M с тегом #inbox/review)
+📥 Inbox: N notes (M tagged #inbox/review)
 
-🎯 Высокий приоритет (связаны с активными проектами):
-  • [[Заметка А]] → #thought, 03. Ресурсы/04. Заметки/
-    Связана с [[Проект X]]; добавить в `up` ссылку на MOC.
+🎯 High priority (linked to active projects):
+  • [[Note A]] → #thought, 03. Ресурсы/04. Заметки/
+    Linked to [[Project X]]; add an `up` link to the MOC.
 
-  • [[Заметка Б]] → #meeting, 02. Сферы/03. Работа/
+  • [[Note B]] → #meeting, 02. Сферы/03. Работа/
 
-⚖️ Средний приоритет:
-  • [[Заметка В]] → нужна доработка темы, оставить в inbox
+⚖️ Medium priority:
+  • [[Note C]] → needs more work on the topic, leave in inbox
 
-❓ Требуют решения:
-  • [[Заметка Г]] — похоже на дубль [[Существующая заметка]]
-  • [[Заметка Д]] — тема непонятна, спросить пользователя
+❓ Needs a decision:
+  • [[Note D]] — looks like a duplicate of [[Existing note]]
+  • [[Note E]] — topic unclear, ask the user
 
-🗄 Кандидаты в архив:
-  • [[Старая заметка]] — нет связей, потеряла актуальность
+🗄 Archive candidates:
+  • [[Old note]] — no links, no longer relevant
 
-📊 Статистика: X к обработке, Y к архиву, Z неясных.
+📊 Stats: X to process, Y to archive, Z unclear.
 ```
 
-После отчёта — спроси, какие заметки обработать через `obsidian-refactor-inbox`.
+After the report, ask which notes to process via `obsidian-refactor-inbox`.
 
 ---
 
-## Ограничения
+## Constraints
 
-- Никаких изменений файлов на этом этапе
-- Не выдумывай связи — если похожих заметок нет, скажи об этом
-- Работай инкрементально — 10–15 заметок за итерацию
+- No file changes at this stage
+- Don't invent links — if there are no similar notes, say so
+- Work incrementally — 10–15 notes per iteration
 
 ---
 
-## Когда НЕ использовать
+## When NOT to use this
 
-| Ситуация | Используй вместо |
+| Situation | Use instead |
 |----------|-----------------|
-| Сразу обработать заметку (теги, связи, переместить) | `obsidian-refactor-inbox` |
-| Только обновить frontmatter без перемещения | `obsidian-enrich-note` |
-| Заметка большая и её нужно разбить | `obsidian-split-note` |
-| Создать карту по теме | `obsidian-note-canvas-map` |
+| Process the note right away (tags, links, move it) | `obsidian-refactor-inbox` |
+| Only update frontmatter without moving | `obsidian-enrich-note` |
+| The note is large and needs to be split | `obsidian-split-note` |
+| Create a map for a topic | `obsidian-note-canvas-map` |

@@ -1,52 +1,52 @@
-# Стиль текста, язык и внутренние ссылки
+# Text style, language, and internal links
 
-## Стиль текста и язык
+## Text style and language
 
-### Делай
+### Do
 
-- Пиши на **русском языке** — это основной язык хранилища
-- Сохраняй **личный тон** и перспективу автора, не превращай заметки в формальную документацию
-- Используй **краткие, ёмкие формулировки** — это личная база знаний, а не учебник
-- Оставляй технические термины на английском: `Dataview`, `MOC`, `SRE`, `DevOps`, `plugin`, `Kubernetes`, `Prometheus`
-- Используй Markdown-разметку: заголовки, списки, callout-блоки
-- Сохраняй существующую иерархию заголовков (`##`, `###`, `####`)
-- Один основной топик на заметку
+- Write in **Russian** — that's the vault's primary language
+- Preserve the author's **personal tone** and perspective, don't turn notes into formal documentation
+- Use **brief, concise wording** — this is a personal knowledge base, not a textbook
+- Leave technical terms in English: `Dataview`, `MOC`, `SRE`, `DevOps`, `plugin`, `Kubernetes`, `Prometheus`
+- Use Markdown formatting: headings, lists, callout blocks
+- Preserve the existing heading hierarchy (`##`, `###`, `####`)
+- One main topic per note
 
-### Не делай
+### Don't
 
-- Не переводи названия плагинов, команд, путей, тегов
-- Не превращай личные заметки в Wikipedia-статьи или официальную документацию
-- Не добавляй «воду» и вступительные абзацы, которых нет в оригинале
-- Не меняй авторский стиль на канцелярский или академический
-- Не используй обращения на «вы» — в заметках допустимо «ты» или безличные конструкции
+- Don't translate plugin names, commands, paths, or tags
+- Don't turn personal notes into Wikipedia articles or official documentation
+- Don't add "filler" or introductory paragraphs that aren't in the original
+- Don't change the author's style to a bureaucratic or academic one
+- Don't use formal address — informal address or impersonal constructions are fine in notes
 
-## Внутренние ссылки (Wikilinks)
+## Internal links (Wikilinks)
 
-### Делай
+### Do
 
-- Используй **wikilinks** (`[[Название заметки]]`) для всех связей между заметками
-- Ставь ссылки на уже существующие заметки там, где упоминаются их темы
-- При создании новой заметки — ставь ссылку на неё из родительской заметки или MOC
-- При переименовании заметки — обновляй входящие ссылки (backlinks), если пользователь просит
-- Используй алиасы через `[[Заметка|отображаемый текст]]`, когда это улучшает читаемость
-- В frontmatter используй поля `up: []`, `down: []`, `links: []`, `other: []` для явных связей:
-    - `up` — родительские заметки (от частного к общему)
-    - `down` — дочерние заметки (от общего к частному)
-    - `links` — только ссылки на веб-ресурсы
-    - `other` — горизонтальные связи (похожие темы) и прочие ассоциации
+- Use **wikilinks** (`[[Note name]]`) for all connections between notes
+- Link to existing notes wherever their topics are mentioned
+- When creating a new note — link to it from the parent note or MOC
+- When renaming a note — update the incoming links (backlinks), if the user asks
+- Use aliases via `[[Note|display text]]` when it improves readability
+- In frontmatter, use the `up: []`, `down: []`, `links: []`, `other: []` fields for explicit connections:
+    - `up` — parent notes (specific to general)
+    - `down` — child notes (general to specific)
+    - `links` — web links only
+    - `other` — horizontal connections (similar topics) and other associations
 
-### Не делай
+### Don't
 
-- Не создавай «мёртвые» ссылки на несуществующие заметки без явного намерения пользователя
-- Не удаляй существующие ссылки — они часть графа знаний
-- Не ставь ссылки на каждое второе слово — ссылай только то, что действительно связано
+- Don't create "dead" links to nonexistent notes without the user's explicit intent
+- Don't remove existing links — they're part of the knowledge graph
+- Don't link every other word — link only what's genuinely related
 
-## Правила форматирования Markdown
+## Markdown formatting rules
 
-Настроены в `.markdownlint.yaml`:
+Configured in `.markdownlint.yaml`:
 
-- Стиль заголовков — **ATX** (`## Заголовок`, не `Заголовок\n===`)
-- Отступ в списках — **4 пробела**
-- Жёсткие табуляции разрешены (`no-hard-tabs: false`)
-- Ограничение длины строки отключено (3600 символов — фактически нет)
-- MD041 отключён — первый элемент файла не обязан быть заголовком h1 (из-за frontmatter)
+- Heading style — **ATX** (`## Heading`, not `Heading\n===`)
+- List indentation — **4 spaces**
+- Hard tabs allowed (`no-hard-tabs: false`)
+- Line-length limit disabled (3600 characters — effectively none)
+- MD041 disabled — the file's first element doesn't have to be an h1 heading (because of frontmatter)

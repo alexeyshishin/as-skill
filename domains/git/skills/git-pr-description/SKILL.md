@@ -1,29 +1,29 @@
 ---
 name: git-pr-description
 description: >
-  Формирует описание Pull Request из diff текущей ветки относительно базовой
-  (main/master). Анализирует все коммиты, выделяет «зачем / что / как проверить»,
-  фиксирует breaking changes. Используй, когда пользователь хочет «описать PR»,
-  «сделать описание для пуллреквеста», «оформить PR», «запушить и открыть PR»,
-  «сгенерируй PR description».
+  Builds a Pull Request description from the diff of the current branch against
+  the base branch (main/master). Analyzes all commits, extracts "why / what / how
+  to verify", captures breaking changes. Use when the user wants to "describe the
+  PR", "write a description for the pull request", "put together a PR", "push and
+  open a PR", "generate a PR description".
 ---
 
-# git-pr-description — Описание PR из diff ветки
+# git-pr-description — PR description from a branch diff
 
-Цель: дать пользователю готовое описание PR в один шаг — анализ коммитов и diff ветки против базовой ветки.
+Goal: give the user a ready-made PR description in one step — analysis of the branch's commits and diff against the base branch.
 
-Перед началом прочитай `~/.claude/rules/git-conventions.md` — раздел про структуру PR.
+Before starting, read `~/.claude/rules/git-conventions.md` — the section on PR structure.
 
-## Шаг 1. Определи базовую ветку и текущую
+## Step 1. Determine the base branch and the current one
 
 ```
 git branch --show-current
 git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
 ```
 
-Если `origin/HEAD` не определена — спроси пользователя: `main` или `master`. Запомни как `BASE`.
+If `origin/HEAD` is not determined — ask the user: `main` or `master`. Store it as `BASE`.
 
-## Шаг 2. Собери материал
+## Step 2. Gather the material
 
 ```
 git log $BASE..HEAD --oneline
@@ -32,60 +32,60 @@ git diff $BASE...HEAD --stat
 git diff $BASE...HEAD
 ```
 
-Изучи, что менялось: список файлов, размер изменений, тексты коммитов.
+Study what changed: the file list, the size of the changes, the commit texts.
 
-## Шаг 3. Сформируй заголовок PR
+## Step 3. Build the PR title
 
-Заголовок — Conventional Commit для предполагаемого merge-коммита:
-- если все коммиты ветки `feat` — `feat(<scope>): <общая фича>`
-- если только `fix` — `fix(<scope>): <что починили>`
-- если разные — выбери доминирующий type
+The title is a Conventional Commit for the intended merge commit:
+- if all commits on the branch are `feat` — `feat(<scope>): <overall feature>`
+- if only `fix` — `fix(<scope>): <what was fixed>`
+- if mixed — pick the dominant type
 
-## Шаг 4. Сформируй описание
+## Step 4. Build the description
 
-Структура (markdown):
+Structure (markdown):
 
 ```markdown
-## Зачем
+## Why
 
-<1-2 предложения: какая проблема решается, чья боль, ссылки на issue/тикет>
+<1-2 sentences: what problem is being solved, whose pain, links to the issue/ticket>
 
-## Что изменилось
+## What changed
 
-- <буллет по логическому изменению, не по файлу>
-- <ещё один>
-- <ещё>
+- <bullet per logical change, not per file>
+- <another one>
+- <another>
 
-## Как проверить
+## How to verify
 
-<либо шаги для ручной проверки, либо «покрыто новыми тестами в X», либо «smoke в стейджинге»>
+<either manual verification steps, or "covered by new tests in X", or "smoke-tested on staging">
 
-## Риски / breaking changes
+## Risks / breaking changes
 
-<либо «нет», либо явный список с миграцией>
+<either "none", or an explicit list with migration steps>
 
 Closes #N
 ```
 
-## Шаг 5. Покажи и спроси
+## Step 5. Show and ask
 
-Покажи заголовок и описание в блоке. Спроси:
-1. Принять
-2. Поправить (что именно)
-3. Добавить чего-то (тесты, screenshots, migration plan)
+Show the title and description in a block. Ask:
+1. Accept
+2. Adjust (specify what)
+3. Add something (tests, screenshots, migration plan)
 
-## Шаг 6. Опубликуй (опционально)
+## Step 6. Publish (optional)
 
-Если пользователь подтвердил и хочет открыть PR прямо сейчас:
-- проверь, есть ли `gh` CLI: `which gh`
-- если есть — `gh pr create --title "..." --body-file <tmp>` с подготовленным телом
-- если нет — скажи, что нужно либо `gh` поставить, либо открыть PR через UI и вставить описание
+If the user has confirmed and wants to open the PR right now:
+- check whether the `gh` CLI is available: `which gh`
+- if yes — `gh pr create --title "..." --body-file <tmp>` with the prepared body
+- if not — say they need to either install `gh` or open the PR via the UI and paste in the description
 
-**Не пушь ветку самостоятельно**, если она ещё не запушена. Покажи пользователю команду `git push -u origin <branch>` и дай ему решить.
+**Don't push the branch yourself** if it hasn't been pushed yet. Show the user the `git push -u origin <branch>` command and let them decide.
 
-## Чего не делать
+## What not to do
 
-- Не дублируй subject коммита в «Что изменилось» — это не log, это саммари
-- Не пиши «Что изменилось: добавил X, удалил Y, обновил Z» — это видно из diff. Пиши на уровне причин.
-- Не выдумывай тестовые сценарии — если не уверен, как проверить, спроси
-- Не клейми пользователя за плохие коммиты — просто аккуратно сложи их в описание
+- Don't duplicate commit subjects in "What changed" — this is not a log, it's a summary
+- Don't write "What changed: added X, removed Y, updated Z" — that's visible from the diff. Write at the level of reasons.
+- Don't invent test scenarios — if unsure how to verify, ask
+- Don't blame the user for bad commits — just neatly fold them into the description

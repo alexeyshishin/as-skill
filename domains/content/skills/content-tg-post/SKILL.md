@@ -1,93 +1,93 @@
 ---
 name: content-tg-post
 description: >
-  Превращает идею, заметку или сырой текст в готовый пост для Telegram-канала —
-  плотный, с тезисом первым, авторским голосом, в пределах 500-1500 символов.
-  Используй, когда пользователь хочет «написать пост в тг», «оформить мысль для
-  канала», «короткий пост», «tg-пост», «оформить идею для подписчиков».
+  Turns an idea, a note, or raw text into a ready-to-post Telegram channel
+  post — tight, thesis-first, in the author's voice, within 500-1500
+  characters. Use when the user wants "write a TG post," "shape this thought
+  for the channel," "short post," "tg post," "shape an idea for subscribers."
 ---
 
-# content-tg-post — Пост для Telegram-канала
+# content-tg-post — Telegram channel post
 
-Цель: взять идею или сырой текст и сделать из него **один** Telegram-пост, который хочется дочитать.
+Goal: take an idea or raw text and turn it into **one** Telegram post that people want to read to the end.
 
-Перед началом прочитай:
-- `~/.claude/rules/content-voice.md` — авторский голос (обращение «ты», не Wikipedia)
-- `~/.claude/rules/content-formatting.md` — раздел Telegram
+Before starting, read:
+- `~/.claude/rules/content-voice.md` — authorial voice (informal "you," not Wikipedia)
+- `~/.claude/rules/content-formatting.md` — the Telegram section
 
-## Шаг 1. Пойми материал
+## Step 1. Understand the material
 
-Спроси (или возьми из контекста):
-- **исходник**: идея в одну фразу, заметка из Obsidian, draft, тезисы
-- **тема канала** (если ещё не знаешь): технический, личный, смешанный
-- **формат поста**: тезис / разбор / личная история / разбор инцидента / краткий how-to
+Ask (or pull from context):
+- **the source**: an idea in one phrase, a note from Obsidian, a draft, bullet points
+- **the channel's theme** (if not already known): technical, personal, mixed
+- **the post format**: a thesis / a breakdown / a personal story / an incident post-mortem / a brief how-to
 
-Если материала недостаточно для поста — **остановись и попроси конкретику**: «недостаточно для поста, нужен пример из практики или числа».
+If there isn't enough material for a post — **stop and ask for specifics**: "there isn't enough for a post, I need a real-world example or some numbers."
 
-## Шаг 2. Найди тезис
+## Step 2. Find the thesis
 
-Один пост = один тезис. Спроси себя:
-- что я хочу, чтобы читатель вынес?
-- если он прочтёт только первое предложение — он получит главное?
+One post = one thesis. Ask yourself:
+- what do I want the reader to walk away with?
+- if they only read the first sentence, will they get the main point?
 
-Сформулируй тезис в одну фразу. Это первая строка поста.
+Formulate the thesis in one phrase. This is the post's first line.
 
-## Шаг 3. Сложи структуру
+## Step 3. Build the structure
 
-Стандартная структура поста на 500-1500 символов:
+Standard structure for a 500-1500 character post:
 
 ```
-<Крючок / тезис — 1 предложение>
+<Hook / thesis — 1 sentence>
 
-<Контекст или развёртывание тезиса — 2-4 предложения>
+<Context or expansion of the thesis — 2-4 sentences>
 
-<Конкретика: пример, число, код, история — обязательно>
+<Specifics: an example, a number, code, a story — mandatory>
 
-<Следствие / вывод / вопрос — 1-2 предложения, или отсутствует>
+<Implication / conclusion / question — 1-2 sentences, or none at all>
 ```
 
-Каждый блок — отдельный абзац, разделённый пустой строкой.
+Each block is a separate paragraph, separated by a blank line.
 
-## Шаг 4. Напиши
+## Step 4. Write it
 
-Применяя `content-voice.md`:
-- никаких «дорогих читателей» и «представляет собой»
-- ноль ИИ-штампов («давайте погрузимся», «в этой статье»)
-- конкретика > обобщения
-- короткие предложения, короткие абзацы
+Applying `content-voice.md`:
+- no "dear readers" and no "represents"
+- zero AI clichés ("let's dive in," "in this article")
+- specifics > generalizations
+- short sentences, short paragraphs
 
-Применяя `content-formatting.md`:
-- технические термины в `backticks`
-- code blocks с указанием языка
-- никаких заголовков `#` — Telegram их не рендерит
-- символы для MarkdownV2 (или используй HTML-форматирование, если канал поддерживает)
+Applying `content-formatting.md`:
+- technical terms in `backticks`
+- code blocks with a language tag
+- no `#` headings — Telegram doesn't render them
+- MarkdownV2 escape characters (or use HTML formatting if the channel supports it)
 
-## Шаг 5. Самопроверка
+## Step 5. Self-check
 
-Прежде чем показать пользователю:
-- **длина** — в диапазоне 500-1500? Если больше — режь. Если меньше — может, это твит, а не пост.
-- **тезис в первой строке** — если убрать первые 1-3 предложения, теряется ли смысл? Если нет — выкидывай вступление.
-- **конкретика** — есть ли хоть один пример / число / команда / ссылка?
-- **личность** — мог это написать любой? Если да — добавь личное наблюдение.
-- **финал** — он есть в принципе? Или текст обрывается? Оба варианта ок, главное — не «таким образом».
+Before showing it to the user:
+- **length** — within the 500-1500 range? If longer — cut it. If shorter — maybe it's a tweet, not a post.
+- **thesis in the first line** — if you remove the first 1-3 sentences, is meaning lost? If not — cut the intro.
+- **specifics** — is there at least one example / number / command / link?
+- **personality** — could anyone have written this? If so — add a personal observation.
+- **ending** — does it have one at all? Or does the text just cut off? Either is fine, as long as it's not "thus."
 
-## Шаг 6. Покажи и спроси
+## Step 6. Show it and ask
 
-Покажи пост в блоке (как он будет выглядеть в Telegram, без меты). Под ним:
-- длина: X символов
-- проверки: ✓ тезис первым / ✓ конкретика / ✓ голос ок
+Show the post in a block (how it will look in Telegram, without metadata). Below it:
+- length: X characters
+- checks: ✓ thesis first / ✓ specifics / ✓ voice ok
 
-Спроси:
-1. Принять
-2. Сократить (если близко к 1500)
-3. Усилить тезис
-4. Добавить конкретики
-5. Сделать варианты заголовка/хука
+Ask:
+1. Accept
+2. Trim it (if close to 1500)
+3. Strengthen the thesis
+4. Add more specifics
+5. Produce variants of the title/hook
 
-## Чего не делать
+## What not to do
 
-- не делай посты длиннее 1500 символов «потому что есть что сказать» — разбей на серию
-- не используй эмодзи как буллет-маркеры
-- не выдумывай числа и примеры — если у пользователя их нет, спроси
-- не клей в один пост 2 тезиса — это всегда хуже, чем 2 разных поста
-- не пиши «как уже писал ранее» — Telegram нелинеен, читатель мог не видеть предыдущий пост
+- don't write posts longer than 1500 characters "because there's a lot to say" — split into a series
+- don't use emoji as bullet markers
+- don't invent numbers and examples — if the user doesn't have them, ask
+- don't glue 2 theses into one post — that's always worse than 2 separate posts
+- don't write "as I wrote before" — Telegram is non-linear, the reader may not have seen the previous post

@@ -3,141 +3,141 @@ id: template-usage
 aliases: []
 tags: []
 ---
-# Правила выбора и использования шаблонов
+# Rules for choosing and using templates
 
-Шаблоны лежат в `_Система/1. Шаблоны/`. Всегда создавай заметку через шаблон, а не «с нуля» — это обеспечивает консистентный frontmatter.
+Templates live in `_Система/1. Шаблоны/`. Always create a note from a template, not "from scratch" — this ensures consistent frontmatter.
 
 ---
 
-## Как выбрать шаблон
+## How to choose a template
 
-### Что именно ты хочешь зафиксировать?
+### What exactly are you trying to capture?
 
-| Ситуация | Шаблон |
+| Situation | Template |
 |----------|--------|
-| Прочитал книгу | `Шаблон тезисов по книге.md` |
-| Посмотрел видео / доклад с YouTube | `Шаблон тезисов по видео.md` |
-| Прочитал статью / пост / RFC | `Шаблон тезисов по статье.md` |
-| Был на докладе вживую / смотрел запись | `Шаблон тезисов по докладу.md` |
-| Прослушал лекцию (курс, обучение) | `Конспект по лекции.md` |
-| Конкретная цитата из источника | `Шаблон литературной цитаты.md` |
-| Мысль / инсайт (личный, из головы) | `Шаблон мысли.md` |
-| Сырая идея, не оформилась | `Шаблон идея.md` |
-| Термин, модель, фреймворк, концепция | `Шаблон концепта.md` |
-| Проект (работа, личное, обучение) | `Шаблон проекта.md` |
-| Карта знаний по теме (5+ заметок) | `Шаблон карты.md` |
-| Профиль человека / контакта | `Шаблон человека.md` |
-| Черновик поста для Telegram-канала | `Черновик поста.md` |
-| Эссе / развёрнутый разбор темы | `Шаблон эссе.md` |
-| Конспект встречи или созвона | `Созвон или встреча.md` |
-| Конференция (несколько докладов) | `Обзор конференции.md` |
-| Ревью прогресса по цели | `Шаблон селф-ревью по цели.md` |
-| Инцидент / постмортем | `Шаблон инцидента.md` |
-| Архитектурное решение (ADR) | `Шаблон ADR.md` |
-| Ежедневная запись | `Ежедневная заметка.md` |
-| Итоги недели | `Еженедельная заметка.md` |
-| Итоги месяца | `Ежемесячная заметка.md` |
-| Итоги года | `Ежегодная заметка.md` |
-| Быстрая запись (привычка, метрика) | `Шаблон микропрогресса.md` |
+| Read a book | `Шаблон тезисов по книге.md` |
+| Watched a video / talk from YouTube | `Шаблон тезисов по видео.md` |
+| Read an article / post / RFC | `Шаблон тезисов по статье.md` |
+| Attended a talk live / watched a recording | `Шаблон тезисов по докладу.md` |
+| Attended a lecture (course, coursework) | `Конспект по лекции.md` |
+| A specific quote from a source | `Шаблон литературной цитаты.md` |
+| A thought / insight (personal, from your own head) | `Шаблон мысли.md` |
+| A raw idea, not yet fully formed | `Шаблон идея.md` |
+| A term, model, framework, concept | `Шаблон концепта.md` |
+| A project (work, personal, education) | `Шаблон проекта.md` |
+| A knowledge map for a topic (5+ notes) | `Шаблон карты.md` |
+| A profile of a person / contact | `Шаблон человека.md` |
+| A draft post for the Telegram channel | `Черновик поста.md` |
+| An essay / in-depth treatment of a topic | `Шаблон эссе.md` |
+| Notes from a meeting or call | `Созвон или встреча.md` |
+| A conference (multiple talks) | `Обзор конференции.md` |
+| A progress review against a goal | `Шаблон селф-ревью по цели.md` |
+| An incident / postmortem | `Шаблон инцидента.md` |
+| An architectural decision (ADR) | `Шаблон ADR.md` |
+| A daily entry | `Ежедневная заметка.md` |
+| A weekly summary | `Еженедельная заметка.md` |
+| A monthly summary | `Ежемесячная заметка.md` |
+| A yearly summary | `Ежегодная заметка.md` |
+| A quick entry (habit, metric) | `Шаблон микропрогресса.md` |
 
 ---
 
-## Разграничение похожих шаблонов
+## Distinguishing similar templates
 
-### Мысль vs Идея vs Концепт
+### Thought vs. Idea vs. Concept
 
 | | `Шаблон мысли.md` | `Шаблон идея.md` | `Шаблон концепта.md` |
 |--|-------------------|-----------------|----------------------|
-| **Тег** | `thought` | `fleeting` + `inbox/review` | `concept` |
-| **Суть** | Личный инсайт, оформленный | Сырая, ещё не осмысленная | Модель / термин / фреймворк |
-| **Источник** | Из головы | Из головы, «не потерять» | Из источника или практики |
-| **Что дальше** | Связать с MOC или проектом | Обработать → превратить в мысль или концепт | Пополнять через `sources` |
-| **confidence** | `low` (личное мнение) | не указывается | `medium` / `high` |
+| **Tag** | `thought` | `fleeting` + `inbox/review` | `concept` |
+| **Nature** | A personal insight, already formed | Raw, not yet thought through | A model / term / framework |
+| **Source** | From your own head | From your own head, "don't lose this" | From a source or practice |
+| **What's next** | Link to a MOC or project | Process → turn into a thought or concept | Grow it via `sources` |
+| **confidence** | `low` (personal opinion) | not specified | `medium` / `high` |
 
-**Правило:** сомневаешься — создай `Шаблон идея.md` с тегом `inbox/review`, потом разберёшься при обработке inbox.
+**Rule:** when in doubt, create a `Шаблон идея.md` tagged `inbox/review`, and sort it out later during inbox processing.
 
-### Тезисы по источнику vs Литературная заметка
+### Source takeaways vs. Literature note
 
-- `Шаблон тезисов по X.md` — верхнеуровневая заметка на весь источник (книга, статья, видео). Одна на источник.
-- `Литературная.md` — конкретная цитата или идея из источника. Может быть несколько на один источник.
+- `Шаблон тезисов по X.md` — a top-level note covering the whole source (book, article, video). One per source.
+- `Литературная.md` — a specific quote or idea from the source. There can be several per source.
 
-Связь: из тезисов ссылайся на литературные заметки через `down`, из литературных — `up` на тезисы.
+Connection: from the takeaways note, link to literature notes via `down`; from literature notes, `up` points to the takeaways note.
 
-### Доклад vs Конференция
+### Talk vs. Conference
 
-- `Шаблон тезисов по докладу.md` — один доклад, один спикер.
-- `Обзор конференции.md` — вся конференция как событие. Содержит ссылки на заметки по отдельным докладам через `## Посетил следующие доклады`.
+- `Шаблон тезисов по докладу.md` — one talk, one speaker.
+- `Обзор конференции.md` — the whole conference as an event. Contains links to individual talk notes via `## Посетил следующие доклады`.
 
-### Карта vs Топик
+### Map vs. Topic
 
-- `Шаблон карты.md` (`MapOfContent`) — навигационная точка входа по теме, содержит **ссылки** на заметки.
-- `Шаблон топика.md` — тема для изучения, ещё не ставшая MOC. Используй на старте, когда заметок меньше пяти.
+- `Шаблон карты.md` (`MapOfContent`) — a navigational entry point for a topic, containing **links** to notes.
+- `Шаблон топика.md` — a topic being studied that hasn't become a MOC yet. Use it at the start, when there are fewer than five notes.
 
-Переход: когда у топика накопилось 5+ связанных заметок — преврати его в карту.
-
----
-
-## Правила заполнения шаблонов
-
-### Обязательно при создании любой заметки
-
-1. Заполни `aliases` — хотя бы синонимы или сокращения названия
-2. Укажи `up` — к чему относится заметка (MOC, проект, область)
-3. Поставь правильный тег из таксономии (см. `tags.md`)
-
-### Поле `confidence`
-
-Обязательно для: `Шаблон мысли.md`, `Шаблон концепта.md`, `Литературная.md`, `Шаблон тезисов по книге.md` и аналогичных.
-
-- `low` — единственный источник или личное мнение без проверки
-- `medium` — есть источник, но мало примеров
-- `high` — подтверждено двумя независимыми источниками или личным опытом
-
-Не ставь `high` без оснований — лучше `medium` с пометкой, чем завышенная уверенность.
-
-### Поле `sources`
-
-Никогда не очищай. Только добавляй новые источники. Формат — wikilinks на заметки-тезисы или внешние ссылки.
-
-### Поле `status` (проекты, тезисы, черновики)
-
-| Значение | Когда |
-|----------|-------|
-| `Todo` | Только создано, ещё не начато |
-| `WIP` | В работе |
-| `Done` | Завершено |
+Transition: once a topic has accumulated 5+ related notes — turn it into a map.
 
 ---
 
-## Журнальные заметки: когда создавать
+## Rules for filling in templates
 
-| Шаблон | Когда создавать |
+### Required when creating any note
+
+1. Fill in `aliases` — at least synonyms or abbreviations of the title
+2. Specify `up` — what the note relates to (a MOC, project, area)
+3. Set the correct tag from the taxonomy (see `tags.md`)
+
+### The `confidence` field
+
+Required for: `Шаблон мысли.md`, `Шаблон концепта.md`, `Литературная.md`, `Шаблон тезисов по книге.md`, and similar templates.
+
+- `low` — a single source or a personal opinion without verification
+- `medium` — there's a source, but few examples
+- `high` — confirmed by two independent sources or personal experience
+
+Don't set `high` without grounds — better `medium` with a note than overstated confidence.
+
+### The `sources` field
+
+Never clear it. Only add new sources. Format — wikilinks to takeaway notes or external links.
+
+### The `status` field (projects, takeaways, drafts)
+
+| Value | When |
+|----------|------|
+| `Todo` | Just created, not started yet |
+| `WIP` | In progress |
+| `Done` | Completed |
+
+---
+
+## Journal notes: when to create them
+
+| Template | When to create |
 |--------|----------------|
-| `Ежедневная заметка.md` | Каждый день, автоматически через Templater |
-| `Еженедельная заметка.md` | В начале недели или в воскресенье вечером |
-| `Ежемесячная заметка.md` | В начале месяца |
-| `Ежегодная заметка.md` | В начале года или 31 декабря |
+| `Ежедневная заметка.md` | Every day, automatically via Templater |
+| `Еженедельная заметка.md` | At the start of the week or Sunday evening |
+| `Ежемесячная заметка.md` | At the start of the month |
+| `Ежегодная заметка.md` | At the start of the year, or on December 31 |
 
-Не создавай задним числом, если записывать уже нечего — лучше пропустить.
-
----
-
-## Инцидент / постмортем
-
-`Шаблон инцидента.md` — для фиксации разборов инцидентов. Заполняй **по горячему следу** (в течение 24–48 часов после инцидента), пока детали свежи.
-
-Обязательные поля:
-
-- `severity` — P1/P2/P3 или Critical/Major/Minor
-- `date` — дата инцидента (не дата написания заметки)
-- `status: Done` — только после написания выводов и action items
-
-Связывай с проектом или сервисом через `up`. Action items переноси в трекер задач или добавляй как чеклист в соответствующий проект.
+Don't create these retroactively if there's nothing left to record — better to skip.
 
 ---
 
-## Что не нужно создавать через шаблон
+## Incident / postmortem
 
-- Разделы внутри других заметок (`##`-блоки)
-- Ссылки-заглушки (`[[Несуществующая заметка]]`)
-- Временные черновики в `00. Входящие/` — они создаются в свободной форме и обрабатываются позже
+`Шаблон инцидента.md` — for recording incident retrospectives. Fill it in **while things are fresh** (within 24–48 hours of the incident), while details are still vivid.
+
+Required fields:
+
+- `severity` — P1/P2/P3 or Critical/Major/Minor
+- `date` — the date of the incident (not the date the note was written)
+- `status: Done` — only after the conclusions and action items are written up
+
+Link to the project or service via `up`. Move action items to the task tracker, or add them as a checklist in the corresponding project.
+
+---
+
+## What not to create via a template
+
+- Sections within other notes (`##` blocks)
+- Placeholder links (`[[Nonexistent note]]`)
+- Temporary drafts in `00. Входящие/` — these are created freeform and processed later

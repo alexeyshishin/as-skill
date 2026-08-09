@@ -1,83 +1,83 @@
 # git-conventions
 
-Базовые конвенции для всех git-операций bear-skills. Скиллы домена `git` ссылаются на этот файл как `~/.claude/rules/git-conventions.md`.
+Base conventions for all git operations of bear-skills. Skills in the `git` domain reference this file as `~/.claude/rules/git-conventions.md`.
 
 ## Conventional Commits
 
-Формат: `<type>(<scope>)?: <subject>` — на английском, в нижнем регистре, без точки в конце, не длиннее 72 символов.
+Format: `<type>(<scope>)?: <subject>` — in English, lowercase, no trailing period, no longer than 72 characters.
 
-Допустимые `type`:
+Allowed `type` values:
 
-| type | назначение |
+| type | purpose |
 |------|-----------|
-| `feat` | новая функциональность для пользователя |
-| `fix` | исправление бага |
-| `refactor` | изменение кода без изменения поведения |
-| `perf` | оптимизация |
-| `docs` | только документация |
-| `test` | только тесты |
-| `build` | сборка, зависимости, CI |
-| `ci` | конфигурация CI |
-| `chore` | техобслуживание, не попадающее в другие категории |
-| `revert` | откат |
+| `feat` | new functionality for the user |
+| `fix` | bug fix |
+| `refactor` | code change with no behavior change |
+| `perf` | performance optimization |
+| `docs` | documentation only |
+| `test` | tests only |
+| `build` | build, dependencies, CI |
+| `ci` | CI configuration |
+| `chore` | maintenance that doesn't fall into other categories |
+| `revert` | revert |
 
-`scope` — короткое имя модуля/SDK/папки (`sdk-go`, `cli`, `auth`). Если scope нет — опускается вместе со скобками.
+`scope` — a short name for the module/SDK/folder (`sdk-go`, `cli`, `auth`). If there's no scope — omit it along with the parentheses.
 
-Тело commit-сообщения (опционально, после пустой строки):
-- что и зачем — на русском или английском, по контексту проекта
-- breaking change — `BREAKING CHANGE:` в футере или `!` после type/scope (`feat!:`, `feat(api)!:`)
-- ссылки на issue — `Refs: #123` или `Closes: #123` в футере
+Commit message body (optional, after a blank line):
+- what and why — in Russian or English, depending on the project's context
+- breaking change — `BREAKING CHANGE:` in the footer, or `!` after type/scope (`feat!:`, `feat(api)!:`)
+- issue references — `Refs: #123` or `Closes: #123` in the footer
 
-Примеры:
+Examples:
 ```
-feat(sdk-go): добавить ретраи для idempotent-запросов
-fix: исправить race condition в startup
-refactor(auth): вынести проверку токена в отдельный middleware
-docs(readme): обновить пример установки
-chore(deps): обновить express до 4.19
+feat(sdk-go): add retries for idempotent requests
+fix: fix race condition in startup
+refactor(auth): extract token validation into a separate middleware
+docs(readme): update installation example
+chore(deps): update express to 4.19
 ```
 
-## Имена веток
+## Branch names
 
-- `feature/<short-desc>` — новая функциональность
-- `fix/<short-desc>` или `bugfix/<short-desc>` — исправление
-- `hotfix/<short-desc>` — срочное в прод
-- `chore/<short-desc>` — техническое
-- `docs/<short-desc>` — только документация
-- `release/<version>` — релизная ветка (если используется release-train)
+- `feature/<short-desc>` — new functionality
+- `fix/<short-desc>` or `bugfix/<short-desc>` — bug fix
+- `hotfix/<short-desc>` — urgent production fix
+- `chore/<short-desc>` — technical/maintenance
+- `docs/<short-desc>` — documentation only
+- `release/<version>` — release branch (if using a release train)
 
-Описание в kebab-case, латиница, не длиннее 50 символов. Если есть тикет — добавь в конце: `feature/oauth-pkce-PROJ-1234`.
+Description in kebab-case, Latin script, no longer than 50 characters. If there's a ticket — append it at the end: `feature/oauth-pkce-PROJ-1234`.
 
 ## Pull Request
 
-- заголовок PR — Conventional Commit для merge-коммита (`feat(sdk-go): retries for idempotent`)
-- описание содержит:
-  - **Зачем** — мотивация в 1-2 предложениях
-  - **Что изменилось** — буллеты по слоям/компонентам
-  - **Как проверить** — шаги для ручной проверки или ссылка на тесты
-  - **Riски / breaking changes** — отдельно, если применимо
-- линковка с issue (`Closes #N`)
-- ревьюер — минимум один; если код сложный или breaking — двое
+- PR title — a Conventional Commit for the merge commit (`feat(sdk-go): retries for idempotent`)
+- description contains:
+  - **Why** — motivation in 1-2 sentences
+  - **What changed** — bullets by layer/component
+  - **How to verify** — manual verification steps or a link to tests
+  - **Risks / breaking changes** — separately, if applicable
+- linked to the issue (`Closes #N`)
+- reviewer — at least one; if the code is complex or breaking — two
 
-## Semver и теги
+## Semver and tags
 
-Версионирование строго по semver: `MAJOR.MINOR.PATCH`.
+Versioning strictly follows semver: `MAJOR.MINOR.PATCH`.
 
-- **PATCH** — `fix`, `perf`, `docs`, `refactor` без изменения публичного API
-- **MINOR** — `feat`, который не ломает совместимость
-- **MAJOR** — любой breaking change
+- **PATCH** — `fix`, `perf`, `docs`, `refactor` with no public API change
+- **MINOR** — `feat` that doesn't break compatibility
+- **MAJOR** — any breaking change
 
-До `v1.0.0` breaking change идёт в MINOR, а не в MAJOR.
+Before `v1.0.0`, a breaking change goes into MINOR, not MAJOR.
 
-Формат тега — `v<MAJOR>.<MINOR>.<PATCH>` (например, `v1.4.2`). В монорепо с несколькими SDK: `<sdk>/v<X>.<Y>.<Z>` (например, `sdk-go/v0.3.1`). Такой формат требует Go: путь тега должен совпадать с путём модуля от корня репозитория, иначе `go get` не найдёт модуль в поддиректории. Остальные пакеты следуют тому же формату для единообразия.
+Tag format — `v<MAJOR>.<MINOR>.<PATCH>` (e.g. `v1.4.2`). In a monorepo with multiple SDKs: `<sdk>/v<X>.<Y>.<Z>` (e.g. `sdk-go/v0.3.1`). This format is required for Go: the tag path must match the module path from the repo root, otherwise `go get` won't find the module in the subdirectory. Other packages follow the same format for consistency.
 
-В монорепо каждый пакет версионируется независимо: breaking change в одном SDK не двигает версии соседних. Общий тег `vX.Y.Z` на монорепо с независимыми версиями не ставится — он не соответствует ни одному пакету.
+In a monorepo, each package is versioned independently: a breaking change in one SDK doesn't move the versions of its neighbors. A shared `vX.Y.Z` tag is not set on a monorepo with independent versions — it wouldn't correspond to any single package.
 
-Тег ставится только на merge-коммит в `main` после успешного CI.
+A tag is set only on the merge commit into `main` after CI succeeds.
 
-## Принципы
+## Principles
 
-- **Atomic commits.** Один коммит — одно логическое изменение. Не смешивай рефакторинг с feature.
-- **Не переписывай историю опубликованных веток.** Force-push только в свою feature-ветку до открытия PR.
-- **Squash при merge** — если ветка содержит шумные WIP-коммиты. Иначе — rebase или merge commit, в зависимости от соглашения проекта.
-- **Никогда не коммить секреты.** Если случайно — ротация ключа, не правка истории как единственная мера.
+- **Atomic commits.** One commit — one logical change. Don't mix a refactor with a feature.
+- **Don't rewrite the history of published branches.** Force-push only to your own feature branch before the PR is opened.
+- **Squash on merge** — if the branch contains noisy WIP commits. Otherwise — rebase or merge commit, depending on the project's convention.
+- **Never commit secrets.** If it happens by accident — rotate the key; don't rely on rewriting history as the only remedy.

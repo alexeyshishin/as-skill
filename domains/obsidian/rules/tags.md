@@ -1,113 +1,113 @@
-# Теги
+# Tags
 
-Предпочитай стабильный набор существующих тегов. Не плоди новые без необходимости.
+Prefer the existing, stable set of tags. Don't multiply new ones unnecessarily.
 
-## Основной набор
+## Core set
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#project` | Проект |
-| `#journal/daily` | Ежедневная запись |
-| `#journal/weekly` | Еженедельная запись |
-| `#journal/monthly` | Ежемесячная запись |
-| `#thought` | Атомарная мысль |
-| `#book` | Книга |
-| `#inbox/review` | Требует обработки / просмотра |
-| `#archive` | Заметка перенесена в `04. Архив/` |
+| `#project` | Project |
+| `#journal/daily` | Daily entry |
+| `#journal/weekly` | Weekly entry |
+| `#journal/monthly` | Monthly entry |
+| `#thought` | Atomic thought |
+| `#book` | Book |
+| `#inbox/review` | Needs processing / review |
+| `#archive` | Note moved to `04. Архив/` |
 
-## Структурные теги (по папкам PARA)
+## Structural tags (by PARA folder)
 
-Используются для маршрутизации заметки в правильную папку. Выбирай из этого списка — не изобретай новые. Один структурный тег на заметку.
+Used to route a note to the right folder. Choose from this list — don't invent new ones. One structural tag per note.
 
-| Тег | Папка |
+| Tag | Folder |
 |-----|-------|
 | `#project` | `01. Проекты/` |
 | `#person` | `02. Сферы/01. Люди/` |
-| `#meeting` | `02. Сферы/03. Работа/` (созвон, 1:1, синк) |
-| `#conference` | `02. Сферы/06. Конференции/` (доклад, митап) |
+| `#meeting` | `02. Сферы/03. Работа/` (call, 1:1, sync) |
+| `#conference` | `02. Сферы/06. Конференции/` (talk, meetup) |
 | `#book` | `03. Ресурсы/01. Книги/` |
 | `#article` | `03. Ресурсы/02. Статьи/` |
 | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| `#thought` | `03. Ресурсы/04. Заметки/` (атомарная мысль / концепт) |
+| `#thought` | `03. Ресурсы/04. Заметки/` (atomic thought / concept) |
 | `#video` | `03. Ресурсы/05. Видео/` |
 | `#moc` | `03. Ресурсы/07. Карты/` (Map of Content) |
-| `#lecture` | конспект лекции (рядом с `#resource`) |
+| `#lecture` | lecture notes (alongside `#resource`) |
 
-## Расширенная таксономия по доменам
+## Extended taxonomy by domain
 
-**Техника и работа:**
+**Tech and work:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#sre` | Site Reliability Engineering, надёжность, инциденты |
-| `#reliability` | Надёжность как инженерная дисциплина (HA, fault tolerance) — без явной привязки к SRE-практикам |
-| `#devops` | DevOps-практики, CI/CD, инфраструктура |
-| `#kubernetes` | Kubernetes, k8s, оркестрация |
-| `#observability` | Мониторинг, логирование, трейсинг, Prometheus |
-| `#linux` | Linux, ядро, файловая система, сети, утилиты |
-| `#macos` | macOS, инструменты, настройки рабочего окружения |
-| `#security` | Информационная безопасность (общая) |
+| `#sre` | Site Reliability Engineering, reliability, incidents |
+| `#reliability` | Reliability as an engineering discipline (HA, fault tolerance) — without an explicit tie to SRE practices |
+| `#devops` | DevOps practices, CI/CD, infrastructure |
+| `#kubernetes` | Kubernetes, k8s, orchestration |
+| `#observability` | Monitoring, logging, tracing, Prometheus |
+| `#linux` | Linux, kernel, filesystem, networking, utilities |
+| `#macos` | macOS, tools, workstation setup |
+| `#security` | Information security (general) |
 | `#appsec` | Application Security, Secure SDLC, SAST/DAST/Fuzzing |
-| `#architecture` | Архитектура ПО, System Design, распределённые системы |
-| `#database` | Базы данных, репликация, шардирование, ACID |
-| `#golang` | Go: язык, паттерны, библиотеки |
-| `#python` | Python: язык, инструменты |
-| `#git` | Git: команды, workflow, hooks |
-| `#agile` | Agile, Scrum, Kanban, Lean, метрики команд |
-| `#career` | Карьера, рост, менторство |
-| `#management` | Управление командой, процессы |
-| `#productivity` | Личная продуктивность, GTD, планирование, привычки |
+| `#architecture` | Software architecture, System Design, distributed systems |
+| `#database` | Databases, replication, sharding, ACID |
+| `#golang` | Go: language, patterns, libraries |
+| `#python` | Python: language, tools |
+| `#git` | Git: commands, workflow, hooks |
+| `#agile` | Agile, Scrum, Kanban, Lean, team metrics |
+| `#career` | Career, growth, mentorship |
+| `#management` | Team management, processes |
+| `#productivity` | Personal productivity, GTD, planning, habits |
 
-**Знания, обучение и письмо:**
+**Knowledge, learning, and writing:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#concept` | Концепт, модель, фреймворк |
-| `#synthesis` | Синтез-заметка (сравнение, кросс-анализ) |
-| `#fleeting` | Беглая мысль, требует обработки |
-| `#zettelkasten` | Метод Лумана, заметочное мышление, постоянные/литературные заметки |
-| `#writing` | Письмо как инструмент мышления, инфостиль, редактура, эссеистика |
-| `#education` | Образование, обучение, методики обучения, учебные программы |
-| `#llm` | LLM, AI-ассистенты, агенты, промт-инжиниринг |
+| `#concept` | Concept, model, framework |
+| `#synthesis` | Synthesis note (comparison, cross-analysis) |
+| `#fleeting` | A fleeting thought, needs processing |
+| `#zettelkasten` | Luhmann's method, note-based thinking, permanent/literature notes |
+| `#writing` | Writing as a thinking tool, plain-language style, editing, essay-writing |
+| `#education` | Education, learning, teaching methods, curricula |
+| `#llm` | LLMs, AI assistants, agents, prompt engineering |
 
-**Гуманитарные домены:**
+**Humanities domains:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#economics` | Макро- и микроэкономика, экономические модели, налоги, ВВП |
-| `#finance` | Личные финансы, инвестиции, фондовый рынок, портфельный анализ |
-| `#psychology` | Психология, когнитивные искажения, эмоции, мотивация |
-| `#health` | Здоровье, сон, спорт, медицинские темы |
-| `#history` | Историческая фактура и анализ событий |
-| `#philosophy` | Философия, мировоззренческие концепции, цивилизационные подходы |
-| `#politics` | Политика, государственное устройство, идеологии |
+| `#economics` | Macro- and microeconomics, economic models, taxes, GDP |
+| `#finance` | Personal finance, investing, the stock market, portfolio analysis |
+| `#psychology` | Psychology, cognitive biases, emotions, motivation |
+| `#health` | Health, sleep, sports, medical topics |
+| `#history` | Historical facts and event analysis |
+| `#philosophy` | Philosophy, worldview concepts, civilizational approaches |
+| `#politics` | Politics, government structure, ideologies |
 
-**Медийность и публичность:**
+**Media presence and publicity:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#content` | Черновики и идеи для публикаций |
-| `#telegram` | Материалы для Telegram-канала «Мишка на сервере» |
-| `#talk` | Выступления, конференции, доклады |
+| `#content` | Drafts and ideas for publications |
+| `#telegram` | Material for the "Мишка на сервере" Telegram channel |
+| `#talk` | Talks, conferences, presentations |
 
-**Знания и обучение:**
+**Knowledge and learning:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#concept` | Концепт, модель, фреймворк |
-| `#synthesis` | Синтез-заметка (сравнение, кросс-анализ) |
-| `#fleeting` | Беглая мысль, требует обработки |
+| `#concept` | Concept, model, framework |
+| `#synthesis` | Synthesis note (comparison, cross-analysis) |
+| `#fleeting` | A fleeting thought, needs processing |
 
-**Статусы достоверности:**
+**Confidence statuses:**
 
-| Тег | Назначение |
+| Tag | Purpose |
 |-----|-----------|
-| `#confidence/high` | Хорошо проверено |
-| `#confidence/low` | Требует проверки |
+| `#confidence/high` | Well verified |
+| `#confidence/low` | Needs verification |
 
-## Правила работы с тегами
+## Rules for working with tags
 
-- Теги указывай в frontmatter (поле `tags`), а не инлайново в тексте
-- Не удаляй и не переименовывай теги массово без явного запроса
-- Если нужен новый тег — используй иерархическую структуру (например, `#journal/daily`, а не `#daily`)
-- Проверяй, не существует ли уже подходящий тег, прежде чем создавать новый
+- Put tags in the frontmatter (`tags` field), not inline in the text
+- Don't delete or rename tags in bulk without an explicit request
+- If a new tag is needed — use a hierarchical structure (e.g. `#journal/daily`, not `#daily`)
+- Check whether a suitable tag already exists before creating a new one

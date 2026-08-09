@@ -1,51 +1,51 @@
 ---
 name: obsidian-split-note
-description: Рефакторинг большой заметки в Obsidian — разбивка на атомарные/тематические заметки с сохранением wikilinks в оригинале. Используй этот скилл когда пользователь просит разбить, разделить, рефакторить конкретную заметку. Скилл создаёт дочерние заметки, вставляет [[ссылки]] в оригинал и соблюдает структуру хранилища PARA.
+description: Refactor a large Obsidian note — split it into atomic/thematic notes while preserving wikilinks in the original. Use this skill when the user asks to split, divide, or refactor a specific note. The skill creates child notes, inserts [[links]] into the original, and follows the PARA vault structure.
 ---
 
 # obsidian-split-note
 
-Разбивает одну большую заметку на несколько меньших (атомарных или тематических), сохраняя связность:
+Splits one large note into several smaller ones (atomic or thematic) while preserving connectivity:
 
-- оригинал остаётся, его разделы заменяются на краткое описание + `[[wikilink]]`;
-- каждая новая заметка создаётся в правильной папке по PARA;
-- frontmatter оригинала и новых заметок согласованы (`up`/`down` проставлены).
+- the original stays, its sections are replaced with a short description + `[[wikilink]]`;
+- each new note is created in the correct PARA folder;
+- the frontmatter of the original and the new notes is kept consistent (`up`/`down` are set).
 
-Базовые правила (PARA, теги, frontmatter, стиль, имена файлов) — в `.agents/rules/`. Особенно: `tags.md` (раздел «Структурные теги»), `note-types-frontmatter.md`, `knowledge-structures.md` (атомарные заметки), `file-naming.md`.
+Base rules (PARA, tags, frontmatter, style, file names) — in `.agents/rules/`. In particular: `tags.md` (the "Structural tags" section), `note-types-frontmatter.md`, `knowledge-structures.md` (atomic notes), `file-naming.md`.
 
 ---
 
-## Алгоритм
+## Algorithm
 
-### 1. Прочитай и определи кандидатов
+### 1. Read and identify candidates
 
-Критерии «выделять / оставить» — `knowledge-structures.md` (раздел «Когда выделять раздел в отдельную заметку»). Определи общую тему оригинала и список кандидатов.
+Criteria for "extract / keep" — `knowledge-structures.md` (the "When to split a section into its own note" section). Determine the original's overall topic and the list of candidates.
 
-### 2. Покажи план и дождись подтверждения
+### 2. Show the plan and wait for confirmation
 
-Протокол план → подтверждение → действие — `workflows.md`. Формат плана:
+Plan → confirmation → action protocol — `workflows.md`. Plan format:
 
 ```
-Оригинал: [[Название]] (тема: …)
-Выделить:
-  1. [[Имя новой 1]] → 03. Ресурсы/04. Заметки/ (#thought)
-  2. [[Имя новой 2]] → 03. Ресурсы/07. Карты/ (#moc)
-Оставить в оригинале: вводный абзац, короткое заключение
+Original: [[Title]] (topic: …)
+Extract:
+  1. [[New note 1 name]] → 03. Ресурсы/04. Заметки/ (#thought)
+  2. [[New note 2 name]] → 03. Ресурсы/07. Карты/ (#moc)
+Leave in the original: intro paragraph, short conclusion
 ```
 
-### 3. Создай дочерние заметки
+### 3. Create the child notes
 
-Для каждой:
+For each one:
 
-1. **Имя файла** — см. `file-naming.md`. Для серии из одного источника: `<Родитель> – <Концепт>.md`. Для самостоятельной: содержательное claim-based имя.
-2. **Структурный тег + папка** — по `tags.md` (обычно `#thought` → `03. Ресурсы/04. Заметки/`).
-3. **Frontmatter** — по соответствующему шаблону из `_Система/1. Шаблоны/` (см. `template-usage.md`). В `up` — wikilink на оригинал.
-4. **Тело** — перенеси содержимое раздела под заголовком `## Суть` (или `## Идея` / `## Определение` по типу).
-5. **Перед созданием** — `rg -l "Название концепта" .` чтобы не плодить дубликаты.
+1. **File name** — see `file-naming.md`. For a series from one source: `<Parent> – <Concept>.md`. For a standalone one: a substantive claim-based name.
+2. **Structural tag + folder** — per `tags.md` (usually `#thought` → `03. Ресурсы/04. Заметки/`).
+3. **Frontmatter** — from the matching template in `_Система/1. Шаблоны/` (see `template-usage.md`). `up` gets a wikilink to the original.
+4. **Body** — transfer the section's content under the heading `## Суть` (or `## Идея` / `## Определение` depending on type).
+5. **Before creating** — run `rg -l "Concept name" .` to avoid duplicates.
 
-### 4. Обнови оригинал
+### 4. Update the original
 
-Каждый вынесенный раздел заменяется на краткое описание + ссылку:
+Each extracted section is replaced with a short description + link:
 
 ```markdown
 ### Виртуальная память
@@ -53,35 +53,35 @@ description: Рефакторинг большой заметки в Obsidian �
 ОС создаёт иллюзию единого адресного пространства. Подробнее: [[Виртуальная память]]
 ```
 
-Или inline в потоке текста: `… использует [[Виртуальная память|виртуальную память]] для …`.
+Or inline within the flow of text: `… использует [[Виртуальная память|виртуальную память]] для …`.
 
-В frontmatter оригинала добавь wikilinks на новые заметки в `down`.
+In the original's frontmatter, add wikilinks to the new notes in `down`.
 
-### 5. Проверь связность
+### 5. Verify connectivity
 
-- Все новые заметки имеют `up` на оригинал (или правильного родителя)
-- В `down` оригинала — все новые заметки
-- Нет «висящих» wikilinks (ссылок на несуществующие файлы)
-- Нет дубликатов (grep перед созданием)
-
----
-
-## Что НЕ делать
-
-- Не удалять оригинал — только модифицировать.
-- Не дробить слишком мелко (раздел в 2–3 строки не заслуживает файла).
-- Не дублировать существующие заметки — сначала grep.
-- Не менять структуру папок — только создавать файлы в существующих.
-- Не убирать wikilinks из оригинала — замена раздела должна содержать ссылку.
+- All new notes have `up` pointing to the original (or the correct parent)
+- The original's `down` lists all the new notes
+- No "dangling" wikilinks (links to nonexistent files)
+- No duplicates (grep before creating)
 
 ---
 
-## Чек-лист
+## What NOT to do
 
-- [ ] Все новые файлы созданы в правильных папках
-- [ ] Frontmatter каждого нового файла заполнен по шаблону
-- [ ] Структурный тег нового файла соответствует папке (`tags.md`)
-- [ ] Оригинал обновлён: развёрнутые разделы заменены на wikilinks
-- [ ] `down` оригинала содержит wikilinks на все новые заметки
-- [ ] Нет дубликатов (grep перед созданием)
-- [ ] Имена файлов без запрещённых символов (`file-naming.md`)
+- Don't delete the original — only modify it.
+- Don't split too finely (a 2–3 line section doesn't deserve its own file).
+- Don't duplicate existing notes — grep first.
+- Don't change the folder structure — only create files in existing folders.
+- Don't remove wikilinks from the original — the section's replacement must contain a link.
+
+---
+
+## Checklist
+
+- [ ] All new files are created in the correct folders
+- [ ] Every new file's frontmatter is filled in per the template
+- [ ] The new file's structural tag matches its folder (`tags.md`)
+- [ ] The original is updated: expanded sections are replaced with wikilinks
+- [ ] The original's `down` lists all the new notes
+- [ ] No duplicates (grep before creating)
+- [ ] File names contain no forbidden characters (`file-naming.md`)

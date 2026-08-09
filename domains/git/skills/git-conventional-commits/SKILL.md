@@ -1,101 +1,101 @@
 ---
 name: git-conventional-commits
 description: >
-  Формирует commit-сообщение по Conventional Commits для текущих изменений в git.
-  Анализирует staged-diff (или unstaged, если staged пуст), определяет type/scope,
-  пишет subject и при необходимости тело. Используй, когда пользователь хочет
-  «сделать коммит», «закоммитить изменения», «commit это», «сформулируй commit-message»,
-  «commit по конвенции».
+  Builds a Conventional Commits commit message for the current changes in git.
+  Analyzes the staged diff (or unstaged, if staged is empty), determines type/scope,
+  writes the subject and, if needed, a body. Use when the user wants to
+  "make a commit", "commit the changes", "commit this", "write a commit message",
+  "commit following the convention".
 ---
 
-# git-conventional-commits — Conventional Commit message для текущего diff
+# git-conventional-commits — Conventional Commit message for the current diff
 
-Цель: вместо того чтобы пользователь сам формулировал commit-message, ты анализируешь diff и формируешь сообщение по конвенции `~/.claude/rules/git-conventions.md`.
+Goal: instead of the user writing the commit message themselves, you analyze the diff and build a message following the convention in `~/.claude/rules/git-conventions.md`.
 
-Перед началом прочитай `~/.claude/rules/git-conventions.md` — там полный список допустимых `type`, формат scope и принципы.
+Before starting, read `~/.claude/rules/git-conventions.md` — it has the full list of allowed `type` values, the scope format, and the principles.
 
-## Шаг 1. Собери контекст
+## Step 1. Gather context
 
-Запусти:
-- `git status --short` — посмотри, что изменено
-- `git diff --staged` (если есть staged) или `git diff` (если нет) — содержание изменений
-- `git log --oneline -10` — стиль предыдущих коммитов в проекте (особенно язык: русский/английский)
+Run:
+- `git status --short` — see what's changed
+- `git diff --staged` (if there's staged content) or `git diff` (if not) — the content of the changes
+- `git log --oneline -10` — the style of previous commits in the project (especially the language: Russian/English)
 
-Если staged пуст и unstaged тоже — скажи пользователю и остановись.
+If staged is empty and unstaged is also empty — tell the user and stop.
 
-## Шаг 2. Определи type
+## Step 2. Determine the type
 
-Прочитай diff и реши:
+Read the diff and decide:
 
-| diff показывает | type |
+| diff shows | type |
 |----------------|------|
-| новый файл с функциональностью, новый endpoint, новая фича | `feat` |
-| правка логики, чтобы баг перестал воспроизводиться | `fix` |
-| перенос/переименование/упрощение без изменения поведения | `refactor` |
-| только улучшение производительности | `perf` |
-| только `.md`, комментарии в коде | `docs` |
-| только тесты добавлены или поправлены | `test` |
-| `package.json`, `go.mod`, `requirements.txt`, Dockerfile, CI-конфиги | `build` или `ci` |
-| зависимости, версии тулинга | `chore(deps)` |
-| откат предыдущего коммита | `revert` |
+| a new file with functionality, a new endpoint, a new feature | `feat` |
+| a logic fix so a bug no longer reproduces | `fix` |
+| move/rename/simplify with no behavior change | `refactor` |
+| performance improvement only | `perf` |
+| only `.md`, code comments | `docs` |
+| only tests added or fixed | `test` |
+| `package.json`, `go.mod`, `requirements.txt`, Dockerfile, CI configs | `build` or `ci` |
+| dependencies, tooling versions | `chore(deps)` |
+| revert of a previous commit | `revert` |
 
-Если diff смешанный (например, и `fix` и `refactor`) — **остановись и предложи пользователю разбить на несколько коммитов**. Не пиши «feat: исправил баг и отрефакторил» — это анти-паттерн.
+If the diff is mixed (e.g. both `fix` and `refactor`) — **stop and suggest the user split it into several commits**. Don't write "feat: fixed a bug and refactored" — that's an anti-pattern.
 
-## Шаг 3. Определи scope (опционально)
+## Step 3. Determine the scope (optional)
 
-Scope — короткое имя модуля/папки/SDK. Эвристика:
-- если все файлы под одной папкой первого уровня (`src/auth/`, `sdk-go/`, `cli/`) — scope = имя этой папки
-- если затронуто 2-3 файла в разных папках — scope можно опустить
-- если поправлен один конкретный компонент (`UserCard.tsx`) — scope = имя компонента в kebab-case
+Scope — a short name for the module/folder/SDK. Heuristic:
+- if all files are under one top-level folder (`src/auth/`, `sdk-go/`, `cli/`) — scope = that folder's name
+- if 2-3 files in different folders are touched — scope can be omitted
+- if one specific component is fixed (`UserCard.tsx`) — scope = the component name in kebab-case
 
-## Шаг 4. Сформулируй subject
+## Step 4. Write the subject
 
-- 50-72 символа
-- глагол в настоящем времени, без заглавной буквы, без точки
-- если коммиты в проекте на русском — пиши на русском, если на английском — на английском (смотри `git log`)
-- субъект описывает **что изменилось**, не «что я сделал»
+- 50-72 characters
+- present-tense verb, no capital letter, no trailing period
+- if the project's commits are in Russian — write in Russian, if in English — write in English (check `git log`)
+- the subject describes **what changed**, not "what I did"
 
-Плохо: `feat: добавил новый эндпоинт для логина пользователей`
-Хорошо: `feat(auth): добавить endpoint POST /login`
+Bad: `feat: added a new endpoint for user login`
+Good: `feat(auth): add POST /login endpoint`
 
-## Шаг 5. Тело и футер (если нужны)
+## Step 5. Body and footer (if needed)
 
-Тело пиши, если:
-- изменение неочевидно из subject — объясни **зачем**
-- есть breaking change — обязательно
-- есть ссылки на issue/тикет
+Write a body if:
+- the change isn't obvious from the subject — explain **why**
+- there's a breaking change — mandatory in that case
+- there are issue/ticket references
 
-Формат:
+Format:
 ```
 <type>(<scope>): <subject>
 
-<body — что/зачем, 2-5 предложений>
+<body — what/why, 2-5 sentences>
 
-BREAKING CHANGE: <что ломается и как мигрировать>
+BREAKING CHANGE: <what breaks and how to migrate>
 Refs: #123
 ```
 
-## Шаг 6. Покажи и спроси
+## Step 6. Show and ask
 
-Покажи пользователю предложенный commit-message в блоке. Спроси:
-1. Принять как есть → `git commit -m "..."`
-2. Поправить subject/тело
-3. Разбить на несколько коммитов
-4. Отменить
+Show the user the proposed commit message in a block. Ask:
+1. Accept as is → `git commit -m "..."`
+2. Adjust subject/body
+3. Split into several commits
+4. Cancel
 
-**Не запускай `git commit` без подтверждения пользователя.**
+**Don't run `git commit` without the user's confirmation.**
 
-## Шаг 7. Выполни
+## Step 7. Execute
 
-После подтверждения:
-- если subject короткий (одностроковый) — `git commit -m "..."`
-- если есть тело — используй `git commit -F -` с heredoc, либо временный файл
+After confirmation:
+- if the subject is short (single-line) — `git commit -m "..."`
+- if there's a body — use `git commit -F -` with a heredoc, or a temp file
 
-Покажи результат `git log -1 --stat`.
+Show the result of `git log -1 --stat`.
 
-## Чего не делать
+## What not to do
 
-- Не предлагай `chore: update` — это пустое сообщение
-- Не объединяй несвязанные изменения в один коммит
-- Не используй `feat` для багфиксов и наоборот
-- Не пиши «WIP» в финальном коммите — для WIP есть `git commit --fixup` и rebase позже
+- Don't suggest `chore: update` — that's an empty message
+- Don't combine unrelated changes into one commit
+- Don't use `feat` for bug fixes or vice versa
+- Don't write "WIP" in the final commit — for WIP there's `git commit --fixup` and rebasing later
