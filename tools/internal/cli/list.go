@@ -63,9 +63,6 @@ func runList(args []string) error {
 				}
 			}
 		}
-		for _, name := range reg.CoreSkills {
-			fmt.Printf("  %-30s (core)\n", name)
-		}
 	}
 	return nil
 }

@@ -8,7 +8,7 @@ A multi-domain collection of rules, skills, and agents for Claude Code. Each dom
 
 ## Always-on skill
 
-Always run with the `caveman` core skill (`core/skills/caveman/`) active — ultra-compressed output, full technical accuracy kept. Don't wait for the user to ask for brevity; it's the default in this repo.
+Always run with the `caveman` core skill (`domains/core/skills/caveman/`) active — ultra-compressed output, full technical accuracy kept. Don't wait for the user to ask for brevity; it's the default in this repo.
 
 ## Architecture
 
@@ -23,6 +23,7 @@ as-skill/
     │   └── hooks/             ← optional; only `code` has one today
     ├── code/
     ├── content/
+    ├── core/
     ├── devops/
     ├── git/
     └── obsidian/
@@ -43,6 +44,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 |--------|--------------|--------------|
 | `code` | — | Dev-loop harness — plan → build → review → debug, installable into any target project |
 | `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, Russian-text humanizing |
+| `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
@@ -57,9 +59,9 @@ installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.
 
 One verb, two modes: `as-skill install ...` defaults to **symlink** — edits under
-`domains/`/`core/skills/` show up in the target immediately, no reinstall; this is
+`domains/` show up in the target immediately, no reinstall; this is
 how this repo's own root `.claude/` stays live (`rm -rf .claude && ./as-skill
-install domains code git --project .`). `as-skill install ... --copy` instead
+install domains code git core --project .`). `as-skill install ... --copy` instead
 writes a static snapshot, independent of this checkout's lifetime — for sharing,
 or for projects that shouldn't depend on a harness checkout sticking around.
 `as-skill uninstall ...` mirrors `install`'s positional shapes and removes only
@@ -72,7 +74,7 @@ owned-vs-foreign and mode apart even when a project mixes the two across runs.
   `<project>` is whatever `--project` you pass `as-skill` (default: the
   current directory)
 - rules, skills, agents for every domain → `${CLAUDE_HOME}/{rules,skills,agents}/`
-- `core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`, `swarm-report`) → `${CLAUDE_HOME}/skills/` always; no manifest, no gating
+- `domains/core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`, `swarm-report`) → `${CLAUDE_HOME}/skills/`, installed the same way as any other domain's skills
 
 `obsidian` is the one domain gated on `requires_env: OBSIDIAN_VAULT` — an
 opt-in check (install it only for users who actually keep a vault), not a
@@ -89,7 +91,7 @@ instead skips it with a warning and installs the rest. Right now only
 
 `code` is a separate case: it's a portable dev-loop harness meant to be installed
 into *other* projects, not just this repo's own `.claude/`. From a clone of this
-repo, run `as-skill install domain code --project <target> --copy --with-core` to
+repo, run `as-skill install domains code core --project <target> --copy` to
 place it (agents, skills, the `test-gate` hook, plus core skills) into a target
 project directory. `--copy` here is deliberate, not the default: the target is an
 unrelated project elsewhere on the user's machine, and coupling it to this
@@ -210,10 +212,11 @@ A dev-loop harness meant to be installed into other projects (see the install co
 
 **Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit).
 
-## Core skills (no domain)
+### domain: core
 
-In `core/skills/` — not tied to any domain, always installed, no `manifest.yaml`:
+Domain-independent utility skills — not tied to any other domain, but installed and gated the same way as any other domain (`domains/core/manifest.yaml`, `requires_env: []`). No `rules/` or `agents/`.
 
+**Skills:**
 - `caveman` — ultra-compressed communication mode (lite/full/ultra, plus wenyan variants)
 - `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`
 - `memory-bank-defrag` — folds accumulated `.memory-bank/` patches into clean current-state docs

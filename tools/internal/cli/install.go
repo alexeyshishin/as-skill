@@ -15,7 +15,6 @@ type installOpts struct {
 	project     string
 	harnessRoot string
 	dryRun      bool
-	withCore    bool
 	force       bool
 	copy        bool
 }
@@ -57,8 +56,6 @@ func parseInstallArgs(args []string) ([]string, installOpts, error) {
 			opts.harnessRoot = v
 		case "--dry-run":
 			opts.dryRun = true
-		case "--with-core":
-			opts.withCore = true
 		case "--force":
 			opts.force = true
 		case "--copy":
@@ -116,22 +113,12 @@ func runInstall(args []string) error {
 		if err := in.InstallDomain(reg, positionals[0], true); err != nil {
 			return err
 		}
-		if opts.withCore {
-			if err := in.InstallCoreSkills(reg); err != nil {
-				return err
-			}
-		}
 	case "domains":
 		if len(positionals) == 0 {
 			return errors.New("install domains needs at least one domain name")
 		}
 		for _, name := range positionals {
 			if err := in.InstallDomain(reg, name, true); err != nil {
-				return err
-			}
-		}
-		if opts.withCore {
-			if err := in.InstallCoreSkills(reg); err != nil {
 				return err
 			}
 		}
@@ -143,9 +130,6 @@ func runInstall(args []string) error {
 			if err := in.InstallDomain(reg, name, false); err != nil {
 				return err
 			}
-		}
-		if err := in.InstallCoreSkills(reg); err != nil {
-			return err
 		}
 	case "skill":
 		if len(positionals) != 1 {

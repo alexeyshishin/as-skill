@@ -40,7 +40,16 @@ func Load(projectRoot string) (*Lockfile, error) {
 	if err := json.Unmarshal(data, lf); err != nil {
 		return nil, fmt.Errorf("parsing %s: %w", p, err)
 	}
+	migrateCoreSkillKind(lf)
 	return lf, nil
+}
+
+func migrateCoreSkillKind(lf *Lockfile) {
+	for i, e := range lf.Entries {
+		if e.Domain == "core" && e.Kind == "skill" {
+			lf.Entries[i].Kind = "skills"
+		}
+	}
 }
 
 func (lf *Lockfile) Owns(target string) (Entry, bool) {

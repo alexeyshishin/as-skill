@@ -98,10 +98,6 @@ func TestUninstallDomainCopyModeRemovesOnlyThisDomainsItems(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := os.MkdirAll(filepath.Join(harnessRoot, "core", "skills"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-
 	reg, err := registry.LoadRegistry(harnessRoot)
 	if err != nil {
 		t.Fatalf("LoadRegistry: %v", err)
