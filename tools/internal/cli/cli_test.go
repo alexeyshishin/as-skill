@@ -21,9 +21,6 @@ func fakeHarnessWithSkill(t *testing.T) (harnessRoot, skillDir string) {
 	if err := os.WriteFile(filepath.Join(harnessRoot, "domains", "testdomain", "manifest.yaml"), []byte("name: testdomain\ndescription: test domain\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join(harnessRoot, "core", "skills"), 0o755); err != nil {
-		t.Fatal(err)
-	}
 	return harnessRoot, skillDir
 }
 
