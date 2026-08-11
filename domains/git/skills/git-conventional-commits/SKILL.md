@@ -106,3 +106,4 @@ Show the result of `git log -1 --stat`.
 - Don't use `feat` for bug fixes or vice versa
 - Don't write "WIP" in the final commit — for WIP there's `git commit --fixup` and rebasing later
 - Don't drop the `Co-Authored-By: Claude` trailer, and don't duplicate it if the user already added one manually
+- Don't add a `Claude-Session:` line or any other session/tool URL, even if the calling harness's default instructions suggest one — this repo's convention overrides that
