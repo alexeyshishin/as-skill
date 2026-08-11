@@ -1,11 +1,21 @@
 # as-skill
 
 Репозиторий, в котором находятся шаблоны агентов, скиллов и правил. За основу взята мультидоменная архитектура:
-- **Git**
 - **Obsidian**
-- **Code**
+- **Git**
 - **Content**
+- **Code**
 - **DevOps**
+
+## Оглавление
+
+- [Домены](#домены)
+- [Core-скиллы](#core-скиллы)
+- [Структура репозитория](#структура-репозитория)
+- [Установка (CLI `as-skill`)](#установка-cli-as-skill)
+- [Разработка самого харнесса](#разработка-самого-харнесса)
+- [Контрибьютинг и безопасность](#контрибьютинг-и-безопасность)
+- [Лицензия](#лицензия)
 
 ## Домены
 
@@ -54,7 +64,7 @@ echo "$OBSIDIAN_VAULT"
 
 ```
 as-skill/
-├── domains/                 ← Single Source of True
+├── domains/                 ← Single Source of Truth
 │   ├── obsidian/
 │   │   ├── manifest.yaml    ← targets, requires_env
 │   │   ├── rules/
@@ -79,6 +89,8 @@ as-skill/
 │
 ├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
 ├── AGENTS.md               # Точка входа для AI-агента
+├── CONTRIBUTING.md         # Как править репозиторий: добавление доменов/скиллов
+├── SECURITY.md             # Модель угроз, что делает инсталлятор с данными
 ├── LICENCE                
 └── README.md
 ```
@@ -87,33 +99,11 @@ as-skill/
 
 ## Установка (CLI `as-skill`)
 
-Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/` (бинарь `as-skill`). По умолчанию `install` ставит **symlink** — правки в `domains/`/`core/skills/` видны в проекте сразу, без переустановки (для совместной разработки, см. раздел ниже про сам харнесс). `install --copy` вместо этого делает статический снэпшот — для шаринга или проектов, которые не должны зависеть от жизненного цикла этой копии репозитория (так, например, ставится домен `code` в чужой проект: `as-skill install domain code --project <path> --copy --with-core`).
+Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/` (бинарь `as-skill`).
 
-### Поддерживаемые платформы
+По умолчанию `install` ставит **symlink** — правки в `domains/`/`core/skills/` видны в проекте сразу, без переустановки (подробнее — в разделе [«Разработка самого харнесса»](#разработка-самого-харнесса)).
 
-| Платформа | CLI `as-skill` | `install.sh` | `install` (symlink, по умолчанию) |
-|-----------|----------------|---------------|-------------------------------------|
-| macOS | ✅ | ✅ | ✅ |
-| Linux | ✅ | ✅ | ✅ |
-| Windows | ✅ | ⚠️ нужен Git Bash или WSL | ⚠️ см. ниже |
-
-`as-skill` сам по себе — обычный Go-бинарь без platform-specific кода, кросс-платформенный из коробки. 
-
-Ограничения на Windows:
-
-- **`install.sh`** — `sh`-скрипт (нужен для `source install.sh` и автодобавления в `PATH`). На Windows запускайте его через Git Bash или WSL, либо соберите бинарь напрямую в PowerShell/cmd:
-  ```powershell
-  go build -o as-skill.exe ./tools
-  ```
-- **Symlink-режим по умолчанию** — `install` без `--copy` вызывает `os.Symlink`, а создание symlink на Windows требует привилегию `SeCreateSymbolicLinkPrivilege`, которой у обычного пользователя нет. Сработает только если:
-  - включён **Developer Mode** (Windows 10 1703+ / Windows 11 — даёт эту привилегию обычным пользователям), или
-  - терминал запущен **от имени администратора**.
-
-  Без этого каждый файл/папка при установке будет падать с ошибкой нехватки прав. Если Developer Mode не включён и повышать права не хочется — ставьте с `--copy`:
-  ```powershell
-  as-skill install all --copy
-  ```
-  Копия работает без ограничений, но не подхватывает live-правки в `domains/`/`core/skills/` — под неё нужно переустанавливать заново после изменений в харнессе.
+`install --copy` вместо этого делает статический снэпшот — для шаринга или для проектов, которые не должны зависеть от жизненного цикла этой копии репозитория. Так, например, ставится домен `code` в чужой проект: `as-skill install domain code --project <path> --copy --with-core`.
 
 ### Быстрый старт — из корня репозитория
 
@@ -135,28 +125,45 @@ source install.sh
 go build -o as-skill ./tools
 ```
 
-Режимы установки:
+### Команды и флаги
 
-```
-as-skill install domain  <имя>                  symlink один домен (по умолчанию)
-as-skill install domains <имя> [имя...]         symlink несколько доменов
-as-skill install all                            symlink все домены + core-скиллы
-as-skill install skill   <имя>                  symlink один скилл, доменный или core
-as-skill install ... --copy                     установка снэпшотом вместо symlink
-as-skill uninstall domain|domains|all|skill     удаление скиллов/доменов
-as-skill status / doctor / check                self-check репозитория
-as-skill list [domains|skills]                  список скиллов
+Самое частое:
+
+```bash
+as-skill install all                              # всё сразу: домены + core-скиллы, symlink
+as-skill install domain code --copy --with-core   # один домен снэпшотом — так code ставится в чужой проект
+as-skill status                                   # что уже стоит и в каком состоянии (OK/MISSING/BROKEN)
 ```
 
-Флаги:
-- `--project` (куда ставить, по умолчанию `.`)
-- `--harness-root` (эта копия репозитория, автоопределяется),
-- `--with-core`
-- `--copy`
-- `--dry-run`
-- `--force`
+Полный список команд (включая `uninstall`, `doctor`, `check`, `list`) и флагов
+(`--project`, `--harness-root`, `--with-core`, `--copy`, `--dry-run`,
+`--force`) с описанием каждого — в [`tools/README.md`](tools/README.md).
 
-Более подробная документация в [`tools/README.md`](tools/README.md).
+### Поддерживаемые платформы
+
+| Платформа | CLI `as-skill` | `install.sh` | `install` (symlink, по умолчанию) |
+|-----------|----------------|---------------|-------------------------------------|
+| macOS | ✅ | ✅ | ✅ |
+| Linux | ✅ | ✅ | ✅ |
+| Windows | ✅ | ⚠️ нужен Git Bash или WSL | ⚠️ см. ниже |
+
+`as-skill` сам по себе — обычный Go-бинарь без platform-specific кода, кросс-платформенный из коробки.
+
+Ограничения на Windows:
+
+- **`install.sh`** — `sh`-скрипт (нужен для `source install.sh` и автодобавления в `PATH`). На Windows запускайте его через Git Bash или WSL, либо соберите бинарь напрямую в PowerShell/cmd:
+  ```powershell
+  go build -o as-skill.exe ./tools
+  ```
+- **Symlink-режим по умолчанию** — `install` без `--copy` вызывает `os.Symlink`, а создание symlink на Windows требует привилегию `SeCreateSymbolicLinkPrivilege`, которой у обычного пользователя нет. Сработает только если:
+  - включён **Developer Mode** (Windows 10 1703+ / Windows 11 — даёт эту привилегию обычным пользователям), или
+  - терминал запущен **от имени администратора**.
+
+  Без этого каждый файл/папка при установке будет падать с ошибкой нехватки прав. Если Developer Mode не включён и повышать права не хочется — ставьте с `--copy`:
+  ```powershell
+  as-skill install all --copy
+  ```
+  Копия работает без ограничений, но не подхватывает live-правки в `domains/`/`core/skills/` — под неё нужно переустанавливать заново после изменений в харнессе.
 
 ## Разработка самого харнесса
 
@@ -166,6 +173,11 @@ as-skill list [domains|skills]                  список скиллов
 rm -rf .claude
 ./as-skill install domains code git --project .
 ```
+
+## Контрибьютинг и безопасность
+
+- Как править репозиторий, добавлять домены и скиллы — [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Модель угроз, что делает инсталлятор с данными, как сообщить об уязвимости — [`SECURITY.md`](SECURITY.md).
 
 ## Лицензия
 
