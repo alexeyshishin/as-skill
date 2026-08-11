@@ -1,15 +1,15 @@
 ---
 name: code-plan
-description: Design a feature before writing code. Spawns planner + skeptic subagents that read the Memory Bank, argue, and write a plan to swarm-report/. Use BEFORE /build, for any feature touching 2+ files or with unclear scope. Skip for typos and one-line fixes.
+description: Design a feature before writing code. Spawns planner + skeptic subagents that read the Memory Bank, argue, and write a plan to swarm-report/. Use BEFORE /code-build, for any feature touching 2+ files or with unclear scope. Skip for typos and one-line fixes.
 ---
 
-# Skill: /plan
+# Skill: /code-plan
 
 You are the ORCHESTRATOR. You do not design the plan yourself — you run two subagents
 and merge their output. No code edits here.
 
 ## Invocation
-`/plan "<one-sentence feature>"`
+`/code-plan "<one-sentence feature>"`
 
 ## Steps
 
@@ -33,11 +33,11 @@ and merge their output. No code edits here.
    ```
    # Plan: <feature>   (slug: <slug>)
    ## TL;DR
-   ## Acceptance criteria  — observable "done" conditions; /review checks these
+   ## Acceptance criteria  — observable "done" conditions; /code-review checks these
    ## Plan                 — merged steps + affected files + tests
    ## Blockers             — skeptic HIGH not yet resolved (human decides)
    ## Out of scope
    ## Assumptions
    ```
 6. **Report to user**: TL;DR + any Blockers. If Blockers exist, ask the user to resolve
-   them before `/build`.
+   them before `/code-build`.
