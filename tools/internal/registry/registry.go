@@ -135,9 +135,8 @@ func ParseSkillFrontmatter(path string) (name string, hasName bool, hasDescripti
 }
 
 type Registry struct {
-	Domains    map[string]*Manifest
-	Order      []string
-	CoreSkills []string
+	Domains map[string]*Manifest
+	Order   []string
 }
 
 func (r *Registry) DomainNames() []string { return r.Order }
@@ -168,16 +167,6 @@ func LoadRegistry(harnessRoot string) (*Registry, error) {
 	sort.Strings(reg.Order)
 	if len(reg.Domains) == 0 {
 		return nil, fmt.Errorf("no domains with manifest.yaml found under %s", domainsDir)
-	}
-
-	coreDir := filepath.Join(harnessRoot, "core", "skills")
-	if entries, err := os.ReadDir(coreDir); err == nil {
-		for _, e := range entries {
-			if e.IsDir() && fileExists(filepath.Join(coreDir, e.Name(), "SKILL.md")) {
-				reg.CoreSkills = append(reg.CoreSkills, e.Name())
-			}
-		}
-		sort.Strings(reg.CoreSkills)
 	}
 
 	return reg, nil
