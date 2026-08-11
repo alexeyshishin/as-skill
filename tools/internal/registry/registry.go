@@ -190,12 +190,12 @@ func ResolveHarnessRoot(start string) (string, error) {
 	}
 	dir := abs
 	for {
-		if dirExists(filepath.Join(dir, "domains")) && dirExists(filepath.Join(dir, "core", "skills")) {
+		if dirExists(filepath.Join(dir, "domains")) {
 			return dir, nil
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", fmt.Errorf("no claude-harness checkout found at or above %q (looked for domains/ + core/skills/) — pass --harness-root", abs)
+			return "", fmt.Errorf("no claude-harness checkout found at or above %q (looked for domains/) — pass --harness-root", abs)
 		}
 		dir = parent
 	}

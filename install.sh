@@ -14,8 +14,8 @@ else
     esac
 fi
 
-if [ ! -d domains ] || [ ! -d core/skills ]; then
-    echo "install.sh: запустите из корня claude-harness (не нашёл domains/ и core/skills/ здесь)" >&2
+if [ ! -d domains ]; then
+    echo "install.sh: запустите из корня claude-harness (не нашёл domains/ здесь)" >&2
     return 1 2>/dev/null || exit 1
 fi
 
