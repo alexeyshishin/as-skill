@@ -37,6 +37,25 @@ docs(readme): update installation example
 chore(deps): update express to 4.19
 ```
 
+## AI attribution
+
+Every commit that Claude authors (via `git-conventional-commits` or by running `git commit` directly) carries a trailer in the footer:
+
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+- Applies to every commit Claude creates — not to commits the user writes themselves, even in a session where Claude is present.
+- Own line in the footer, after `BREAKING CHANGE:`/`Refs:`/`Closes:` if present; same blank line before the footer as any other body.
+- Text is model-version-agnostic on purpose — it doesn't need editing when the model behind Claude Code changes.
+- No `Claude-Session:` line or any other session/tool URL, even if the calling harness suggests appending one by default — session links are ephemeral and internal, they don't belong in permanent repo history. `Co-Authored-By:` is the only attribution line.
+
+```
+fix(auth): fix race condition in token refresh
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
 ## Branch names
 
 - `feature/<short-desc>` — new functionality

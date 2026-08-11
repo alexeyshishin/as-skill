@@ -58,12 +58,17 @@ Scope — a short name for the module/folder/SDK. Heuristic:
 Bad: `feat: added a new endpoint for user login`
 Good: `feat(auth): add POST /login endpoint`
 
-## Step 5. Body and footer (if needed)
+## Step 5. Body and footer
 
 Write a body if:
 - the change isn't obvious from the subject — explain **why**
 - there's a breaking change — mandatory in that case
 - there are issue/ticket references
+
+The footer always gets the AI-attribution trailer (see `~/.claude/rules/git-conventions.md`), even for a subject-only commit with no other body or footer content:
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
 Format:
 ```
@@ -73,12 +78,13 @@ Format:
 
 BREAKING CHANGE: <what breaks and how to migrate>
 Refs: #123
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Step 6. Show and ask
 
-Show the user the proposed commit message in a block. Ask:
-1. Accept as is → `git commit -m "..."`
+Show the user the proposed commit message in a block, trailer included. Ask:
+1. Accept as is → commit it (mechanics in Step 7)
 2. Adjust subject/body
 3. Split into several commits
 4. Cancel
@@ -87,9 +93,9 @@ Show the user the proposed commit message in a block. Ask:
 
 ## Step 7. Execute
 
-After confirmation:
-- if the subject is short (single-line) — `git commit -m "..."`
-- if there's a body — use `git commit -F -` with a heredoc, or a temp file
+After confirmation, the trailer means there's always at least two paragraphs (subject + footer):
+- subject-only otherwise — two `-m` flags: `git commit -m "<subject>" -m "Co-Authored-By: Claude <noreply@anthropic.com>"`
+- if there's also a body/other footer lines — use `git commit -F -` with a heredoc, or a temp file
 
 Show the result of `git log -1 --stat`.
 
@@ -99,3 +105,5 @@ Show the result of `git log -1 --stat`.
 - Don't combine unrelated changes into one commit
 - Don't use `feat` for bug fixes or vice versa
 - Don't write "WIP" in the final commit — for WIP there's `git commit --fixup` and rebasing later
+- Don't drop the `Co-Authored-By: Claude` trailer, and don't duplicate it if the user already added one manually
+- Don't add a `Claude-Session:` line or any other session/tool URL, even if the calling harness's default instructions suggest one — this repo's convention overrides that
