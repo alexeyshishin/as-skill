@@ -35,7 +35,7 @@ Each `domains/<name>/manifest.yaml` declares:
 
 Dependencies run top-down: an agent knows about a skill, a skill knows about a rule. Not the reverse — **except in `code`** (see below).
 
-**Exception — `code`:** the `/plan`, `/build`, `/review`, `/debug` skills are orchestrators that spawn subagents (`code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger`) and merge their output — skill → agent, inverted from every other domain. `code` also has no `rules/` directory; instead its skills/agents read `.memory-bank/index.md` and `swarm-report/<slug>-*.md` inside whichever project they're running in.
+**Exception — `code`:** the `/code-plan`, `/code-build`, `/code-review`, `/code-debug` skills are orchestrators that spawn subagents (`code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger`) and merge their output — skill → agent, inverted from every other domain. `code` also has no `rules/` directory; instead its skills/agents read `.memory-bank/index.md` and `swarm-report/<slug>-*.md` inside whichever project they're running in.
 
 ## Current domains
 
@@ -87,14 +87,13 @@ instead skips it with a warning and installs the rest. Right now only
 `obsidian` declares `requires_env`; no domain currently declares a
 `requires_bin` gate.
 
-`code` is a separate case: it also has its own `/code-setup` skill that installs the
-`code` domain (agents, skills, the `test-gate` hook) plus core skills into a *target
-project* directory, run from a clone of this repo. Under the hood it's the same
-`as-skill install domain code --project <target> --copy --with-core` as above —
-`code-setup` just always passes `--copy` explicitly, on purpose: the target is an
+`code` is a separate case: it's a portable dev-loop harness meant to be installed
+into *other* projects, not just this repo's own `.claude/`. From a clone of this
+repo, run `as-skill install domain code --project <target> --copy --with-core` to
+place it (agents, skills, the `test-gate` hook, plus core skills) into a target
+project directory. `--copy` here is deliberate, not the default: the target is an
 unrelated project elsewhere on the user's machine, and coupling it to this
-checkout's lifetime via a symlink (the installer's default) would be wrong. See
-`domains/code/skills/code-setup/SKILL.md` for the full recipe.
+checkout's lifetime via a symlink (the installer's default) would be wrong.
 
 ## What to do before your first action
 
@@ -199,14 +198,13 @@ GitOps rule: production changes go through ArgoCD only.
 
 ### domain: code
 
-A dev-loop harness meant to be installed into other projects (see `/code-setup` above), not a set of personal-productivity skills. No `rules/`; context comes from `.memory-bank/index.md` and `swarm-report/`.
+A dev-loop harness meant to be installed into other projects (see the install command above), not a set of personal-productivity skills. No `rules/`; context comes from `.memory-bank/index.md` and `swarm-report/`.
 
 **Skills:**
-- `code-plan` (`/plan`) — spawns `code-planner` + `code-skeptic`, writes a plan to `swarm-report/`; use before `/build`
-- `code-build` (`/build`) — implements an approved plan, routes tasks by file scope, runs tests, writes a build report
-- `code-review` (`/review`) — spawns `code-reviewer`, read-only, ship/rework with severity-tagged findings
-- `code-debug` (`/debug`) — spawns `code-debugger`, reproduces → ladders hypotheses → minimal fix
-- `code-setup` — installs this harness (agents, skills, hooks, settings, `AGENTS.md`) into a target project
+- `code-plan` (`/code-plan`) — spawns `code-planner` + `code-skeptic`, writes a plan to `swarm-report/`; use before `/code-build`
+- `code-build` (`/code-build`) — implements an approved plan, routes tasks by file scope, runs tests, writes a build report
+- `code-review` (`/code-review`) — spawns `code-reviewer`, read-only, ship/rework with severity-tagged findings
+- `code-debug` (`/code-debug`) — spawns `code-debugger`, reproduces → ladders hypotheses → minimal fix
 
 **Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — all TERSE-output subagents, spawned only by the skills above, never invoked directly.
 
