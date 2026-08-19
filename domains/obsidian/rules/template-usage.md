@@ -5,7 +5,9 @@ tags: []
 ---
 # Rules for choosing and using templates
 
-Templates live in `_Система/1. Шаблоны/`. Always create a note from a template, not "from scratch" — this ensures consistent frontmatter.
+Templates live in `_Система/templates/`. Always create a note from a template, not "from scratch" — this ensures consistent frontmatter.
+
+The vault currently has 12 templates — fewer and more general-purpose than this doc used to assume. Several situations that used to get their own dedicated template now share one; see "Distinguishing similar templates" below for how to pick between them.
 
 ---
 
@@ -15,65 +17,55 @@ Templates live in `_Система/1. Шаблоны/`. Always create a note fro
 
 | Situation | Template |
 |----------|--------|
-| Read a book | `Шаблон тезисов по книге.md` |
-| Watched a video / talk from YouTube | `Шаблон тезисов по видео.md` |
-| Read an article / post / RFC | `Шаблон тезисов по статье.md` |
-| Attended a talk live / watched a recording | `Шаблон тезисов по докладу.md` |
-| Attended a lecture (course, coursework) | `Конспект по лекции.md` |
-| A specific quote from a source | `Шаблон литературной цитаты.md` |
-| A thought / insight (personal, from your own head) | `Шаблон мысли.md` |
-| A raw idea, not yet fully formed | `Шаблон идея.md` |
-| A term, model, framework, concept | `Шаблон концепта.md` |
-| A project (work, personal, education) | `Шаблон проекта.md` |
-| A knowledge map for a topic (5+ notes) | `Шаблон карты.md` |
-| A profile of a person / contact | `Шаблон человека.md` |
-| A draft post for the Telegram channel | `Черновик поста.md` |
-| An essay / in-depth treatment of a topic | `Шаблон эссе.md` |
-| Notes from a meeting or call | `Созвон или встреча.md` |
-| A conference (multiple talks) | `Обзор конференции.md` |
-| A progress review against a goal | `Шаблон селф-ревью по цели.md` |
-| An incident / postmortem | `Шаблон инцидента.md` |
-| An architectural decision (ADR) | `Шаблон ADR.md` |
-| A daily entry | `Ежедневная заметка.md` |
-| A weekly summary | `Еженедельная заметка.md` |
-| A monthly summary | `Ежемесячная заметка.md` |
-| A yearly summary | `Ежегодная заметка.md` |
-| A quick entry (habit, metric) | `Шаблон микропрогресса.md` |
+| Read a book / watched a video / read an article, post, RFC | `11. шаблон тезисов по видео-книге-статье.md` — set `tags` to `book`/`video`/`article` |
+| Attended a talk live / watched a recording | `06. шаблон тезисов по докладу.md` |
+| Attended a lecture (course, coursework) | `04. конспект по лекции.md` |
+| A thought, a raw idea, or a term/model/concept | `03. шаблон идея.md` — the tag you set marks which (see below) |
+| A knowledge map for a topic (5+ notes) | `08. шаблон карты.md` |
+| A profile of a person / contact | `10. шаблон человека.md` |
+| A draft post for a blog/channel | `02. черновик поста.md` |
+| Notes from a meeting or call | `07. созвон или встреча.md` |
+| A conference (multiple talks) | `05. обзор конференции.md` as the umbrella note, plus one `06. шаблон тезисов по докладу.md` per talk |
+| A standalone SRE incident/lesson (not tied to one project) | `09. шаблон инцидента.md` |
+| A project postmortem | `12. шаблон постмортемы.md` |
+| A daily entry | `01. ежедневная заметка.md` |
+
+No current template for: a project index note, a standalone quote (quotes now live inline in the merged source-takeaways note — see below), a progress review against a goal, an essay, a weekly/monthly/yearly journal summary, an ADR, or a micro-progress log. If one of these comes up, ask the user how to proceed rather than improvising frontmatter from scratch.
 
 ---
 
 ## Distinguishing similar templates
 
-### Thought vs. Idea vs. Concept
+### Idea vs. thought vs. concept
 
-| | `Шаблон мысли.md` | `Шаблон идея.md` | `Шаблон концепта.md` |
-|--|-------------------|-----------------|----------------------|
+Same template file (`03. шаблон идея.md`) for all three — the old separate templates are gone. What used to be a template choice is now a tag choice made by hand after creating the note. Full breakdown in `note-types-frontmatter.md`; short version:
+
+| | Thought | Idea | Concept |
+|--|---------|------|---------|
 | **Tag** | `thought` | `fleeting` + `inbox/review` | `concept` |
-| **Nature** | A personal insight, already formed | Raw, not yet thought through | A model / term / framework |
-| **Source** | From your own head | From your own head, "don't lose this" | From a source or practice |
-| **What's next** | Link to a MOC or project | Process → turn into a thought or concept | Grow it via `sources` |
-| **confidence** | `low` (personal opinion) | not specified | `medium` / `high` |
+| **Nature** | Already-formed personal insight | Raw, not yet thought through | A model / term / framework, backed by sources |
 
-**Rule:** when in doubt, create a `Шаблон идея.md` tagged `inbox/review`, and sort it out later during inbox processing.
+**Rule:** when in doubt, tag `fleeting` + `inbox/review` and sort it out later during inbox processing.
 
-### Source takeaways vs. Literature note
+### Source takeaways: book vs. video vs. article
 
-- `Шаблон тезисов по X.md` — a top-level note covering the whole source (book, article, video). One per source.
-- `Литературная.md` — a specific quote or idea from the source. There can be several per source.
-
-Connection: from the takeaways note, link to literature notes via `down`; from literature notes, `up` points to the takeaways note.
+One merged template (`11. шаблон тезисов по видео-книге-статье.md`) covers all three — set `tags` to whichever fits. There's no separate per-quote literature note anymore: quotes go straight into that note's `Цитаты` section, alongside `Основные идеи` / `Мои мысли` / `Применение`.
 
 ### Talk vs. Conference
 
-- `Шаблон тезисов по докладу.md` — one talk, one speaker.
-- `Обзор конференции.md` — the whole conference as an event. Contains links to individual talk notes via `## Посетил следующие доклады`.
+- `06. шаблон тезисов по докладу.md` — one talk, one speaker.
+- `05. обзор конференции.md` — the whole conference as an event, linking out to the individual talk notes.
 
-### Map vs. Topic
+### Incident vs. postmortem
 
-- `Шаблон карты.md` (`MapOfContent`) — a navigational entry point for a topic, containing **links** to notes.
-- `Шаблон топика.md` — a topic being studied that hasn't become a MOC yet. Use it at the start, when there are fewer than five notes.
+- `09. шаблон инцидента.md` — a standalone SRE lesson/incident (`severity`, `date`), not necessarily tied to one project.
+- `12. шаблон постмортемы.md` — a project-specific retrospective (`status`, `up`), filed under that project's own `Постмортемы/` subfolder in `01. Проекты/<Проект>/`.
 
-Transition: once a topic has accumulated 5+ related notes — turn it into a map.
+(This split is inferred from how the two templates and real postmortem notes are structured, not from an explicit rule — flag it to the user if a case doesn't cleanly fit either.)
+
+### Map — no separate "topic" staging template anymore
+
+The old "topic that hasn't become a MOC yet" template doesn't exist — there's just `08. шаблон карты.md`. If a topic hasn't reached 5+ related notes, hold off on creating a map at all rather than reaching for a placeholder.
 
 ---
 
@@ -85,9 +77,11 @@ Transition: once a topic has accumulated 5+ related notes — turn it into a map
 2. Specify `up` — what the note relates to (a MOC, project, area)
 3. Set the correct tag from the taxonomy (see `tags.md`)
 
+None of these are pre-filled by the raw template file — add them by hand (or via `obsidian-enrich-note`) right after creating the note.
+
 ### The `confidence` field
 
-Required for: `Шаблон мысли.md`, `Шаблон концепта.md`, `Литературная.md`, `Шаблон тезисов по книге.md`, and similar templates.
+Required for reference/concept notes under `03. Ресурсы/<Тема>/База знаний/` and source takeaway notes (see `note-types-frontmatter.md`).
 
 - `low` — a single source or a personal opinion without verification
 - `medium` — there's a source, but few examples
@@ -95,11 +89,7 @@ Required for: `Шаблон мысли.md`, `Шаблон концепта.md`, 
 
 Don't set `high` without grounds — better `medium` with a note than overstated confidence.
 
-### The `sources` field
-
-Never clear it. Only add new sources. Format — wikilinks to takeaway notes or external links.
-
-### The `status` field (projects, takeaways, drafts)
+### The `status` field (projects, postmortems, drafts)
 
 | Value | When |
 |----------|------|
@@ -111,26 +101,18 @@ Never clear it. Only add new sources. Format — wikilinks to takeaway notes or 
 
 ## Journal notes: when to create them
 
-| Template | When to create |
-|--------|----------------|
-| `Ежедневная заметка.md` | Every day, automatically via Templater |
-| `Еженедельная заметка.md` | At the start of the week or Sunday evening |
-| `Ежемесячная заметка.md` | At the start of the month |
-| `Ежегодная заметка.md` | At the start of the year, or on December 31 |
+Only `01. ежедневная заметка.md` currently exists — daily entries, created automatically via Templater. There's no weekly/monthly/yearly summary template right now; if the user wants one, ask before building ad hoc frontmatter for it rather than assuming the old cadence still applies.
 
-Don't create these retroactively if there's nothing left to record — better to skip.
+Don't create daily entries retroactively if there's nothing left to record — better to skip.
 
 ---
 
 ## Incident / postmortem
 
-`Шаблон инцидента.md` — for recording incident retrospectives. Fill it in **while things are fresh** (within 24–48 hours of the incident), while details are still vivid.
+See "Incident vs. postmortem" above for which of the two templates fits. Fill it in **while things are fresh** (within 24–48 hours), while details are still vivid.
 
-Required fields:
-
-- `severity` — P1/P2/P3 or Critical/Major/Minor
-- `date` — the date of the incident (not the date the note was written)
-- `status: Done` — only after the conclusions and action items are written up
+- `09. шаблон инцидента.md` — fill `severity` and `date` (the date of the incident, not the note).
+- `12. шаблон постмортемы.md` — fill `status`, `up` (the project's index note). `status: Done` only once conclusions and action items are written up.
 
 Link to the project or service via `up`. Move action items to the task tracker, or add them as a checklist in the corresponding project.
 

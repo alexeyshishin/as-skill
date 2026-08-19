@@ -3,7 +3,7 @@
 ## MOC (Map of Content)
 
 A MOC is a navigational note that collects links on a given topic.
-The main MOC is `README.md` at the root. Topic MOCs live in `03. Ресурсы/07. Карты/`.
+The main MOC is `README.md` at the root. It links to one index MOC per top-level PARA section (`00. Входящие.md`, `01. Проекты.md`, `02. Сферы.md`, `03. Ресурсы.md`), all stored in `02. Сферы/07. Карты/` — the vault-wide maps hub. Deeper domain-specific navigation notes nest one level further, e.g. `02. Сферы/07. Карты/03. Ресурсы/Навигация по книгам.md`.
 
 ### When to create a MOC
 
@@ -47,7 +47,7 @@ SORT file.mtime DESC
 
 ### MOC rules
 
-- Use `Шаблон карты.md` as the base
+- Use the maps template in `_Система/templates/` as the base (see `template-usage.md` for the current filename)
 - In `up`, put the parent MOC or area (if any)
 - In `down`, put the major child subtopics
 - Add a Dataview query to auto-collect related notes
@@ -58,7 +58,7 @@ SORT file.mtime DESC
 ## Synthesis notes
 
 A synthesis is a note comparing several concepts/tools/approaches and producing a cross-cutting conclusion.
-Stored in `03. Ресурсы/07. Карты/`, tagged `#synthesis`.
+Stored in `02. Сферы/07. Карты/`, tagged `#synthesis`.
 
 ### When to create a synthesis
 
@@ -111,7 +111,7 @@ When to use which approach, and why.
 
 ## Atomic notes
 
-An atomic note is one key idea, thought, or insight. Use `Шаблон мысли.md`.
+An atomic note is one key idea, thought, or insight. Use the idea template in `_Система/templates/` (see `template-usage.md`) — the vault no longer has separate templates for "already-formed thought" vs. "raw idea" vs. "concept"; the distinction now lives in which tag you set (`thought` vs. `fleeting` + `inbox/review` vs. `concept`), not in the template file.
 
 ### When to split one out
 
@@ -123,7 +123,7 @@ An atomic note is one key idea, thought, or insight. Use `Шаблон мысл�
 
 1. **Identify the atomic idea** — one thought, one insight, one fact
 2. **Create a new note** in `00. Входящие/` with a clear title
-3. **Frontmatter**: `thought` tag, `up` and `links` fields
+3. **Frontmatter**: `thought` tag (or `concept`, if it's a model/framework with sources), `up` and `links` fields
 4. **Write the essence** — 1–3 paragraphs in your own words (don't copy verbatim from the source note)
 5. **Add context** — where the thought came from, what it's connected to
 6. **Add links** — in `links`, reference the source note and related ones

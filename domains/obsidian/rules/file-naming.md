@@ -38,6 +38,10 @@ Signs of a good name:
 
 Applied in `obsidian-ingest` (names of atomic notes), `book-highlights-processor` (callout headings → future file names), `obsidian-split-note`, `obsidian-refactor-lecture`.
 
+### Exception: technical reference notes
+
+Inside a subject's `База знаний` subfolder under `03. Ресурсы/<Тема>/` (see `vault-struct.md`), short topic-based names — often a single English term (`SSH.md`, `cronjob.md`, `redis.md`) — are allowed instead of a claim. These notes work as reference/glossary entries (a protocol, a tool, a command), where a topic name is the more natural key than a claim. Claim-based naming stays the rule everywhere else — thoughts, concepts outside a knowledge-base subfolder, MOCs, source takeaway notes.
+
 ## Naming patterns
 
 ### A series of notes from one source / discipline
@@ -61,11 +65,13 @@ Error budget как разрешение на риск.md
 
 ### Lectures
 
-`Lecture – <Discipline> – <YYYY-MM-DD> – <Topic>.md`
+`<NN>. <Discipline> лекция <YYYY-MM-DD>.md` (numbered within `02. Сферы/03. Образование/02. Конспекты/`).
 
-### Literature notes
+### Source takeaway notes (book / video / article)
 
-Source name + author: `LN – <Title> – <Author>.md`, or simply a meaningful title for the quote.
+One subfolder per source under `03. Ресурсы/<Тема>/<Название источника>/`. Inside it: `00. Оглавление.md` for the overview note (quotes, main ideas, thoughts — see `template-usage.md`), plus one numbered file per chapter/section if the source is split up: `01. <Chapter title>.md`, `02. <Chapter title>.md`, ...
+
+There's no more standalone per-quote literature note (`LN – ...`) — quotes live inline in `00. Оглавление.md`'s `Цитаты` section.
 
 ## Checks before creating
 

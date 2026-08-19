@@ -44,13 +44,13 @@ aliases:
 ### 3. Find links
 
 ```bash
-rg -l "KEYWORD" "03. Ресурсы/" "02. Сферы/01. Люди/" | head -20
+rg -l "KEYWORD" "03. Ресурсы/" "02. Сферы/" | head -20
 ```
 
 Where to look:
-- `03. Ресурсы/07. Карты/` — candidates for `up` (MOC)
-- `03. Ресурсы/04. Заметки/` — atomic notes on adjacent topics (`other`)
-- `02. Сферы/01. Люди/` — for `other` (if the topic relates to a person)
+- `02. Сферы/07. Карты/` — candidates for `up` (MOC)
+- `03. Ресурсы/<Тема>/База знаний/` — atomic notes on adjacent topics (`other`)
+- If the topic relates to a person, there's no dedicated folder yet — search the whole vault for an existing note about them before adding an `other` link
 
 ### 4. Fill in the fields
 

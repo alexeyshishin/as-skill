@@ -39,16 +39,15 @@ Pick the structural tag and folder per `.claude/rules/tags.md` (the "Structural 
 
 | What's in the note | Tag | Folder |
 |---------------|-----|-------|
-| Atomic thought / concept | `#thought` | `03. Ресурсы/04. Заметки/` |
-| Map / navigation | `#moc` | `03. Ресурсы/07. Карты/` |
-| Person | `#person` | `02. Сферы/01. Люди/` |
-| Book / article / video | `#book` / `#article` / `#video` | `03. Ресурсы/01–05` |
-| Literature note / quote | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| Project | `#project` | `01. Проекты/` |
-| Meeting / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
-| Conference notes | `#conference` | `02. Сферы/06. Конференции/` |
-| Journal / reflection | `#journal/daily` | `05. Дневник/<year>/<month>/` |
-| Content for a channel | + `#telegram` or `#content` | `02. Сферы/05. Медийность/` |
+| Atomic thought / concept | `#thought` | `03. Ресурсы/<Тема>/База знаний/` |
+| Map / navigation | `#moc` | `02. Сферы/07. Карты/` |
+| Person | `#person` | No folder currently exists — ask the user where it should live |
+| Book / article / video | `#book` / `#article` / `#video` | `03. Ресурсы/<Тема>/<Источник>/` — one subfolder per source |
+| Project | `#project` | `01. Проекты/<Проект>/` |
+| Meeting / 1:1 | `#meeting` | `02. Сферы/02. Работа/` |
+| Conference notes | `#conference` | No folder currently exists — ask the user where it should live |
+| Journal / reflection | `#journal/daily` | `05. Дневник/` (flat, filename `DD-MM-YYYY.md`) |
+| Content for a channel | + `#telegram` or `#content` | `02. Сферы/04. Личный блог/` |
 | No longer relevant | `#archive` | `04. Архив/` |
 | Duplicate | — | merge or flag |
 
@@ -68,10 +67,10 @@ Process in this order:
 📥 Inbox: N notes (M tagged #inbox/review)
 
 🎯 High priority (linked to active projects):
-  • [[Note A]] → #thought, 03. Ресурсы/04. Заметки/
+  • [[Note A]] → #thought, 03. Ресурсы/<Тема>/База знаний/
     Linked to [[Project X]]; add an `up` link to the MOC.
 
-  • [[Note B]] → #meeting, 02. Сферы/03. Работа/
+  • [[Note B]] → #meeting, 02. Сферы/02. Работа/
 
 ⚖️ Medium priority:
   • [[Note C]] → needs more work on the topic, leave in inbox

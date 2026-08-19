@@ -28,8 +28,8 @@ Plan → confirmation → action protocol — `workflows.md`. Plan format:
 ```
 Original: [[Title]] (topic: …)
 Extract:
-  1. [[New note 1 name]] → 03. Ресурсы/04. Заметки/ (#thought)
-  2. [[New note 2 name]] → 03. Ресурсы/07. Карты/ (#moc)
+  1. [[New note 1 name]] → 03. Ресурсы/<Тема>/База знаний/ (#thought)
+  2. [[New note 2 name]] → 02. Сферы/07. Карты/ (#moc)
 Leave in the original: intro paragraph, short conclusion
 ```
 
@@ -38,8 +38,8 @@ Leave in the original: intro paragraph, short conclusion
 For each one:
 
 1. **File name** — see `file-naming.md`. For a series from one source: `<Parent> – <Concept>.md`. For a standalone one: a substantive claim-based name.
-2. **Structural tag + folder** — per `tags.md` (usually `#thought` → `03. Ресурсы/04. Заметки/`).
-3. **Frontmatter** — from the matching template in `_Система/1. Шаблоны/` (see `template-usage.md`). `up` gets a wikilink to the original.
+2. **Structural tag + folder** — per `tags.md` (usually `#thought` → `03. Ресурсы/<Тема>/База знаний/`).
+3. **Frontmatter** — from the matching template in `_Система/templates/` (see `template-usage.md`). `up` gets a wikilink to the original.
 4. **Body** — transfer the section's content under the heading `## Суть` (or `## Идея` / `## Определение` depending on type).
 5. **Before creating** — run `rg -l "Concept name" .` to avoid duplicates.
 

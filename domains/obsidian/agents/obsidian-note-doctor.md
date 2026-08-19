@@ -88,7 +88,7 @@ Show the plan, wait for confirmation. For a single note and enrichment-only — 
 Run the chosen skill. After critique:
 
 - **Brief review (≤ 3 critical points)** → a `> [!warning]` or `> [!question]` callout right in the note, near the end.
-- **Full review (> 3 points or serious contradictions)** → a new review note in `03. Ресурсы/04. Заметки/` tagged `#thought`, with `up` pointing to the original note. In the original — a wikilink to the review.
+- **Full review (> 3 points or serious contradictions)** → a new review note in `03. Ресурсы/<Тема>/База знаний/` tagged `#thought`, with `up` pointing to the original note. In the original — a wikilink to the review.
 
 ### 5. Report
 

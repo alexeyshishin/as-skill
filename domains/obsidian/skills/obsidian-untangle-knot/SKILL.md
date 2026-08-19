@@ -66,11 +66,11 @@ fd -t f "DevOps.md" .
 
 If there are several matches, ask which one.
 
-**Discovery** — the user wants to find candidates ("find my hub notes", "where am I overloaded"). Scan `03. Ресурсы/07. Карты/` (by default) or another folder on request:
+**Discovery** — the user wants to find candidates ("find my hub notes", "where am I overloaded"). Scan `02. Сферы/07. Карты/` (by default) or another folder on request:
 
 ```bash
 # Count out-links: number of [[wikilink]] in the body + frontmatter
-for f in "03. Ресурсы/07. Карты/"*.md; do
+for f in "02. Сферы/07. Карты/"*.md; do
   out=$(rg -o '\[\[[^\]]+\]\]' "$f" | wc -l)
   echo "$out  $f"
 done | sort -rn | head -10
@@ -196,7 +196,7 @@ For each of the hub's out-neighbors — a quick read and **classification**:
 | Atomic note / concept (`#thought`) | standard re-linking |
 | MOC / map (`#moc`, MapOfContent) | standard re-linking; add as `down` on the new sub-MOC |
 | **Mention note** (`#person`, a link to a company, a tool) | **not considered a categorizable neighbor** — stays on the hub as a contextual link, doesn't move to the sub-MOC |
-| Note from `02. Сферы/05. Медийность/` (Telegram, content) | has its own lifecycle (`status`, `publication_date`, `link`); don't touch `up` |
+| Note from `02. Сферы/04. Личный блог/` (blog/content) | has its own lifecycle (`status`); don't touch `up` |
 | Note whose `up` points to an **existing** alternative sub-MOC | already categorized — leave it; add the alternative to the new sub-MOC's `other` as a related map |
 
 Don't read the full body — the thesis and frontmatter are enough for categorization. If the thesis is unclear, look at the first heading.
@@ -259,7 +259,7 @@ Plan format:
 
 ═══ Iteration 1 (scaffold) ═══
 
-Create sub-MOCs (in 03. Ресурсы/07. Карты/):
+Create sub-MOCs (in 02. Сферы/07. Карты/):
   1. [[DevOps – Основы]]                       → 3 out-links
   2. [[DevOps – Управление инфраструктурой]]   → 4
   3. [[DevOps – Деплой и релиз]]               → 1 (Blue-Green/Canary stay on the alt. map)
@@ -281,12 +281,12 @@ Expected effect: the original's in-degree will drop only slightly (~5–10),
 
 Redirect in-links in the bodies of resource notes:
    Total resource in-links: ~160
-       — 03. Ресурсы/04. Заметки/        131  ← heavy, split into sub-batches
-       — 03. Ресурсы/07. Карты/           17
-       — 03. Ресурсы/02. Статьи/           5
-       — 03. Ресурсы/01. Книги/            3
-       — 03. Ресурсы/03. Литературные/    3
-       — 03. Ресурсы/05. Видео/            1
+       — 03. Ресурсы/<Тема>/База знаний/        131  ← heavy, split into sub-batches
+       — 02. Сферы/07. Карты/           17
+       — 03. Ресурсы/<Тема>/           5
+       — 03. Ресурсы/Книги/            3
+       — 03. Ресурсы/<Тема>/<Источник>/    3
+       — 03. Ресурсы/<Тема>/            1
    Not touching (~60): 01. Проекты/, 02. Сферы/, 05. Дневник/, 04. Архив/, 00. Входящие/
 
 Expected effect: the original's in-degree will drop by 50–70% (from the resource mass).
@@ -302,7 +302,7 @@ The order of steps matters, so you don't end up with broken links at intermediat
 
 #### 6.1. Create the sub-MOCs
 
-In `03. Ресурсы/07. Карты/`, from `Шаблон карты.md`:
+In `02. Сферы/07. Карты/`, from `08. шаблон карты.md`:
 
 ```yaml
 ---
@@ -357,9 +357,9 @@ This is the **author's intent** to categorize — pick it up. Replace the dangli
 
 Not considered categorizable. Don't touch `up`, the note stays on the hub as a contextual link.
 
-**Branch F — Telegram/content notes** (`02. Сферы/05. Медийность/Telegram/`):
+**Branch F — blog/content notes** (`02. Сферы/04. Личный блог/`):
 
-Don't touch `up` — these notes have their own lifecycle and frontmatter (`status`, `publication_date`, `link`).
+Don't touch `up` — these notes have their own lifecycle (`status`).
 
 **Branch G — the neighbor's `up` already has a more precise parent, and `[[Hub]]` is redundant:**
 
@@ -374,7 +374,6 @@ Sign of branch G: none of our sub-MOCs fit **semantically**, and the note alread
 **General nuances:**
 
 - Preserve the list/string format (YAML) as it is in the source note.
-- Literature sources stay in `sources` unchanged (the "up + sources in sync" policy from `note-types-frontmatter.md` — sync both sides if you change one).
 
 #### 6.3. Redirect in-links (the main step)
 
@@ -388,18 +387,15 @@ rg -l -F "[[Hub name]]" --type md . > /tmp/in-links.txt
 
 Only notes of an **informational/resource nature** are eligible for re-linking:
 
-- ✅ `03. Ресурсы/01. Книги/`
-- ✅ `03. Ресурсы/02. Статьи/`
-- ✅ `03. Ресурсы/03. Литературные заметки/`
-- ✅ `03. Ресурсы/04. Заметки/` (concepts, thoughts)
-- ✅ `03. Ресурсы/05. Видео/`
-- ✅ `03. Ресурсы/07. Карты/` (other MOCs)
+- ✅ `03. Ресурсы/<Тема>/` (any subject folder, including `Книги`)
+- ✅ `03. Ресурсы/<Тема>/<Источник>/` (a source's own takeaway folder)
+- ✅ `03. Ресурсы/<Тема>/База знаний/` (concepts, thoughts)
+- ✅ `02. Сферы/07. Карты/` (other MOCs)
 
 **Don't touch** — links made intentionally as a "general entry point"; re-linking them breaks the historical context:
 
 - ❌ `01. Проекты/` — project notes deliberately link to the general MOC
-- ❌ `02. Сферы/03. Работа/` — meetings, 1:1s — contextual links
-- ❌ `02. Сферы/06. Конференции/` — talk notes as a point in time
+- ❌ `02. Сферы/02. Работа/` — meetings, 1:1s — contextual links
 - ❌ `05. Дневник/` — journal, historical context
 - ❌ `04. Архив/` — archived material
 - ❌ `00. Входящие/` — unprocessed, leave for `obsidian-refactor-inbox`
@@ -495,12 +491,12 @@ Proceed to iteration 2 (redirecting ~160 in-links in bodies)?
    in:  191 → 60–80   (real drop)
 
 In-links redirected by sub-batch:
-   03. Ресурсы/04. Заметки/    105 of 131
-   03. Ресурсы/07. Карты/       13 of 17
-   03. Ресурсы/02. Статьи/       3 of 5
-   03. Ресурсы/01. Книги/        2 of 3
-   03. Ресурсы/03. Лит.заметки/  2 of 3
-   03. Ресурсы/05. Видео/        1 of 1
+   03. Ресурсы/<Тема>/База знаний/    105 of 131
+   02. Сферы/07. Карты/       13 of 17
+   03. Ресурсы/<Тема>/       3 of 5
+   03. Ресурсы/Книги/        2 of 3
+   03. Ресурсы/<Тема>/<Источник>/  2 of 3
+   03. Ресурсы/<Тема>/        1 of 1
 
 Kept as-is: ~60 (outside the resource area — intentional general links) +
                   ~10 resource notes where the category was unclear (see "Under question")
@@ -520,7 +516,7 @@ If anything new turned up along the way (a neighboring note is also a hub, a con
 
 An atomic note/concept has spontaneously become a hub (e.g. `Kubernetes` with 30 links). Two options:
 
-1. **Turn it into a MOC** — if the note is essentially already a map. Change `#thought` → `#moc`, update the frontmatter per `Шаблон карты.md`, move it to `03. Ресурсы/07. Карты/`. Backlinks won't break — Obsidian updates them on rename.
+1. **Turn it into a MOC** — if the note is essentially already a map. Change `#thought` → `#moc`, update the frontmatter per `08. шаблон карты.md`, move it to `02. Сферы/07. Карты/`. Backlinks won't break — Obsidian updates them on rename.
 2. **Keep it as a concept** — if the content stands on its own and deserves to remain a concept. Offload the links (categorize neighbors into sub-MOCs), but don't rework the note itself.
 
 Ask the user at the moment the hub is chosen.
@@ -555,7 +551,7 @@ If you land on an out-tangle, ask the user what effect they want (navigation vs.
 
 An atomic note/concept (like `Kubernetes`) has accumulated in-links. Two options:
 
-1. **Turn it into a MOC** — if the content already reads more like a map. Change `#thought` → `#moc`, move it to `03. Ресурсы/07. Карты/`. Obsidian will update backlinks on rename.
+1. **Turn it into a MOC** — if the content already reads more like a map. Change `#thought` → `#moc`, move it to `02. Сферы/07. Карты/`. Obsidian will update backlinks on rename.
 2. **Keep it as a concept + create a MOC alongside it** — if the content stands on its own and is valuable as a concept. Create `Kubernetes – MOC.md`, and redirect the in-links there; the concept stays a narrow "definition/idea" object.
 
 Ask the user at the moment the hub is chosen.
@@ -573,10 +569,9 @@ A symptom of confusion. Show them explicitly: "in both up and down at once: N no
 - **Don't re-link references outside `03. Ресурсы/`** — projects, journal, conferences, archive, inbox are left untouched; their links to the general MOC are intentional.
 - **Don't ignore a neighbor's existing `up`.** If it points to a dangling link, pick up the author's intent. If it points to an existing alternative sub-MOC, respect it and leave it alone — add that map to the new sub-MOC's `other` as a related map.
 - **Don't treat mentions of people and companies** (`#person`, `[[Some Company]]`) as categorizable neighbors — they stay on the hub as contextual links.
-- **Don't touch Telegram/content notes** in `02. Сферы/05. Медийность/` — they have their own lifecycle (`status`, `publication_date`, `link`).
+- **Don't touch blog/content notes** in `02. Сферы/04. Личный блог/` — they have their own lifecycle (`status`).
 - **Don't try to re-link a dangling out-link on the hub** — there's no note, the placeholder stays on the hub until it's manually created via `obsidian-ingest`.
 - **Don't touch links inside** `> [!quote]`, `> [!note]`, `> [!warning]`, and other callout blocks — that's historical context or quotes.
-- **Don't touch `sources`** when re-linking `up` — it's a record of sources, kept in sync with `up` per the policy in `note-types-frontmatter.md`.
 - **Don't move neighboring notes between PARA folders** — we're re-linking connections, not migrating structure.
 - **Don't do recursive offloading** — one hub per run.
 - **Don't merge the scaffold and in-links into one iteration** — after the scaffold, let the user see the result and decide whether to go into the heavy part.
@@ -590,7 +585,7 @@ A symptom of confusion. Show them explicitly: "in both up and down at once: N no
 
 **Sub-MOCs:**
 
-- [ ] Created in `03. Ресурсы/07. Карты/` with `#moc` and frontmatter per `Шаблон карты.md`
+- [ ] Created in `02. Сферы/07. Карты/` with `#moc` and frontmatter per `08. шаблон карты.md`
 - [ ] `up` points to the original hub
 - [ ] `down` is filled in (manually as a list, or via Dataview)
 - [ ] Names contain no forbidden characters (`file-naming.md`); format `<Parent> – <Category>`
@@ -598,14 +593,13 @@ A symptom of confusion. Show them explicitly: "in both up and down at once: N no
 **Out-neighbors (notes the hub links to):**
 
 - [ ] `up` re-linked from the original to the matching sub-MOC (where applicable per the structural tag)
-- [ ] Literature sources are in sync in `up` and `sources` (policy B from `note-types-frontmatter.md`)
 
 **In-links (the main part):**
 
-- [ ] Went through the resource in-links (only `03. Ресурсы/`)
+- [ ] Went through the eligible in-links only (the folders listed in 6.3 — `03. Ресурсы/` subject folders and `02. Сферы/07. Карты/`)
 - [ ] Where the category was clear — replaced `[[hub]]` with `[[sub-MOC]]`
 - [ ] Where the category was unclear — left as-is, listed under "Under question"
-- [ ] Didn't touch `01. Проекты/`, `02. Сферы/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`
+- [ ] Didn't touch `01. Проекты/`, `02. Сферы/` outside `07. Карты/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`
 - [ ] Didn't touch callout blocks or `sources`
 
 **Original hub:**

@@ -9,10 +9,10 @@ description: Specialized agent for ingesting external sources (article, book, vi
 
 I turn one external source into a graph of connected notes:
 
-- a literature source note in `03. Ресурсы/03. Литературные заметки/`
-- 3–8 atomic insight notes in `03. Ресурсы/04. Заметки/`
+- a source takeaway note in `03. Ресурсы/<Тема>/<Источник>/`
+- 3–8 atomic insight notes in `03. Ресурсы/<Тема>/База знаний/`
 - updated existing concepts linking to the new source
-- an entry in `_Система/wiki-log.md`
+- an entry in `_Система/wiki-log.md` (create the file if it doesn't exist yet)
 
 ## Knowledge base
 
@@ -23,7 +23,7 @@ Before acting, read:
 
 - `AGENTS.md`
 - `rules/vault-struct.md` — where things go
-- `rules/note-types-frontmatter.md` — especially the "literature sources in up + sources" policy
+- `rules/note-types-frontmatter.md` — especially "Provenance for book/video/article notes" (the old up+sources policy is retired)
 - `rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
 - `rules/file-naming.md` — claim-based, no forbidden characters
 - `rules/content-style.md` — language, tone, wikilinks
@@ -35,12 +35,11 @@ Before acting, read:
 
 | Source type | Skill | Source template |
 |---------------|-------|-----------------|
-| Article / web clip / transcript / freeform markdown | `obsidian-ingest` | `Шаблон тезисов по статье.md` or `Шаблон литературной цитаты.md` |
-| Quote export from iBooks or Zotero (📔 / 🎯) | `book-highlights-processor` → then `obsidian-ingest` | `Шаблон тезисов по книге.md` |
-| Video / talk from YouTube or a recording | `obsidian-ingest` | `Шаблон тезисов по видео.md` or `Шаблон тезисов по докладу.md` |
-| Lecture notes from a course | `obsidian-refactor-lecture` | `Конспект по лекции.md` |
-| Book in freeform (in your own words) | `obsidian-ingest` | `Шаблон тезисов по книге.md` |
-| Conference (multiple talks) | `obsidian-ingest` for each talk | `Обзор конференции.md` as the umbrella note |
+| Article / web clip / transcript / freeform markdown / book (in your own words) | `obsidian-ingest` | `11. шаблон тезисов по видео-книге-статье.md` (set `tags` to `article`/`book`) |
+| Quote export from iBooks or Zotero (📔 / 🎯) | `book-highlights-processor` → then `obsidian-ingest` | `11. шаблон тезисов по видео-книге-статье.md` (`tags: book`) |
+| Video / talk from YouTube or a recording | `obsidian-ingest` | `11. шаблон тезисов по видео-книге-статье.md` (`tags: video`) or `06. шаблон тезисов по докладу.md` for a conference talk |
+| Lecture notes from a course | `obsidian-refactor-lecture` | `04. конспект по лекции.md` |
+| Conference (multiple talks) | `obsidian-ingest` for each talk | `05. обзор конференции.md` as the umbrella note |
 
 ## Algorithm
 
@@ -49,7 +48,7 @@ Before acting, read:
 Ask the user for the file path (or accept it if already given). Open it and determine the type from signals:
 
 - frontmatter contains `book:` and 🎯 quotes → iBooks/Zotero export, needs `book-highlights-processor`
-- starts with `# Лекция N` or the title contains `Lecture –` → lecture notes, needs `obsidian-refactor-lecture`
+- starts with `# Лекция N` or the title matches `<Discipline> лекция <YYYY-MM-DD>` → lecture notes, needs `obsidian-refactor-lecture`
 - a URL and block quotes, long markdown text → article/web clip, needs `obsidian-ingest`
 - timestamps like `00:12:34` → video/talk transcript, needs `obsidian-ingest`
 - freeform markdown with no clear signals → `obsidian-ingest` with a note flagging this
@@ -61,15 +60,15 @@ Show the plan in this format:
 ```
 📦 Source type: <article / book / video / talk / lecture>
 🛠 Skill: <name>
-📄 Literature note: "Title" → 03. Ресурсы/03. Литературные заметки/
+📄 Source takeaway note: "Title" → 03. Ресурсы/<Тема>/<Источник>/
 
 📝 New atomic notes (preliminary):
-   1. "Claim A" → 03. Ресурсы/04. Заметки/
-   2. "Claim B" → 03. Ресурсы/04. Заметки/
-   3. "Claim C" → 03. Ресурсы/04. Заметки/
+   1. "Claim A" → 03. Ресурсы/<Тема>/База знаний/
+   2. "Claim B" → 03. Ресурсы/<Тема>/База знаний/
+   3. "Claim C" → 03. Ресурсы/<Тема>/База знаний/
 
 🔄 Update candidates (rg by key terms):
-   - [[Existing note X]] — add source to sources, clarify ...
+   - [[Existing note X]] — link to the source, clarify ...
    - [[Existing note Y]] — add a wikilink
 
 🗺 MOC: [[Topic MOC]] — add links to the new notes
@@ -86,7 +85,7 @@ Special case — quote export: first `book-highlights-processor` (converts 🎯 
 ### 4. Post-processing
 
 - **Bidirectional links**: each atomic note links to the literature note via `up` (and duplicates it in `sources`); the literature note lists the atomic notes in `## Ключевые идеи`.
-- **MOC**: if the topic matches an existing MOC in `03. Ресурсы/07. Карты/` — add links. If there's no MOC and the topic has accumulated 5+ notes — propose creating one (but don't create it without confirmation).
+- **MOC**: if the topic matches an existing MOC in `02. Сферы/07. Карты/` — add links. If there's no MOC and the topic has accumulated 5+ notes — propose creating one (but don't create it without confirmation).
 - **Confidence**: `medium` by default for a new source. `high` — only if the idea is already confirmed by two independent sources in the base.
 - **Contradictions**: if the new source disagrees with an existing note — add a `> [!warning] Противоречие: ...` callout in both notes, linking to the opposing one.
 - **wiki-log**: add a line to `_Система/wiki-log.md`:
