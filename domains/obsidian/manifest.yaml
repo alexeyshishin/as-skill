@@ -1,0 +1,20 @@
+# Obsidian PKB domain — правила, скиллы и агенты для работы с
+# персональной базой знаний по методологии PARA.
+#
+# Этот домен требует переменную окружения OBSIDIAN_VAULT, указывающую
+# на корень Obsidian-хранилища. Без неё домен не разворачивается.
+#
+# rules уезжают в $OBSIDIAN_VAULT/.agents/rules/ — vault-local, потому что
+# скиллы ссылаются на них как `.agents/rules/<file>.md` (путь относительно vault).
+# skills и agents — в ~/.claude/{skills,agents}/ по конвенции Claude Code.
+
+name: obsidian
+description: PKB на Obsidian по PARA — ингест, разбор inbox, untangle hub, ежедневник.
+
+requires_env:
+  - OBSIDIAN_VAULT
+
+targets:
+  rules:  ${OBSIDIAN_VAULT}/.agents/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
