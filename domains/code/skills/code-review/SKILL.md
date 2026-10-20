@@ -14,7 +14,7 @@ ORCHESTRATOR. One reviewer subagent. Read-only — the reviewer does not fix.
 1. **Gather**: plan `swarm-report/<slug>-plan.md` + build report `swarm-report/<slug>-build.md`
    + the diff (`git diff` for staged + unstaged, or vs the branch point).
 2. **Spawn 1 reviewer** (`Task`, `general-purpose`). Prompt:
-   > Answer TERSE. Read `.claude/agents/reviewer.md` and follow it exactly.
+   > Answer TERSE. Read `.claude/agents/code-reviewer.md` and follow it exactly.
    > Plan: swarm-report/<slug>-plan.md
    > Diff below:
    > <paste git diff here>
