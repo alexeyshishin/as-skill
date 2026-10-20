@@ -9,13 +9,13 @@
 
 ## Домены
 
-| Домен | требует | Что внутри |
-|-------|---------|-----------|
-| **[`obsidian`](domains/obsidian/)** | env `OBSIDIAN_VAULT` | PKB на Obsidian по PARA — приём источников в базу, разбор inbox, обогащение фронтматтера, критика заметок, разбиение больших заметок и лекций, распутывание хабов-MOC. **8 правил, 8 скиллов, 4 агента.** |
-| **[`git`](domains/git/)** | — | Git workflow — Conventional Commits, описания PR. **1 правило, 2 скилла, 1 агент.** |
-| **[`content`](domains/content/)** | — | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста. **2 правила, 5 скиллов, 1 агент.** |
-| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domain code --copy --with-core`. **4 скилла, 4 агента, 1 hook** (test-gate). |
-| **[`devops`](domains/devops/)** | — | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). **7 агентов**, пока без правил и скиллов. |
+| Домен | Требования | Описание | Что внутри |
+|-------|---------|-----------|-----------|
+| **[`obsidian`](domains/obsidian/)** | env `OBSIDIAN_VAULT` | PKB на Obsidian по PARA — приём источников в базу, разбор inbox, обогащение фронтматтера, критика заметок, разбиение больших заметок и лекций, распутывание хабов-MOC. | **8 правил, 8 скиллов, 4 агента.** |
+| **[`git`](domains/git/)** | — | Git workflow — Conventional Commits, описания PR. | **1 правило, 2 скилла, 1 агент.** |
+| **[`content`](domains/content/)** | — | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста. | **2 правила, 5 скиллов, 1 агент.** |
+| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domain code --copy --with-core`. | **4 скилла, 4 агента, 1 hook** (test-gate). |
+| **[`devops`](domains/devops/)** | — | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). | **7 агентов**, пока без правил и скиллов. |
 
 Требования проверяются на установке: нет `OBSIDIAN_VAULT` — пропускается домен `obsidian`, остальные домены `requires_env` не имеют и ставятся всегда.
 
@@ -54,7 +54,7 @@ echo "$OBSIDIAN_VAULT"
 
 ```
 as-skill/
-├── domains/                 # ← ЕДИНСТВЕННЫЙ источник правды по доменам
+├── domains/                 ← Single Source of True
 │   ├── obsidian/
 │   │   ├── manifest.yaml    ← targets, requires_env
 │   │   ├── rules/
@@ -63,7 +63,7 @@ as-skill/
 │   ├── git/     {manifest, rules, skills, agents}
 │   ├── content/ {manifest, rules, skills, agents}
 │   ├── code/    {manifest, skills, agents, hooks/}
-│   └── devops/  {manifest, agents}   ← rules/ и skills/ ещё не заведены
+│   └── devops/  {manifest, agents}
 │
 ├── core/
 │   └── skills/               # Скиллы без домена — ставятся всегда
@@ -74,17 +74,16 @@ as-skill/
 │
 ├── tools/
 │   ├── main.go             # Инсталлятор — CLI as-skill, см. tools/README.md
-│   ├── internal/           # cli/installer/registry/lockfile/transfer/health/fsutil
+│   ├── internal/ 
 │   └── README.md
 │
 ├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
-├── AGENTS.md               # Точка входа для AI-агента — домены, deploy-таргеты, контракт между доменами
-├── LICENCE                 # MIT
+├── AGENTS.md               # Точка входа для AI-агента
+├── LICENCE                
 └── README.md
 ```
 
 Правится напрямую: `domains/`, `core/skills/` (для скиллов без домена) и `AGENTS.md`.
-
 
 ## Установка (CLI `as-skill`)
 
@@ -98,9 +97,11 @@ as-skill/
 | Linux | ✅ | ✅ | ✅ |
 | Windows | ✅ | ⚠️ нужен Git Bash или WSL | ⚠️ см. ниже |
 
-`as-skill` сам по себе — обычный Go-бинарь без platform-specific кода, кросс-платформенный из коробки. Ограничения на Windows — не в CLI, а в двух местах:
+`as-skill` сам по себе — обычный Go-бинарь без platform-specific кода, кросс-платформенный из коробки. 
 
-- **`install.sh`** — POSIX `sh`-скрипт (нужен для `source install.sh` и автодобавления в `PATH`). На Windows запускайте его через Git Bash или WSL, либо соберите бинарь напрямую в PowerShell/cmd:
+Ограничения на Windows:
+
+- **`install.sh`** — `sh`-скрипт (нужен для `source install.sh` и автодобавления в `PATH`). На Windows запускайте его через Git Bash или WSL, либо соберите бинарь напрямую в PowerShell/cmd:
   ```powershell
   go build -o as-skill.exe ./tools
   ```
@@ -114,14 +115,15 @@ as-skill/
   ```
   Копия работает без ограничений, но не подхватывает live-правки в `domains/`/`core/skills/` — под неё нужно переустанавливать заново после изменений в харнессе.
 
-Быстрый старт — из корня репозитория:
+### Быстрый старт — из корня репозитория
 
 ```bash
 source install.sh
 ```
 
-Соберёт `as-skill` и сразу добавит его в `PATH` текущей оболочки (sh/bash/zsh) —
-командой можно пользоваться сразу же, без `./`. Если запустить не через
+Соберёт `as-skill` и сразу добавит его в `PATH` текущей оболочки (sh/bash/zsh).
+
+Если запустить не через
 `source` (`./install.sh` или `bash install.sh`) — бинарь всё равно соберётся,
 но в PATH родительской оболочки попасть не сможет (так уже работают дочерние
 процессы); скрипт сам это увидит и подскажет запустить `source install.sh`.
@@ -136,17 +138,25 @@ go build -o as-skill ./tools
 Режимы установки:
 
 ```
-as-skill install domain  <имя>               symlink один домен (по умолчанию)
-as-skill install domains <имя> [имя...]      symlink несколько доменов
-as-skill install all                          symlink все домены (у кого выполнен requires_env) + core-скиллы
-as-skill install skill   <имя>               symlink один скилл, доменный или core
-as-skill install ... --copy                   любая из форм выше — копией-снэпшотом вместо symlink
-as-skill uninstall domain|domains|all|skill ... снести то, что поставил install
-as-skill status / doctor / check              здоровье установки / self-check репозитория
-as-skill list [domains|skills]                что вообще можно установить
+as-skill install domain  <имя>                  symlink один домен (по умолчанию)
+as-skill install domains <имя> [имя...]         symlink несколько доменов
+as-skill install all                            symlink все домены + core-скиллы
+as-skill install skill   <имя>                  symlink один скилл, доменный или core
+as-skill install ... --copy                     установка снэпшотом вместо symlink
+as-skill uninstall domain|domains|all|skill     удаление скиллов/доменов
+as-skill status / doctor / check                self-check репозитория
+as-skill list [domains|skills]                  список скиллов
 ```
 
-Флаги `--project` (куда ставить, по умолчанию `.`), `--harness-root` (эта копия репозитория, автоопределяется), `--with-core`, `--copy`, `--dry-run`, `--force`, поведение при незаполненном `requires_env`/`requires_bin` (сейчас `requires_env` есть только у `obsidian` → `$OBSIDIAN_VAULT`) — всё в [`tools/README.md`](tools/README.md).
+Флаги:
+- `--project` (куда ставить, по умолчанию `.`)
+- `--harness-root` (эта копия репозитория, автоопределяется),
+- `--with-core`
+- `--copy`
+- `--dry-run`
+- `--force`
+
+Более подробная документация в [`tools/README.md`](tools/README.md).
 
 ## Разработка самого харнесса
 
@@ -156,8 +166,6 @@ as-skill list [domains|skills]                что вообще можно у�
 rm -rf .claude
 ./as-skill install domains code git --project .
 ```
-
-(`--project .` — установка в корень самого харнесса; без `--copy`, потому что для совместной разработки нужны именно живые symlink'и на `domains/`, а не отдельный снэпшот).
 
 ## Лицензия
 
