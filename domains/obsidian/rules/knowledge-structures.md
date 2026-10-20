@@ -1,17 +1,17 @@
-# Структуры знаний: MOC, синтез, атомарные заметки
+# Knowledge structures: MOC, synthesis, atomic notes
 
 ## MOC (Map of Content)
 
-MOC — навигационная заметка, которая собирает ссылки по определённой теме.
-Главная MOC — `README.md` в корне. Тематические MOC лежат в `03. Ресурсы/07. Карты/`.
+A MOC is a navigational note that collects links on a given topic.
+The main MOC is `README.md` at the root. Topic MOCs live in `03. Ресурсы/07. Карты/`.
 
-### Когда создавать MOC
+### When to create a MOC
 
-- Тема упоминается в 5+ заметках и нет единой точки входа
-- Пользователь явно просит создать карту по теме
-- Появляется новая крупная область знаний
+- The topic is mentioned in 5+ notes and there's no single entry point
+- The user explicitly asks to create a map for a topic
+- A new major knowledge area emerges
 
-### Структура MOC
+### MOC structure
 
 ````markdown
 ---
@@ -25,48 +25,48 @@ other: []
 
 ## Описание
 
-Краткое (2–3 предложения) описание темы своими словами.
+A brief (2–3 sentence) description of the topic in your own words.
 
 ## Ключевые заметки
 
-- [[Заметка 1]] — краткое пояснение
-- [[Заметка 2]] — краткое пояснение
+- [[Note 1]] — brief explanation
+- [[Note 2]] — brief explanation
 
 ## Связанные темы
 
-- [[Другая MOC или тема]]
+- [[Another MOC or topic]]
 
 ## Автосбор заметок
 
 ```dataview
 LIST
-FROM [[]] OR #нужный-тег
+FROM [[]] OR #needed-tag
 SORT file.mtime DESC
 ```
 ````
 
-### Правила MOC
+### MOC rules
 
-- Используй `Шаблон карты.md` как основу
-- В `up` указывай родительскую MOC или область (если есть)
-- В `down` указывай дочерние крупные подтемы
-- Добавляй Dataview-запрос для автоматического сбора связанных заметок
-- Кратко аннотируй каждую ссылку — не просто список, а список с контекстом
+- Use `Шаблон карты.md` as the base
+- In `up`, put the parent MOC or area (if any)
+- In `down`, put the major child subtopics
+- Add a Dataview query to auto-collect related notes
+- Briefly annotate each link — not just a list, but a list with context
 
 ---
 
-## Синтез-заметки
+## Synthesis notes
 
-Синтез — заметка, сравнивающая несколько концептов/инструментов/подходов и выдающая кросс-срезовый вывод.
-Хранится в `03. Ресурсы/07. Карты/`, тег `#synthesis`.
+A synthesis is a note comparing several concepts/tools/approaches and producing a cross-cutting conclusion.
+Stored in `03. Ресурсы/07. Карты/`, tagged `#synthesis`.
 
-### Когда создавать синтез
+### When to create a synthesis
 
-- Есть 2+ концепта/инструмента для сравнения
-- Появился инсайт, охватывающий несколько заметок сразу
-- Пользователь явно просит «сравни», «что лучше», «какой подход выбрать»
+- There are 2+ concepts/tools to compare
+- An insight has emerged that spans several notes at once
+- The user explicitly asks to "compare," "which is better," "which approach to choose"
 
-### Структура синтез-заметки
+### Synthesis note structure
 
 ```markdown
 ---
@@ -89,76 +89,76 @@ confidence: medium
 
 ## Анализ
 
-Кросс-срезовые выводы — что объединяет, где расходятся, почему.
+Cross-cutting conclusions — what's shared, where they diverge, and why.
 
 ## Рекомендация
 
-Когда использовать какой подход и почему.
+When to use which approach, and why.
 
 ## Связанные заметки
 
-- [[Заметка А]] — краткое пояснение
+- [[Note A]] — brief explanation
 ```
 
-### Правила синтеза
+### Synthesis rules
 
-- В `sources` перечисляй все исходные заметки
-- Если вывод основан на одной заметке — это не синтез, а атомарная мысль
-- При обновлении исходных заметок — проверяй актуальность синтеза
-- Каждый вывод должен ссылаться на конкретные заметки
-
----
-
-## Атомарные заметки
-
-Атомарная заметка — одна ключевая идея, мысль или инсайт. Используй `Шаблон мысли.md`.
-
-### Когда выделять
-
-- В длинной заметке есть самостоятельная мысль, полезная отдельно от контекста
-- Одна и та же идея повторяется в нескольких заметках
-- Заметка разрослась и содержит 3+ несвязанных тем
-
-### Как выделять
-
-1. **Определи атомарную идею** — одна мысль, один инсайт, один факт
-2. **Создай новую заметку** в `00. Входящие/` с понятным названием
-3. **Frontmatter**: теги `thought`, поля `up`, `links`
-4. **Напиши суть** — 1–3 абзаца своими словами (не копируй дословно из исходной заметки)
-5. **Добавь контекст** — откуда пришла мысль, с чем связана
-6. **Поставь ссылки** — в `links` укажи исходную заметку и связанные
-7. **В исходной заметке** замени развёрнутый блок на ссылку: `[[Новая атомарная заметка]]`
-
-### Не делай
-
-- Не выделяй всё подряд — атомарность ≠ дробление ради дробления
-- Не теряй контекст: в новой заметке должно быть понятно, о чём речь, без открытия исходника
-- Не удаляй текст из исходной заметки без замены на ссылку
-- Не добавляй в frontmatter ссылки на абсолютно все заметки — это перегружает
+- List all source notes in `sources`
+- If the conclusion is based on a single note — it's not a synthesis, it's an atomic thought
+- When source notes are updated — check that the synthesis is still accurate
+- Every conclusion must reference specific notes
 
 ---
 
-## Когда выделять раздел в отдельную заметку
+## Atomic notes
 
-Применяется в `obsidian-split-note`, `obsidian-refactor-lecture`, `obsidian-ingest` — везде, где из большой заметки достаются атомарные.
+An atomic note is one key idea, thought, or insight. Use `Шаблон мысли.md`.
 
-### Признаки «выделяй»
+### When to split one out
 
-- Описывает одно понятие / теорему / алгоритм / инсайт самодостаточно
-- ≥ 5–7 строк содержательного текста (или формула + объяснение)
-- Полезен в других контекстах без исходной заметки
-- Не дубль уже существующей заметки — `rg -l "<название>"` перед созданием
+- A long note contains a standalone thought that's useful outside its context
+- The same idea repeats across several notes
+- A note has grown and contains 3+ unrelated topics
 
-### Признаки «оставь в оригинале»
+### How to split it out
 
-- Вводный или связующий абзац («в этой главе рассматривается…»)
-- Раздел из 2–3 строк без самодостаточного содержания
-- Список примеров, иллюстрирующий соседний раздел
-- Q&A-блоки и ответы на вопросы из лекций (если ответ не вырос в полноценный концепт ≥10 строк)
-- Если сомневаешься — оставляй в оригинале, лучше недодробить, чем переборщить
+1. **Identify the atomic idea** — one thought, one insight, one fact
+2. **Create a new note** in `00. Входящие/` with a clear title
+3. **Frontmatter**: `thought` tag, `up` and `links` fields
+4. **Write the essence** — 1–3 paragraphs in your own words (don't copy verbatim from the source note)
+5. **Add context** — where the thought came from, what it's connected to
+6. **Add links** — in `links`, reference the source note and related ones
+7. **In the source note**, replace the expanded block with a link: `[[New atomic note]]`
 
-### Имя и тег нового файла
+### Don't
 
-- Имя — по `file-naming.md` (claim-based, без запрещённых символов)
-- Структурный тег и папка — по `tags.md` (раздел «Структурные теги»)
-- В новой заметке `up` ссылается на оригинал; в оригинале `down` пополняется ссылкой на новую
+- Don't split out everything — atomicity ≠ splitting for the sake of splitting
+- Don't lose context: the new note must be understandable on its own, without opening the source
+- Don't delete text from the source note without replacing it with a link
+- Don't add links to absolutely every note in frontmatter — it becomes overloaded
+
+---
+
+## When to split a section out into a separate note
+
+Applied in `obsidian-split-note`, `obsidian-refactor-lecture`, `obsidian-ingest` — anywhere atomic notes are extracted from a large note.
+
+### Signs it should be split out
+
+- Describes one concept / theorem / algorithm / insight self-sufficiently
+- ≥ 5–7 lines of substantial text (or a formula + explanation)
+- Useful in other contexts without the source note
+- Not a duplicate of an existing note — `rg -l "<title>"` before creating
+
+### Signs it should stay in the original
+
+- An introductory or connecting paragraph ("this chapter covers…")
+- A 2–3 line section with no self-sufficient content
+- A list of examples illustrating an adjacent section
+- Q&A blocks and answers to lecture questions (unless the answer grew into a full concept ≥ 10 lines)
+- If in doubt — leave it in the original; better to under-split than over-split
+
+### Naming and tagging the new file
+
+- Name — per `file-naming.md` (claim-based, no forbidden characters)
+- Structural tag and folder — per `tags.md` (the "Structural tags" section)
+- In the new note, `up` links to the original; in the original, `down` gets a link to the new note

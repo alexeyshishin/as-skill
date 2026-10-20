@@ -1,95 +1,95 @@
 ---
 name: obsidian-refactor-inbox
-description: Обработка входящих заметок из inbox в Obsidian. Используй этот скилл когда пользователь просит обработать заметки из папки 00. Входящие — нужно обновить теги, добавить aliases, создать связи с существующими заметками (люди, MOC, знания), переместить в правильную папку по методологии PARA. Скилл определяет тип заметки (атомарная мысль, ресурс, человек, проект, конспект конференции), добавляет соответствующие теги и связи, никогда не удаляет заметки — только архивирует с тегом #archive.
+description: Process inbox notes in Obsidian. Use this skill when the user asks to process notes from the `00. Входящие` folder — updating tags, adding aliases, creating links to existing notes (people, MOCs, knowledge), moving them to the right folder per the PARA methodology. The skill determines the note type (atomic thought, resource, person, project, conference notes), adds the corresponding tags and links, and never deletes notes — only archives them with the #archive tag.
 ---
 
 # obsidian-refactor-inbox
 
-Полный цикл обработки заметки из `00. Входящие/`: типизация → frontmatter → связи → перемещение в PARA.
+The full processing cycle for a note from `00. Входящие/`: typing → frontmatter → links → moving into PARA.
 
-Базовые правила (структура, теги, frontmatter, стиль) — в `.agents/rules/`. Здесь только специфика обработки inbox.
+Base rules (structure, tags, frontmatter, style) — in `.agents/rules/`. This covers only what's specific to inbox processing.
 
-## Связанные скиллы
+## Related skills
 
-| Когда | Что использовать |
+| When | What to use |
 |-------|------------------|
-| Сначала только осмотреть инбокс | `obsidian-inbox-review` |
-| Обогатить frontmatter без перемещения | `obsidian-enrich-note` |
-| Разбить большую заметку на части | `obsidian-split-note` |
+| Just want to inspect the inbox first | `obsidian-inbox-review` |
+| Enrich frontmatter without moving | `obsidian-enrich-note` |
+| Split a large note into parts | `obsidian-split-note` |
 
 ---
 
-## Алгоритм
+## Algorithm
 
-### 1. Прочти заметку и определи тип
+### 1. Read the note and determine its type
 
-Структурный тег + папка — по таблице `tags.md` (раздел «Структурные теги»). Кратко:
+Structural tag + folder — from the `tags.md` table (the "Structural tags" section). Summary:
 
-| Тип содержимого | Тег | Папка |
+| Content type | Tag | Folder |
 |-----------------|-----|-------|
-| Атомарная мысль / концепт | `#thought` | `03. Ресурсы/04. Заметки/` |
-| MOC / карта обзора | `#moc` | `03. Ресурсы/07. Карты/` |
-| Человек / контакт | `#person` | `02. Сферы/01. Люди/` |
-| Литературная заметка | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| Книга | `#book` | `03. Ресурсы/01. Книги/` |
-| Статья | `#article` | `03. Ресурсы/02. Статьи/` |
-| Видео | `#video` | `03. Ресурсы/05. Видео/` |
-| Проект | `#project` | `01. Проекты/` |
-| Встреча / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
-| Конспект конференции / доклада | `#conference` | `02. Сферы/06. Конференции/` |
-| Запись в дневник | `#journal/daily` | `05. Дневник/<год>/<месяц>/` |
-| Утратило актуальность | `#archive` | `04. Архив/` |
+| Atomic thought / concept | `#thought` | `03. Ресурсы/04. Заметки/` |
+| MOC / overview map | `#moc` | `03. Ресурсы/07. Карты/` |
+| Person / contact | `#person` | `02. Сферы/01. Люди/` |
+| Literature note | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
+| Book | `#book` | `03. Ресурсы/01. Книги/` |
+| Article | `#article` | `03. Ресурсы/02. Статьи/` |
+| Video | `#video` | `03. Ресурсы/05. Видео/` |
+| Project | `#project` | `01. Проекты/` |
+| Meeting / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
+| Conference / talk notes | `#conference` | `02. Сферы/06. Конференции/` |
+| Journal entry | `#journal/daily` | `05. Дневник/<year>/<month>/` |
+| No longer relevant | `#archive` | `04. Архив/` |
 
-### 2. Обнови frontmatter
+### 2. Update frontmatter
 
-Шаблоны и поля — `.agents/rules/note-types-frontmatter.md`. Заметка должна иметь как минимум:
+Templates and fields — `.agents/rules/note-types-frontmatter.md`. The note must have at least:
 
-- `aliases` — синонимы, английский вариант, аббревиатуры (см. `enrich-note` ниже)
-- `tags` — структурный тег + домен (см. `tags.md`)
-- `up`, `down`, `other`, `links` — связи (правила в `content-style.md`)
+- `aliases` — synonyms, English variant, abbreviations (see `enrich-note` below)
+- `tags` — structural tag + domain (see `tags.md`)
+- `up`, `down`, `other`, `links` — links (rules in `content-style.md`)
 
-### 3. Обогати aliases и связи
+### 3. Enrich aliases and links
 
-Это субзадача — действуй как `obsidian-enrich-note`:
+This is a sub-task — proceed as `obsidian-enrich-note` would:
 
-- Найди родственные заметки в `03. Ресурсы/07. Карты/` и `03. Ресурсы/04. Заметки/`
-- Для людей — посмотри `02. Сферы/01. Люди/`
-- `up` — родительская тема / MOC, `down` — что эта заметка порождает, `other` — горизонтальные связи
-- `links` — только внешние URL
+- Find related notes in `03. Ресурсы/07. Карты/` and `03. Ресурсы/04. Заметки/`
+- For people — check `02. Сферы/01. Люди/`
+- `up` — the parent topic / MOC, `down` — what this note gives rise to, `other` — horizontal links
+- `links` — external URLs only
 
 ```bash
-# Найти заметки по теме
+# Find notes on a topic
 rg -l "KEYWORD" "03. Ресурсы/" | head -20
 ```
 
-### 4. Перемести в PARA
+### 4. Move into PARA
 
 ```bash
 mv "00. Входящие/Note.md" "03. Ресурсы/04. Заметки/Note.md"
 ```
 
-### 5. Убери `#inbox/review`
+### 5. Remove `#inbox/review`
 
-Удали из `tags` (если был).
+Remove it from `tags` (if present).
 
-### 6. Архивирование
+### 6. Archiving
 
-**Никогда не удаляй заметки.** Если заметка устарела:
+**Never delete notes.** If a note is outdated:
 
-1. Перемести в `04. Архив/`
-2. Добавь тег `#archive`
-3. Сохрани все ссылки и связи
+1. Move it to `04. Архив/`
+2. Add the `#archive` tag
+3. Preserve all links and connections
 
 ---
 
-## Чек-лист результата
+## Result checklist
 
-- [ ] Тег `#inbox/review` убран
-- [ ] Добавлен структурный тег (см. `tags.md`)
-- [ ] `aliases` заполнены (синонимы / EN-версия)
-- [ ] `up` — wikilinks или обоснованно пуст
-- [ ] `down` — wikilinks или обоснованно пуст
-- [ ] `other` — wikilinks на смежные темы / людей / MOC
-- [ ] `links` содержит только внешние URL (не wikilinks)
-- [ ] Файл перемещён в правильную папку PARA
-- [ ] Все wikilinks указывают на существующие файлы
+- [ ] The `#inbox/review` tag is removed
+- [ ] A structural tag is added (see `tags.md`)
+- [ ] `aliases` are filled in (synonyms / EN version)
+- [ ] `up` — wikilinks or justifiably empty
+- [ ] `down` — wikilinks or justifiably empty
+- [ ] `other` — wikilinks to adjacent topics / people / MOCs
+- [ ] `links` contains only external URLs (not wikilinks)
+- [ ] The file is moved to the correct PARA folder
+- [ ] All wikilinks point to existing files

@@ -1,43 +1,44 @@
 ---
 name: git-flow
 description: >
-  Оркестрирует полный цикл изменений в git: создание ветки → атомарные коммиты по
-  Conventional Commits → описание PR → merge → semver-тег (если релиз). Вызывает
-  скиллы git-conventional-commit, git-pr-description, git-release-tag. Используй,
-  когда задача — провести изменение через git от ветки до релиза или хотя бы до PR.
+  Orchestrates the full cycle of a git change: create a branch → atomic commits
+  following Conventional Commits → PR description → merge → semver tag (if it's a
+  release). Calls the skills git-conventional-commit, git-pr-description,
+  git-release-tag. Use when the task is to carry a change through git from branch
+  to release, or at least to PR.
 ---
 
-# git-flow — Оркестратор GitHub Flow
+# git-flow — GitHub Flow orchestrator
 
-Этот агент ведёт пользователя по сценарию GitHub Flow и в нужный момент вызывает атомарные скиллы домена `git`.
+This agent walks the user through the GitHub Flow scenario and, at the right moment, calls the atomic skills of the `git` domain.
 
-Перед началом прочитай `~/.claude/rules/git-conventions.md` — общие принципы.
+Before starting, read `~/.claude/rules/git-conventions.md` — the general principles.
 
-## Когда вызывать какие скиллы
+## When to call which skill
 
-| фаза | действие | скилл |
+| phase | action | skill |
 |------|---------|-------|
-| **Старт работы** | создать ветку, договориться о scope | (вручную: `git checkout -b feature/...`) |
-| **Каждый логический шаг** | коммит | `git-conventional-commit` |
-| **Перед открытием PR** | описание | `git-pr-description` |
-| **После merge в main** | если это релиз одного пакета | `git-release-tag` |
-| **После merge в main** | если в репо несколько версионируемых пакетов | `git-monorepo-release` |
+| **Start of work** | create a branch, agree on scope | (manual: `git checkout -b feature/...`) |
+| **Each logical step** | commit | `git-conventional-commit` |
+| **Before opening a PR** | description | `git-pr-description` |
+| **After merge into main** | if it's a single-package release | `git-release-tag` |
+| **After merge into main** | if the repo has several versioned packages | `git-monorepo-release` |
 
-## Сценарий
+## Scenario
 
-### 1. Понимание задачи
+### 1. Understand the task
 
-Спроси пользователя:
-- что делаем — feat / fix / refactor / chore / docs?
-- какой scope (модуль / SDK / папка)?
-- есть ли тикет (issue ID)?
+Ask the user:
+- what are we doing — feat / fix / refactor / chore / docs?
+- what scope (module / SDK / folder)?
+- is there a ticket (issue ID)?
 
-Если уже в feature-ветке (`git branch --show-current` ≠ main) — узнай у пользователя, продолжаем эту ветку или новую.
+If already on a feature branch (`git branch --show-current` ≠ main) — ask the user whether to continue this branch or start a new one.
 
-### 2. Создание ветки (если нужно)
+### 2. Create a branch (if needed)
 
-Имя по `~/.claude/rules/git-conventions.md`:
-- `feature/<short-desc>` или `feature/<short-desc>-<TICKET>`
+Name per `~/.claude/rules/git-conventions.md`:
+- `feature/<short-desc>` or `feature/<short-desc>-<TICKET>`
 - `fix/<short-desc>`, `hotfix/<short-desc>`, `chore/<short-desc>`, `docs/<short-desc>`
 
 ```
@@ -45,45 +46,45 @@ git checkout main && git pull --ff-only
 git checkout -b <branch>
 ```
 
-### 3. Атомарные коммиты
+### 3. Atomic commits
 
-После каждой логической порции изменений — вызывай **`git-conventional-commit`**. Не накапливай по 20 файлов в одном коммите.
+After each logical chunk of changes — call **`git-conventional-commit`**. Don't pile up 20 files into a single commit.
 
-Если пользователь делает большую правку без коммитов — предложи разбить её на смысловые куски:
+If the user makes a large edit without committing — suggest splitting it into meaningful chunks:
 ```
-git add -p   # интерактивно по hunks
+git add -p   # interactively, hunk by hunk
 ```
 
-### 4. Перед открытием PR
+### 4. Before opening a PR
 
-- проверь, что ветка свежая относительно base: `git fetch origin && git log HEAD..origin/main --oneline` — если есть новые коммиты в main, предложи rebase
-- запусти **`git-pr-description`**
-- если есть `gh` CLI — открой PR, иначе подскажи команду `git push -u origin <branch>` и URL для UI
+- check that the branch is fresh relative to base: `git fetch origin && git log HEAD..origin/main --oneline` — if there are new commits on main, suggest a rebase
+- run **`git-pr-description`**
+- if `gh` CLI is available — open the PR, otherwise suggest the `git push -u origin <branch>` command and the URL for the UI
 
-### 5. После merge
+### 5. After merge
 
-Если изменение было релизным (или пользователь явно говорит «релиз») — на main:
+If the change was release-worthy (or the user explicitly says "release") — on main:
 ```
 git checkout main && git pull --ff-only
 ```
-Дальше зависит от репозитория: один версионируемый пакет — **`git-release-tag`**; несколько независимых пакетов или SDK (теги вида `sdk-go/vX.Y.Z`) — **`git-monorepo-release`**, он определит состав релиза и вызовет `git-release-tag` на каждый тег.
+What's next depends on the repo: a single versioned package — **`git-release-tag`**; several independent packages or SDKs (tags like `sdk-go/vX.Y.Z`) — **`git-monorepo-release`**, which determines the release composition and calls `git-release-tag` for each tag.
 
-Если изменение не релизное (например, внутренний рефакторинг без публичного API) — просто удалить feature-ветку:
+If the change is not release-worthy (e.g. an internal refactor with no public API impact) — just delete the feature branch:
 ```
 git branch -d <branch>
-git push origin --delete <branch>   # если была запушена
+git push origin --delete <branch>   # if it was pushed
 ```
 
-## Контракт работы с пользователем
+## Contract with the user
 
-Базовый протокол всех bear-skills: **план → подтверждение → действие → отчёт**.
+Base protocol for all bear-skills: **plan → confirmation → action → report**.
 
-- никогда не выполняй `git push`, `git tag --push`, `gh pr merge` без явного подтверждения
-- `git reset --hard`, `git push --force`, удаление веток с unmerged-коммитами — только после двойного подтверждения и предупреждения о последствиях
-- если что-то пошло не так (конфликт rebase, отвергнутый push) — остановись, покажи состояние, спроси пользователя
+- never run `git push`, `git tag --push`, `gh pr merge` without explicit confirmation
+- `git reset --hard`, `git push --force`, deleting branches with unmerged commits — only after double confirmation and a warning about the consequences
+- if something goes wrong (rebase conflict, rejected push) — stop, show the state, ask the user
 
-## Чего не делать
+## What not to do
 
-- не комбинируй несколько фаз без подтверждения (например, commit + push + PR в один заход)
-- не действуй из main напрямую (за исключением `git pull --ff-only` и тегов)
-- не предполагай язык коммитов — посмотри `git log` и сматчись со стилем проекта
+- don't combine several phases without confirmation (e.g. commit + push + PR in one pass)
+- don't act directly from main (except for `git pull --ff-only` and tags)
+- don't assume the commit language — check `git log` and match the project's style

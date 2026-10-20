@@ -1,75 +1,75 @@
 ---
 name: obsidian-untangle-knot
-description: "Разгрузка hub-заметки в Obsidian, на которую ссылается слишком много заметок (in-clubok). Главный сигнал клубка — высокий in-degree (десятки–сотни входящих ссылок), out-degree — вспомогательный. Скилл создаёт под-MOC под существующие категории hub и **перенаправляет входящие ссылки из ресурсных заметок** на конкретный под-MOC вместо общего. Оригинальный MOC сохраняется как точка входа — на него по-прежнему можно ссылаться, когда категория неясна. Используй этот скилл всегда, когда пользователь говорит: «распутай клубок», «разгрузи MOC X», «слишком много ссылок на X», «перепривязать заметки», «X разросся», «карта стала бесполезной», «не вижу структуры в MOC», «слишком много входящих/исходящих ссылок», «обработай хаб-заметку», «найди мои hub-заметки», «свалка ссылок», «карта-помойка». Также применяй, когда из контекста видно, что речь о перегруженном узле графа, даже если пользователь не назвал его hub-ом."
+description: "Offload an Obsidian hub note that too many notes link to (an in-degree tangle). The main signal of a tangle is a high in-degree (tens to hundreds of incoming links); out-degree is secondary. The skill creates sub-MOCs under the hub's existing categories and **redirects incoming links from resource notes** to the specific sub-MOC instead of the general one. The original MOC is kept as an entry point — it can still be linked to when the category is unclear. Use this skill whenever the user says: \"untangle this knot\", \"offload MOC X\", \"too many links to X\", \"re-link these notes\", \"X has grown too big\", \"this map has become useless\", \"I don't see structure in this MOC\", \"too many incoming/outgoing links\", \"process this hub note\", \"find my hub notes\", \"link dump\", \"junk-drawer map\". Also apply it when it's clear from context that the user means an overloaded graph node, even if they didn't call it a hub."
 ---
 
 # obsidian-untangle-knot
 
-## Базовая идея
+## Core idea
 
-В персональной базе на одни и те же MOC ссылаются десятки и сотни заметок — это естественно: когда добавляешь статью, книгу или новую идею, проще сослаться на общий `[[DevOps]]`, чем искать конкретную подкарту. Со временем общий MOC превращается из карты в свалку backlinks: открываешь — и тонешь в шуме.
+In a personal knowledge base, dozens or hundreds of notes end up linking to the same MOCs — that's natural: when you add an article, a book, or a new idea, it's easier to link to the general `[[DevOps]]` than to hunt for the specific sub-map. Over time the general MOC turns from a map into a backlink dump: you open it and drown in noise.
 
-Out-links на hub растут медленно (это всё-таки **карта**, её осознанно поддерживают). А in-links — стихийно и быстро. Поэтому главный сигнал клубка — **высокий in-degree**, не out.
+Out-links on a hub grow slowly (it's still a **map**, deliberately maintained). In-links grow spontaneously and fast. So the main signal of a tangle is **high in-degree**, not out-degree.
 
-Скилл:
+The skill:
 
-1. Находит/принимает hub и считает in/out
-2. Опирается на **уже существующую структуру** hub (подзаголовки, явные категории) как на готовые точки приземления — не выдумывает новые категории, когда их не просили
-3. Создаёт под-MOC под каждую категорию
-4. **Главное действие:** проходит по входящим ссылкам из ресурсных заметок и переключает их с общего MOC на подходящий под-MOC
-5. Оригинальный MOC **остаётся** — он по-прежнему правильная точка входа для случая «не знаю точнее куда сослаться»
+1. Finds/accepts a hub and counts its in/out links
+2. Relies on the hub's **already-existing structure** (subheadings, explicit categories) as ready-made landing points — it doesn't invent new categories when none were asked for
+3. Creates a sub-MOC for each category
+4. **Main action:** goes through incoming links from resource notes and switches them from the general MOC to the appropriate sub-MOC
+5. The original MOC **stays** — it remains the right entry point for the "don't know exactly where to link" case
 
 ```
-до:                          после:
-                             [hub] (~ остаётся, но in-links реже)
-[hub] ←── 200 in-links       ├── [под-MOC A] ←── 60 in-links (бывших общих)
-  ├── 22 out-links           ├── [под-MOC B] ←── 40
-                             ├── [под-MOC C] ←── 30
-                             └── [под-MOC D] ←── 25
-                             (общие, неклассифицированные ~45 — на hub)
+before:                       after:
+                             [hub] (~ stays, but fewer in-links)
+[hub] ←── 200 in-links       ├── [sub-MOC A] ←── 60 in-links (former general ones)
+  ├── 22 out-links           ├── [sub-MOC B] ←── 40
+                             ├── [sub-MOC C] ←── 30
+                             └── [sub-MOC D] ←── 25
+                             (general, unclassified ~45 — stay on the hub)
 ```
 
-Базовые правила (PARA, теги, шаблоны, стиль, именование) — в `.agents/rules/`. Особенно: `knowledge-structures.md` (MOC), `note-types-frontmatter.md` (frontmatter), `workflows.md` (протокол план → подтверждение → действие), `file-naming.md` (имена).
+Base rules (PARA, tags, templates, style, naming) — in `.agents/rules/`. In particular: `knowledge-structures.md` (MOC), `note-types-frontmatter.md` (frontmatter), `workflows.md` (plan → confirmation → action protocol), `file-naming.md` (names).
 
-**Корневая папка хранилища (`<vault>/`):** задаётся при установке (`--vault` или env `BEAR_VAULT`). См. `.agents/rules/vault-struct.md`.
-**Язык вывода:** Русский, технические термины — на английском.
+**Vault root folder (`<vault>/`):** set at install time (`--vault` or the `BEAR_VAULT` env var). See `.agents/rules/vault-struct.md`.
+**Output language:** Russian, technical terms in English.
 
 ---
 
-## Когда использовать и когда нет
+## When to use this and when not to
 
-| Ситуация | Скилл |
+| Situation | Skill |
 |----------|-------|
-| **Одна заметка/MOC, перегруженная связями** | **этот скилл** |
-| Содержимое одной заметки нужно разбить на атомарные | `obsidian-split-note` |
-| Конспект лекции — вынести концепты | `obsidian-refactor-lecture` |
-| Сверка одной заметки на противоречия и пробелы | `obsidian-note-critic` |
-| Inbox-заметки — разобрать и разложить | `obsidian-refactor-inbox` |
-| Обновить frontmatter одной заметки | `obsidian-enrich-note` |
-| Визуальная карта callout-ов одной заметки | `obsidian-note-canvas-map` |
+| **A single note/MOC overloaded with links** | **this skill** |
+| The content of a single note needs splitting into atomic notes | `obsidian-split-note` |
+| Lecture notes — extract concepts | `obsidian-refactor-lecture` |
+| Cross-check a single note for contradictions and gaps | `obsidian-note-critic` |
+| Inbox notes — sort and file them | `obsidian-refactor-inbox` |
+| Update a single note's frontmatter | `obsidian-enrich-note` |
+| Visual callout map of a single note | `obsidian-note-canvas-map` |
 
-Разница с `obsidian-split-note`: тот скилл разбивает **содержимое** одной заметки на атомарки. Здесь мы разбиваем **связи** (граф), а не текст — тело заметки переписывается в оглавление, новые атомарки не создаются.
+Difference from `obsidian-split-note`: that skill splits the **content** of a single note into atoms. Here we split **links** (the graph), not text — the note body is rewritten into a table of contents, and no new atomic notes are created.
 
 ---
 
-## Алгоритм
+## Algorithm
 
-### 1. Выбор hub-заметки
+### 1. Choosing the hub note
 
-Два режима.
+Two modes.
 
-**Точечный** — пользователь сразу назвал заметку («разгрузи [[DevOps]]»). Найди файл по имени:
+**Direct** — the user already named the note ("offload [[DevOps]]"). Find the file by name:
 
 ```bash
 fd -t f "DevOps.md" .
 ```
 
-Если имён несколько — спроси, какой именно.
+If there are several matches, ask which one.
 
-**Discovery** — пользователь хочет найти кандидатов («найди мои hub-заметки», «где у меня перегруз»). Прогон по `03. Ресурсы/07. Карты/` (по умолчанию) или другой папке по запросу:
+**Discovery** — the user wants to find candidates ("find my hub notes", "where am I overloaded"). Scan `03. Ресурсы/07. Карты/` (by default) or another folder on request:
 
 ```bash
-# Подсчёт out-links: количество [[wikilink]] в теле + frontmatter
+# Count out-links: number of [[wikilink]] in the body + frontmatter
 for f in "03. Ресурсы/07. Карты/"*.md; do
   out=$(rg -o '\[\[[^\]]+\]\]' "$f" | wc -l)
   echo "$out  $f"
@@ -77,33 +77,33 @@ done | sort -rn | head -10
 ```
 
 ```bash
-# Подсчёт in-links: сколько раз на заметку ссылаются
-rg -c -F "[[Имя заметки]]" .
+# Count in-links: how many times the note is linked to
+rg -c -F "[[Note name]]" .
 ```
 
-Покажи top-10 по `in + out` и спроси, какую разгружать. Пороги — см. ниже в шаге 2.
+Show the top-10 by `in + out` and ask which one to offload. Thresholds — see step 2 below.
 
-### 2. Подсчёт ссылок и диагностика
+### 2. Counting links and diagnosis
 
-**In-links — три разных потока, не одна метрика.** Это критически важно: ссылка из `up:` соседа и ссылка в теле статьи — это разные явления с разной стратегией обработки. Игнорировать различие — значит работать неполно.
+**In-links are three distinct streams, not one metric.** This matters a lot: a link from a neighbor's `up:` and a link in an article's body are different phenomena with different handling strategies. Ignoring the distinction means doing the job incompletely.
 
-| Поток | Что это | Как искать | Перепривязка |
+| Stream | What it is | How to find it | Re-linking |
 |-------|---------|------------|--------------|
-| **A. Out-соседи hub** | Заметки, **на которые ссылается** hub (из тела или `down`) | Парсинг тела/frontmatter hub | Итерация 1 (каркас) |
-| **B. Up-children** | Заметки, у которых `up: [[Hub]]` в frontmatter, но они **не упомянуты** в теле hub | Скан frontmatter всех заметок | Итерация 1 (каркас) — **не пропускай!** |
-| **C. In-links в телах** | Контекстные упоминания `[[Hub]]` в теле других заметок | `rg -F "[[Hub]]"` по телам | Итерация 2 (тяжёлая, опциональная) |
+| **A. Hub's out-neighbors** | Notes that the hub **links to** (from the body or `down`) | Parse the hub's body/frontmatter | Iteration 1 (scaffold) |
+| **B. Up-children** | Notes with `up: [[Hub]]` in their frontmatter that are **not mentioned** in the hub's body | Scan the frontmatter of all notes | Iteration 1 (scaffold) — **don't skip this!** |
+| **C. In-links in bodies** | Contextual mentions of `[[Hub]]` in the body of other notes | `rg -F "[[Hub]]"` across bodies | Iteration 2 (heavy, optional) |
 
-**Подсчёт:**
+**Counting:**
 
 ```bash
-# Поток A: out-degree
-# В теле hub — wikilinks через regex \[\[([^\]\|#]+)
-# В frontmatter hub — up, down, other, links, sources
+# Stream A: out-degree
+# In the hub's body — wikilinks via regex \[\[([^\]\|#]+)
+# In the hub's frontmatter — up, down, other, links, sources
 
-# Поток B: up-children — ТОЛЬКО из поля `up:`, не из других полей frontmatter!
-# Грубый grep по frontmatter ловит лишнее: [[Hub]] может быть в other/links/category/sources —
-# это разная семантика, перепривязывать НЕЛЬЗЯ.
-# Парсинг точный — только многострочный или однострочный up:
+# Stream B: up-children — ONLY from the `up:` field, not from other frontmatter fields!
+# A crude frontmatter grep also catches unrelated hits: [[Hub]] can appear in other/links/category/sources —
+# that's different semantics, and re-linking those is NOT allowed.
+# Parse precisely — only the multi-line or single-line up: form
 python3 - <<'PY'
 import os, re
 res = []
@@ -117,192 +117,192 @@ for dp, _, fns in os.walk('.'):
         m = re.match(r'^---\n(.*?)\n---', c, re.DOTALL)
         if not m: continue
         fm = m.group(1)
-        # Многострочный (up:\n  - "[[X]]"\n  - ...)
+        # Multi-line (up:\n  - "[[X]]"\n  - ...)
         block = re.search(r'^up:\s*\n(.*?)(?=^[a-zA-Z_]+:|\Z)', fm, re.M|re.S)
         if block and re.search(r'-\s*"?\[\[Hub\]\]"?', block.group(1)):
             res.append(p); continue
-        # Однострочный (up: "[[X]]")
+        # Single-line (up: "[[X]]")
         s = re.search(r'^up:\s*(.+)$', fm, re.M)
         if s and '[[Hub]]' in s.group(1):
             res.append(p)
 print(len(res))
 PY
 
-# Поток C: in-links в телах (общий счёт)
+# Stream C: in-links in bodies (overall count)
 rg -l -F "[[Hub]]" --type md . | wc -l
-rg -l -F "[[Hub]|" --type md . | wc -l  # с pipe-алиасами
+rg -l -F "[[Hub]|" --type md . | wc -l  # with pipe aliases
 ```
 
-Зафиксируй:
+Record:
 
 - **A** = unique out-degree
 - **B** = unique up-children
-- **C** = unique in-links в телах
-- Пересечение A ∩ B (out-сосед, который **также** имеет `up: [[Hub]]`) — обрабатывается в потоке A (он покрывает оба случая)
+- **C** = unique in-links in bodies
+- The overlap A ∩ B (an out-neighbor that **also** has `up: [[Hub]]`) is handled under stream A (it covers both cases)
 
-**Почему это критично:** Поток B — самая «забытая» нагрузка. Заметка имеет `up: [[Hub]]`, но не упомянута в теле hub. Если разгружать только поток A, эти заметки остаются с устаревшей категоризацией.
+**Why this matters:** Stream B is the most "forgotten" load. A note has `up: [[Hub]]` but isn't mentioned in the hub's body. If you only offload stream A, these notes are left with a stale categorization.
 
-**Важно про другие поля frontmatter:**
+**Important note on other frontmatter fields:**
 
-`[[Hub]]` может встречаться в нескольких полях frontmatter — у каждого своя семантика:
+`[[Hub]]` can show up in several frontmatter fields — each with its own semantics:
 
-| Поле | Что это | Трогаем при разгрузке? |
+| Field | What it is | Touch it during offload? |
 |------|---------|------------------------|
-| `up` | Родитель в иерархии PARA/MOC | **Да** — это и есть поток B |
-| `other` | Горизонтальная связь, родственная тема | **Нет** — это контекстная связь, не категория |
-| `links` | Внешние ссылки или родственные wikilinks | **Нет** — навигация, не категоризация |
-| `category` | Пользовательское поле каталога (книги/статьи/видео — «полка») | **Нет** — это категоризация по типу контента, не по теме |
-| `sources` | Источники (литературные wikilinks или текстовые) | **Нет, никогда** — летопись источников |
-| `down` | Дочерние заметки (в hub-е) | Часть потока A |
+| `up` | Parent in the PARA/MOC hierarchy | **Yes** — this is stream B |
+| `other` | Horizontal link, a related topic | **No** — it's a contextual link, not a category |
+| `links` | External links or related wikilinks | **No** — navigation, not categorization |
+| `category` | User-defined catalog field (books/articles/videos — a "shelf") | **No** — this is categorization by content type, not by topic |
+| `sources` | Sources (literature wikilinks or plain text) | **No, never** — a record of sources |
+| `down` | Child notes (on the hub) | Part of stream A |
 
-Если перепутать и тронуть `[[Hub]]` в `other`/`links`/`category` — сломаем семантику. Скилл должен **точно парсить YAML** и работать только с полем `up`.
+If you mix these up and touch `[[Hub]]` in `other`/`links`/`category`, you'll break the semantics. The skill must **parse the YAML precisely** and only work with the `up` field.
 
-**Порог «клубка» (по in-degree):**
+**"Tangle" threshold (by in-degree):**
 
-| in-degree | Диагноз | Действие |
-|-----------|---------|----------|
-| ≥ 100 | Сильный in-клубок | Распутываем (этот скилл) |
-| 50–100 | Зреющий in-клубок | Можно распутать; спроси пользователя |
-| 20–50 | Слабый клубок | Распутывание возможно, но прирост от перепривязки невелик |
-| < 20 | Не клубок | Скорее всего, рано |
+| in-degree | Diagnosis | Action |
+|-----------|-----------|--------|
+| ≥ 100 | Strong in-tangle | Untangle it (this skill) |
+| 50–100 | Emerging in-tangle | Can be untangled; ask the user |
+| 20–50 | Weak tangle | Untangling is possible, but the gain from re-linking is small |
+| < 20 | Not a tangle | Probably too early |
 
-**Out-degree** влияет на возможность распутывания:
+**Out-degree** affects whether untangling is feasible at all:
 
-- **N < 5** при высоком in → распутывать **некуда**, под-MOC не из чего лепить. Скилл отказывается, предлагает `obsidian-ingest` или `obsidian-note-critic`.
-- **N = 5–10** → можно слепить 2–3 категории, если они уже намечены подзаголовками
-- **N > 10** → есть пространство для нормальной категоризации
+- **N < 5** with high in → nowhere **to** untangle into, there's not enough to build sub-MOCs from. The skill declines and suggests `obsidian-ingest` or `obsidian-note-critic`.
+- **N = 5–10** → 2–3 categories can be put together, if they're already outlined by subheadings
+- **N > 10** → there's room for proper categorization
 
-Высокий out при низком in (out=30, in=5) — это **out-клубок**, что в твоей базе встречается редко (out растёт медленнее). Сценарий другой: переписывается тело hub в оглавление, под-MOC создаются для красоты. Это «лёгкая ветка» скилла, см. особый случай ниже.
+High out with low in (out=30, in=5) is an **out-tangle**, which is rare in your base (out grows more slowly). The scenario is different: the hub's body gets rewritten into a table of contents, and sub-MOCs are created for the sake of tidiness. This is the "light branch" of the skill, see the special case below.
 
-### 3. Чтение соседей (без изменений)
+### 3. Reading the neighbors (no changes)
 
-Для каждого out-соседа hub — короткий read и **классификация**:
+For each of the hub's out-neighbors — a quick read and **classification**:
 
-- **Существует ли файл?** Если wikilink dangling — это не сосед, а пустая ссылка. Фиксируй в отдельный список «dangling out-links», в перепривязку `up` не идёт.
-- **Имя файла и путь**
-- **Тезис** (одна фраза — берётся из первой осмысленной строки тела или из aliases)
-- **Структурный тег** и папка PARA
-- **`confidence`** (если есть)
-- **`up`** — самое важное. От его значения зависит ветка перепривязки в шаге 6.2:
-    - `up` пустой → добавляем под-MOC
-    - `up` содержит `[[Hub]]` → заменяем на под-MOC
-    - `up` содержит `[[Какой-то – Альтернативный – под-MOC]]` который **существует как файл** → **не трогаем**, у заметки уже есть категоризация (см. ниже)
-    - `up` содержит wikilink, который **не существует** (dangling) → подхватываем намерение: это попытка категоризации, направляем в новый под-MOC
+- **Does the file exist?** If the wikilink is dangling, it's not a neighbor but an empty link. Record it in a separate "dangling out-links" list; it does not go into the `up` re-linking.
+- **File name and path**
+- **Thesis** (one phrase — taken from the first meaningful line of the body or from aliases)
+- **Structural tag** and PARA folder
+- **`confidence`** (if present)
+- **`up`** — the most important field. Its value determines the re-linking branch in step 6.2:
+    - `up` is empty → add the sub-MOC
+    - `up` contains `[[Hub]]` → replace it with the sub-MOC
+    - `up` contains `[[Some – Alternative – sub-MOC]]` that **exists as a file** → **leave it alone**, the note already has a categorization (see below)
+    - `up` contains a wikilink that **doesn't exist** (dangling) → pick up the intent: it's an attempted categorization, route it to the new sub-MOC
 
-**Классификация соседа:**
+**Classifying the neighbor:**
 
-| Тип соседа | Действие |
-|------------|----------|
-| Атомарка / концепт (`#thought`) | стандартная перепривязка |
-| MOC / карта (`#moc`, `MapOfContent`) | стандартная перепривязка; добавляем как `down` в новый под-MOC |
-| **Заметка-упоминание** (`#person`, ссылка на компанию, инструмент) | **не считается категоризуемым соседом** — остаётся в hub как контекстная ссылка, не уходит в под-MOC |
-| Заметка из `02. Сферы/05. Медийность/` (Telegram, контент) | свой жизненный цикл (`status`, `publication_date`, `link`); `up` не трогаем |
-| Заметка с `up` на **существующий** альтернативный под-MOC | уже категоризована — оставляем; добавляем альтернативу в `other` нового под-MOC как родственную карту |
+| Neighbor type | Action |
+|------------|--------|
+| Atomic note / concept (`#thought`) | standard re-linking |
+| MOC / map (`#moc`, MapOfContent) | standard re-linking; add as `down` on the new sub-MOC |
+| **Mention note** (`#person`, a link to a company, a tool) | **not considered a categorizable neighbor** — stays on the hub as a contextual link, doesn't move to the sub-MOC |
+| Note from `02. Сферы/05. Медийность/` (Telegram, content) | has its own lifecycle (`status`, `publication_date`, `link`); don't touch `up` |
+| Note whose `up` points to an **existing** alternative sub-MOC | already categorized — leave it; add the alternative to the new sub-MOC's `other` as a related map |
 
-Не читай полное тело — для категоризации хватает тезиса и frontmatter. Если тезис непонятен — посмотри первый заголовок.
+Don't read the full body — the thesis and frontmatter are enough for categorization. If the thesis is unclear, look at the first heading.
 
-### 4. Категоризация
+### 4. Categorization
 
-Главный принцип: **под-MOC — это точки приземления для будущих in-links**. Категория должна быть достаточно «семантически устойчивой», чтобы на неё можно было осмысленно ссылаться из новой заметки.
+The main principle: **sub-MOCs are landing points for future in-links.** A category needs to be "semantically stable" enough that it can meaningfully be linked to from a new note.
 
-**Если hub уже структурирован подзаголовками (`##`-секции) — используй их как готовые категории.** Не выдумывай оси, если автор карты уже выполнил эту работу. Достаточно вынести подсекции в под-MOC, даже если они по 3–4 заметки. Это бережнее и сохраняет ментальную модель автора.
+**If the hub is already structured with subheadings (`##` sections), use them as ready-made categories.** Don't invent axes if the map's author has already done that work. It's enough to turn subsections into sub-MOCs, even if they have just 3–4 notes each. This is gentler and preserves the author's mental model.
 
-**Если подзаголовков нет** — подбери ось из таблицы, которая лучше ложится на материал:
+**If there are no subheadings**, pick the axis from the table below that best fits the material:
 
-| Ось | Когда применять | Пример категорий |
+| Axis | When to apply | Example categories |
 |-----|----------------|------------------|
-| По домену знаний | Когда hub намешал несколько областей | SRE, Экономика, Психология |
-| По уровню абстракции | Когда hub — большая дисциплина | Принципы, Инструменты, Опыт, Источники |
-| По типу артефакта | Когда соседи разной природы | Концепты, Литературные, Синтезы, Проекты |
-| По уровню зрелости | Когда есть `confidence` | Подтверждённые, Спорные, В работе |
-| По существующим тегам | Когда в frontmatter уже есть устойчивая разметка | по `tags.md` |
+| By knowledge domain | When the hub mixes several fields | SRE, Economics, Psychology |
+| By level of abstraction | When the hub is a large discipline | Principles, Tools, Experience, Sources |
+| By artifact type | When neighbors differ in nature | Concepts, Literature notes, Syntheses, Projects |
+| By maturity level | When `confidence` is present | Confirmed, Disputed, In progress |
+| By existing tags | When frontmatter already has a stable taxonomy | per `tags.md` |
 
-**Размер категории:**
+**Category size:**
 
-- **Минимум 2 заметки**, если категория уже намечена подзаголовком или существующей структурой — она «семантически устойчива», под-MOC оправдан.
-- **Минимум 3 заметки**, если категория выдумывается с нуля — иначе шум.
-- Если категория > 20 — она сама клубок, дроби её внутри (2-уровневая структура `Hub → группа → под-MOC`).
+- **Minimum 2 notes** if the category is already outlined by a subheading or existing structure — it's "semantically stable", so a sub-MOC is justified.
+- **Minimum 3 notes** if the category is invented from scratch — otherwise it's just noise.
+- If a category has > 20, it's a tangle in its own right — split it internally (a 2-level structure: `Hub → group → sub-MOC`).
 
-**Имя категории** — claim-based, по `file-naming.md`. Для семейства под-MOC от одного родителя — формат `<Родитель> – <Категория>`: `DevOps – Управление инфраструктурой`, `DevOps – Деплой и релиз`. Это сохраняет родство в графе.
+**Category name** — claim-based, per `file-naming.md`. For a family of sub-MOCs from the same parent, use the format `<Parent> – <Category>`: `DevOps – Управление инфраструктурой`, `DevOps – Деплой и релиз`. This preserves kinship in the graph.
 
-**Раздел «Прочее»** в hub — куда идут одиночки, не попавшие в категории. Не дроби под них под-MOC.
+**A "Misc" section** in the hub is where the singletons go — the ones that don't fit any category. Don't build a sub-MOC for them.
 
-**Стоп-сигнал:** если категорий не получается ни по одной оси — материал монолитный. Распутывать нечего. Скажи об этом и предложи `obsidian-note-critic`.
+**Stop signal:** if no axis produces categories, the material is monolithic. There's nothing to untangle. Say so and suggest `obsidian-note-critic`.
 
-### 5. План разгрузки → подтверждение
+### 5. Offload plan → confirmation
 
-**Разгрузка идёт в две итерации** — каркасная и in-links. Это важно: реальное падение in-degree приходит только во второй. Не обещай пользователю чудес после первой.
+**The offload happens in two iterations** — scaffold and in-links. This matters: the actual drop in in-degree only comes in the second one. Don't promise the user miracles after the first.
 
-**Итерация 1 (каркас, безопасная):**
+**Iteration 1 (scaffold, safe):**
 
-- Создать под-MOC
-- Перепривязать `up` у **out-соседей** (поток A)
-- Перепривязать `up` у **up-children** (поток B) — может быть кратно больше, чем A
-- Минимально обновить тело hub (pointers, frontmatter `down`)
+- Create the sub-MOCs
+- Re-link `up` on the **out-neighbors** (stream A)
+- Re-link `up` on the **up-children** (stream B) — can be many times larger than A
+- Minimally update the hub's body (pointers, frontmatter `down`)
 
-Обе перепривязки `up` объединяются — это правки frontmatter, операция симметричная и безопасная. Делим на подпачки только если up-children > 50: батчи по 10–20 за раз, по категориям/папкам.
+Both `up` re-linkings are combined — these are frontmatter edits, a symmetric and safe operation. Split into sub-batches only if up-children > 50: batches of 10–20 at a time, by category/folder.
 
-**Итерация 2 (in-links в телах, опциональная):**
+**Iteration 2 (in-links in bodies, optional):**
 
-- Перенаправить in-links **в телах** ресурсных заметок (поток C)
-- Это тяжелее: нужен контекст ссылки, чтобы определить категорию
-- Реально применимо только к заметкам, где `[[Hub]]` — центральная тема обсуждения. У большинства упоминаний `[[Hub]]` — это родственная контекстная ссылка, её перепривязка ломает смысл текста
-- **Может оказаться, что эта итерация почти не нужна** — если после итерации 1 in-degree уже упал на ожидаемую величину
+- Redirect in-links **in bodies** of resource notes (stream C)
+- This is heavier: it needs the context of the link to determine the category
+- Really applicable only to notes where `[[Hub]]` is the central topic of discussion. For most mentions of `[[Hub]]`, it's a related contextual link, and re-linking it breaks the meaning of the text
+- **This iteration may turn out to be barely needed** — if in-degree has already dropped by the expected amount after iteration 1
 
-Формат плана:
+Plan format:
 
 ```
 🧶 Hub: [[DevOps]]
-   in: 222   out: 22   тип: MOC
+   in: 222   out: 22   type: MOC
    dangling out-links: 4 (Deployment Pipeline, Change Management, GitOps, ChatOps)
-   соседи с альтернативным up: 2 (Blue-Green, Canary — привязаны к [[Стратегии развертывания...]])
+   neighbors with an alternative up: 2 (Blue-Green, Canary — linked to [[Стратегии развертывания...]])
 
-═══ Итерация 1 (каркас) ═══
+═══ Iteration 1 (scaffold) ═══
 
-Создать под-MOC (в 03. Ресурсы/07. Карты/):
-  1. [[DevOps – Основы]]                       → 3 out-link
+Create sub-MOCs (in 03. Ресурсы/07. Карты/):
+  1. [[DevOps – Основы]]                       → 3 out-links
   2. [[DevOps – Управление инфраструктурой]]   → 4
-  3. [[DevOps – Деплой и релиз]]               → 1 (Blue-Green/Canary остаются в альт. карте)
+  3. [[DevOps – Деплой и релиз]]               → 1 (Blue-Green/Canary stay on the alt. map)
   4. [[DevOps – Процессы и подходы]]           → 1 (GitOps/ChatOps dangling)
 
-Прочее (одиночки, остаются в hub): DORA Metrics, Культура, ИБ, DevSecOps
+Misc (singletons, stay on the hub): DORA Metrics, Culture, Security, DevSecOps
 
-Перепривязать `up` у out-соседей: ~8 заметок (после фильтрации danling/альтернативных/упоминаний)
+Re-link `up` on out-neighbors: ~8 notes (after filtering out dangling/alternative/mentions)
 
-Минимально обновить тело [[DevOps]]:
-   — Pointer-строка `→ Подкарта: [[под-MOC]]` в каждый соответствующий ##-подзаголовок
-   — frontmatter `down`: добавить ссылки на новые под-MOC
-   — Не переписывать тело целиком: структура уже есть
+Minimally update the [[DevOps]] body:
+   — a pointer line `→ Sub-map: [[sub-MOC]]` in each corresponding ## subheading
+   — frontmatter `down`: add links to the new sub-MOCs
+   — Don't rewrite the whole body: the structure is already there
 
-Ожидаемый эффект: in-degree оригинала упадёт незначительно (~5–10),
-                  потому что в телах ссылки остаются. Каркас стоит.
+Expected effect: the original's in-degree will drop only slightly (~5–10),
+                  because the links in the bodies remain. The scaffold is in place.
 
-═══ Итерация 2 (in-links, отдельный прогон) ═══
+═══ Iteration 2 (in-links, separate run) ═══
 
-Перенаправить in-links в телах ресурсных заметок:
-   Всего ресурсных in-links: ~160
-       — 03. Ресурсы/04. Заметки/        131  ← тяжёлая, дробить на подпачки
+Redirect in-links in the bodies of resource notes:
+   Total resource in-links: ~160
+       — 03. Ресурсы/04. Заметки/        131  ← heavy, split into sub-batches
        — 03. Ресурсы/07. Карты/           17
        — 03. Ресурсы/02. Статьи/           5
        — 03. Ресурсы/01. Книги/            3
        — 03. Ресурсы/03. Литературные/    3
        — 03. Ресурсы/05. Видео/            1
-   Не трогаем (~60): 01. Проекты/, 02. Сферы/, 05. Дневник/, 04. Архив/, 00. Входящие/
+   Not touching (~60): 01. Проекты/, 02. Сферы/, 05. Дневник/, 04. Архив/, 00. Входящие/
 
-Ожидаемый эффект: in-degree оригинала упадёт на 50–70% (из ресурсной массы).
+Expected effect: the original's in-degree will drop by 50–70% (from the resource mass).
 ```
 
-Дождись подтверждения **на каждую итерацию отдельно**. После итерации 1 покажи отчёт и спроси, идти ли в итерацию 2.
+Wait for confirmation **on each iteration separately**. After iteration 1, show the report and ask whether to proceed to iteration 2.
 
-Исключения из подтверждения — те же, что в `workflows.md`: «делай сразу», «без подтверждения».
+Confirmation exceptions — same as in `workflows.md`: "just do it", "no confirmation needed".
 
-### 6. Выполнение
+### 6. Execution
 
-Порядок шагов важен, чтобы не словить broken-links на промежуточных этапах:
+The order of steps matters, so you don't end up with broken links at intermediate stages:
 
-#### 6.1. Создать под-MOC
+#### 6.1. Create the sub-MOCs
 
-В `03. Ресурсы/07. Карты/` по `Шаблон карты.md`:
+In `03. Ресурсы/07. Карты/`, from `Шаблон карты.md`:
 
 ```yaml
 ---
@@ -310,128 +310,128 @@ aliases: []
 tags:
   - moc
 up:
-  - "[[Оригинальный hub]]"
-down: []   # будет заполнен ссылками на категорийные заметки
+  - "[[Original hub]]"
+down: []   # will be filled with links to the category's notes
 links: []
 other: []
 ---
 ```
 
-В теле — короткое описание категории (1–2 предложения) и список ссылок:
+In the body — a short description of the category (1–2 sentences) and a list of links:
 
 ```markdown
 ## Заметки
 
-- [[Заметка 1]] — что в ней
-- [[Заметка 2]] — что в ней
+- [[Note 1]] — what's in it
+- [[Note 2]] — what's in it
 
 ## Связанные карты
 
-- [[Сосед-MOC]]
-- [[Альтернативный под-MOC]] — родственная карта, если по теме уже есть параллельная категоризация
+- [[Neighbor MOC]]
+- [[Alternative sub-MOC]] — a related map, if a parallel categorization already exists for the topic
 ```
 
-**Если в шаге 3 у какого-то соседа был обнаружен существующий альтернативный под-MOC** (например, `Blue-Green` уже привязан к `Стратегии развертывания приложений в Kubernetes`), добавь этот под-MOC сразу в `other` нашего под-MOC и в раздел «Связанные карты». Это уважение к предыдущей категоризации автора — мы не дублируем, а ссылаемся.
+**If, in step 3, some neighbor was found to already have an existing alternative sub-MOC** (e.g., `Blue-Green` is already linked to `Стратегии развертывания приложений в Kubernetes`), add that sub-MOC right away to the `other` field of our sub-MOC and to the "Связанные карты" section. This respects the author's prior categorization — we don't duplicate it, we reference it.
 
-#### 6.2. Перепривязать `up` у out-соседей
+#### 6.2. Re-link `up` on out-neighbors
 
-Для каждого out-соседа определи ветку **по результату шага 3** и действуй соответственно:
+For each out-neighbor, determine the branch **based on step 3's result** and act accordingly:
 
-**Ветка A — `up` ссылается на сам hub** (`[[DevOps]]`):
+**Branch A — `up` points to the hub itself** (`[[DevOps]]`):
 
-Заменить на `[[Под-MOC]]`. Если в `up` несколько родителей — замени **только** ссылку на hub, остальные оставь.
+Replace it with `[[sub-MOC]]`. If `up` has several parents, replace **only** the link to the hub, leave the rest.
 
-**Ветка B — `up` пустой:**
+**Branch B — `up` is empty:**
 
-Добавь `[[Под-MOC]]` (не hub) — мы сразу проставляем правильную категоризацию.
+Add `[[sub-MOC]]` (not the hub) — we set the correct categorization right away.
 
-**Ветка C — `up` содержит dangling wikilink** (например, `[[DevOps – Практики]]` который не существует как файл):
+**Branch C — `up` contains a dangling wikilink** (e.g., `[[DevOps – Практики]]` which doesn't exist as a file):
 
-Это **намерение автора** категоризовать — подхватываем его. Заменяем dangling на актуальный под-MOC (`[[DevOps – Процессы и подходы]]` в нашем примере). Это важно: автор уже пытался создать категорию, мы её закрываем.
+This is the **author's intent** to categorize — pick it up. Replace the dangling link with the actual sub-MOC (`[[DevOps – Процессы и подходы]]` in our example). This matters: the author already tried to create a category, and we're closing that loop.
 
-**Ветка D — `up` содержит существующий альтернативный под-MOC** (например, `[[Стратегии развертывания приложений в Kubernetes]]`, файл есть):
+**Branch D — `up` contains an existing alternative sub-MOC** (e.g., `[[Стратегии развертывания приложений в Kubernetes]]`, the file exists):
 
-**НЕ трогаем.** Заметка уже категоризована, у неё есть «свой родитель». В план разгрузки эта заметка идёт как **«остаётся на альт. карте»**, а в нашем новом под-MOC указываем родственную карту через `other` и «Связанные карты».
+**Don't touch it.** The note is already categorized, it has its "own parent". In the offload plan, this note is listed as **"stays on the alt. map"**, and in our new sub-MOC we reference the related map via `other` and "Связанные карты".
 
-**Ветка E — соседи-упоминания** (`#person`, ссылка на компанию, инструмент):
+**Branch E — mention neighbors** (`#person`, a link to a company, a tool):
 
-Не считаются категоризуемыми. `up` не трогаем, заметка остаётся в hub как контекстная ссылка.
+Not considered categorizable. Don't touch `up`, the note stays on the hub as a contextual link.
 
-**Ветка F — Telegram/контентные заметки** (`02. Сферы/05. Медийность/Telegram/`):
+**Branch F — Telegram/content notes** (`02. Сферы/05. Медийность/Telegram/`):
 
-`up` не трогаем — у заметок свой жизненный цикл и frontmatter (`status`, `publication_date`, `link`).
+Don't touch `up` — these notes have their own lifecycle and frontmatter (`status`, `publication_date`, `link`).
 
-**Ветка G — у соседа в `up` уже есть более точный родитель, а `[[Hub]]` лишний:**
+**Branch G — the neighbor's `up` already has a more precise parent, and `[[Hub]]` is redundant:**
 
-Когда `up: [[Другой MOC]], [[Hub]]`, и **другой MOC семантически точнее** для этой заметки (например, у `Incident Management` есть `up: [[Site Reliability Engineering]], [[DevOps]]` — она про SRE/ITSM, не подкатегория DevOps), правильное действие — **удалить ссылку на Hub из up**, а не перепривязывать.
+When `up: [[Other MOC]], [[Hub]]`, and **the other MOC is semantically more precise** for this note (e.g., `Incident Management` has `up: [[Site Reliability Engineering]], [[DevOps]]` — it's about SRE/ITSM, not a DevOps subcategory), the right action is to **remove the link to the hub from up**, not re-link it.
 
-Признак ветки G: ни одна из наших под-MOC не подходит **семантически**, и при этом у заметки уже есть другой родитель, который точнее. Это сигнал, что `[[Hub]]` в `up` была ошибочной двусвязностью — навигационной, а не категорийной.
+Sign of branch G: none of our sub-MOCs fit **semantically**, and the note already has another parent that's more precise. This is a sign that `[[Hub]]` in `up` was an erroneous double-link — navigational, not categorical.
 
-**Не путать с веткой D:** в D заметка уже категоризована альтернативным под-MOC (одного семейства с hub), там альт. родитель — это другая категоризация той же темы. В G — заметка про **другую тему**, и hub был просто лишним.
+**Don't confuse this with branch D:** in D, the note is already categorized by an alternative sub-MOC (of the same family as the hub) — there, the alt. parent is a different categorization of the same topic. In G, the note is about **a different topic**, and the hub was simply redundant.
 
-**Бонус-исправление по пути:** если в теле заметки обнаружились dangling wikilinks из старой попытки категоризации hub (например, `[[DevOps – Практики]]` — несуществующий файл), их стоит заменить на актуальный wikilink (`[[DevOps|практиками DevOps]]` через pipe-алиас или на подходящий под-MOC). Это попутная гигиена графа, не основная работа скилла.
+**Bonus fix along the way:** if a note's body has dangling wikilinks left over from an old attempt to categorize the hub (e.g., `[[DevOps – Практики]]` — a nonexistent file), it's worth replacing them with an actual wikilink (`[[DevOps|практиками DevOps]]` via a pipe alias, or a matching sub-MOC). This is incidental graph hygiene, not the skill's main job.
 
-**Общие тонкости:**
+**General nuances:**
 
-- Сохраняй формат списка/строки (YAML), как в исходной заметке.
-- Литературные источники остаются в `sources` без изменений (политика «up + sources синхронны» из `note-types-frontmatter.md` — синхронизуй обе стороны, если меняешь).
+- Preserve the list/string format (YAML) as it is in the source note.
+- Literature sources stay in `sources` unchanged (the "up + sources in sync" policy from `note-types-frontmatter.md` — sync both sides if you change one).
 
-#### 6.3. Перенаправить in-links (главный шаг)
+#### 6.3. Redirect in-links (the main step)
 
-Это **основное** действие скилла. Получаем список всех заметок, которые ссылаются на оригинал:
+This is the skill's **primary** action. Get the list of all notes that link to the original:
 
 ```bash
-rg -l -F "[[Имя hub]]" --type md . > /tmp/in-links.txt
+rg -l -F "[[Hub name]]" --type md . > /tmp/in-links.txt
 ```
 
-**Фильтр папок (важно):**
+**Folder filter (important):**
 
-В перепривязку попадают только заметки **информационной/ресурсной природы**:
+Only notes of an **informational/resource nature** are eligible for re-linking:
 
 - ✅ `03. Ресурсы/01. Книги/`
 - ✅ `03. Ресурсы/02. Статьи/`
 - ✅ `03. Ресурсы/03. Литературные заметки/`
-- ✅ `03. Ресурсы/04. Заметки/` (концепты, мысли)
+- ✅ `03. Ресурсы/04. Заметки/` (concepts, thoughts)
 - ✅ `03. Ресурсы/05. Видео/`
-- ✅ `03. Ресурсы/07. Карты/` (другие MOC)
+- ✅ `03. Ресурсы/07. Карты/` (other MOCs)
 
-**Не трогаем** — ссылки сделаны намеренно как «общая точка входа», их перепривязка ломает исторический контекст:
+**Don't touch** — links made intentionally as a "general entry point"; re-linking them breaks the historical context:
 
-- ❌ `01. Проекты/` — проектные заметки ссылаются на общий MOC сознательно
-- ❌ `02. Сферы/03. Работа/` — встречи, 1:1 — контекстные ссылки
-- ❌ `02. Сферы/06. Конференции/` — конспекты докладов как точка времени
-- ❌ `05. Дневник/` — журнал, исторический контекст
-- ❌ `04. Архив/` — заархивированное
-- ❌ `00. Входящие/` — необработанные, оставляем для `obsidian-refactor-inbox`
+- ❌ `01. Проекты/` — project notes deliberately link to the general MOC
+- ❌ `02. Сферы/03. Работа/` — meetings, 1:1s — contextual links
+- ❌ `02. Сферы/06. Конференции/` — talk notes as a point in time
+- ❌ `05. Дневник/` — journal, historical context
+- ❌ `04. Архив/` — archived material
+- ❌ `00. Входящие/` — unprocessed, leave for `obsidian-refactor-inbox`
 
-Для каждой подходящей заметки:
+For each eligible note:
 
-1. Прочти контекст ссылки (одну-две строки вокруг неё)
-2. Определи, к какой категории относится материал заметки
-3. **Если определимо** — замени `[[Оригинал]]` на `[[Под-MOC]]` в теле заметки
-4. **Если неопределимо или общий контекст** — оставь `[[Оригинал]]` как есть. Это правильное поведение: общий MOC и есть «общая точка входа».
-5. Если в одной заметке несколько ссылок на оригинал — каждую обрабатываем отдельно, могут уйти в разные под-MOC.
+1. Read the context around the link (one or two lines around it)
+2. Determine which category the note's material belongs to
+3. **If it's determinable** — replace `[[Original]]` with `[[Sub-MOC]]` in the note's body
+4. **If it's not determinable, or it's a general context** — leave `[[Original]]` as-is. This is the correct behavior: the general MOC is indeed a "general entry point".
+5. If a single note has several links to the original, handle each one separately — they might go to different sub-MOCs.
 
-**Не трогай ссылки в:**
+**Don't touch links inside:**
 
-- `> [!quote]` и `> [!note]` callout-блоках — это исторические цитаты
-- В frontmatter `sources` — это летопись источников
-- В callout-блоках с явной разметкой «Ревью», «История изменений», «Контекст»
+- `> [!quote]` and `> [!note]` callout blocks — these are historical quotes
+- `sources` in frontmatter — a record of sources
+- Callout blocks explicitly marked "Review", "Change history", "Context"
 
-**Спорные случаи** (категория неясна, заметка пограничная) — оставь оригинальную ссылку и выпиши в раздел отчёта «Под вопросом».
+**Borderline cases** (category unclear, the note sits on the fence) — leave the original link and list them in the "Under question" section of the report.
 
-#### 6.4. Минимально обновить тело оригинального hub
+#### 6.4. Minimally update the original hub's body
 
-**Не переписывай тело hub целиком.** Структура подзаголовками — это ментальная модель автора, она ценна. Достаточно вписать ссылки на под-MOC.
+**Don't rewrite the hub's body from scratch.** Structuring by subheadings is the author's mental model, and it's valuable. It's enough to insert links to the sub-MOCs.
 
-**Если у hub есть подзаголовки (`## Категория`):**
+**If the hub has subheadings (`## Category`):**
 
-Для каждого подзаголовка, который мы вынесли в под-MOC, **первой строкой после заголовка** добавь компактный pointer:
+For each subheading we extracted into a sub-MOC, add a compact pointer **as the first line after the heading**:
 
 ```markdown
 ## Управление инфраструктурой
 
-→ Подкарта: [[DevOps – Управление инфраструктурой]]
+→ Sub-map: [[DevOps – Управление инфраструктурой]]
 
 - [[Infrastructure as Code (IaC)]]
 - [[Infrastructure from Code (IfC)]]
@@ -439,177 +439,177 @@ rg -l -F "[[Имя hub]]" --type md . > /tmp/in-links.txt
 - [[Configuration Management]]
 ```
 
-Существующие out-links под заголовком **не трогай** — они остаются как удобная навигация. Под-MOC и hub отображают одну и ту же информацию с разных уровней детализации.
+**Don't touch** the existing out-links under the heading — they stay as convenient navigation. The sub-MOC and the hub show the same information at different levels of detail.
 
-**Если у hub нет подзаголовков** и тело — плоский список:
+**If the hub has no subheadings** and the body is a flat list:
 
-Сгруппируй ссылки по категориям, добавь подзаголовки. Это уже более ощутимая перестройка тела, но **сохраняй порядок и формулировки** где возможно.
+Group the links by category, add subheadings. This is already a more substantial restructuring of the body, but **preserve the order and wording** where possible.
 
-**В frontmatter оригинала:**
+**In the original's frontmatter:**
 
-- В `down` добавить wikilinks на новые под-MOC (рядом с уже существующими `down`)
-- Остальное (`up`, `aliases`, `links`, `other`, `tags`, Bases/Dataview) — **не трогать**
+- Add wikilinks to the new sub-MOCs in `down` (alongside the existing `down` entries)
+- Leave everything else (`up`, `aliases`, `links`, `other`, `tags`, Bases/Dataview) **untouched**
 
-#### 6.5. Заполнить `down` у под-MOC
+#### 6.5. Fill in `down` on the sub-MOCs
 
-В каждом под-MOC в `down` — список всех заметок, у которых теперь `up: [[Под-MOC]]`. Это можно сделать вручную (как в плане) — нет нужды заново сканировать.
+In each sub-MOC's `down`, list all the notes that now have `up: [[Sub-MOC]]`. This can be done manually (as in the plan) — no need to rescan.
 
-### 7. Отчёт
+### 7. Report
 
-**После итерации 1 (каркас) — обязательное предупреждение:**
+**After iteration 1 (scaffold) — a mandatory caveat:**
 
 ```
-✅ Каркас разгрузки [[DevOps]] стоит
+✅ The offload scaffold for [[DevOps]] is in place
 
-   in (точные [[DevOps]]):  192 → 191  (−1)
-   in (через pipe):          30 →  30   (=)
+   in (exact [[DevOps]]):  192 → 191  (−1)
+   in (via pipe):            30 →  30   (=)
 
-⚠️ Важно: in-degree оригинала упал слабо — это ожидаемо.
-   Мы перепривязали только `up` в frontmatter (8 соседей).
-   В телах ресурсных заметок ссылки на [[DevOps]] остались.
-   Реальный эффект придёт после итерации 2.
+⚠️ Note: the original's in-degree dropped only slightly — that's expected.
+   We only re-linked `up` in frontmatter (8 neighbors).
+   Links to [[DevOps]] in the bodies of resource notes remain.
+   The real effect will come after iteration 2.
 
-Создано под-MOC: 4
+Sub-MOCs created: 4
   [[DevOps – Основы]]                       in=3
   [[DevOps – Управление инфраструктурой]]   in=8
   [[DevOps – Деплой и релиз]]               in=5
   [[DevOps – Процессы и подходы]]           in=5
 
-Перепривязан `up` у out-соседей: 8 (из 22 после фильтрации)
+`up` re-linked on out-neighbors: 8 (out of 22 after filtering)
 
-Под вопросом / отдельная работа:
-  • Dangling out-links у hub: [[Deployment Pipeline]], [[Change Management]],
-    [[GitOps]], [[ChatOps]] — заметок нет, заглушки в hub остались.
-  • Альтернативная категоризация: [[Blue-Green]], [[Canary Deploy]]
-    остались на [[Стратегии развертывания приложений в Kubernetes]];
-    эта карта добавлена в `other` нового под-MOC «Деплой и релиз».
+Under question / separate work:
+  • Dangling out-links on the hub: [[Deployment Pipeline]], [[Change Management]],
+    [[GitOps]], [[ChatOps]] — no notes exist, placeholders remain on the hub.
+  • Alternative categorization: [[Blue-Green]], [[Canary Deploy]]
+    stayed on [[Стратегии развертывания приложений в Kubernetes]];
+    this map was added to the new "Деплой и релиз" sub-MOC's `other`.
 
-Идём в итерацию 2 (перенаправление ~160 in-links в телах)?
+Proceed to iteration 2 (redirecting ~160 in-links in bodies)?
 ```
 
-**После итерации 2 (in-links):**
+**After iteration 2 (in-links):**
 
 ```
-✅ [[DevOps]] разгружен
+✅ [[DevOps]] offloaded
 
-   in:  191 → 60–80   (реальное падение)
+   in:  191 → 60–80   (real drop)
 
-Перенаправлено in-links по подпачкам:
-   03. Ресурсы/04. Заметки/    105 из 131
-   03. Ресурсы/07. Карты/       13 из 17
-   03. Ресурсы/02. Статьи/       3 из 5
-   03. Ресурсы/01. Книги/        2 из 3
-   03. Ресурсы/03. Лит.заметки/  2 из 3
-   03. Ресурсы/05. Видео/        1 из 1
+In-links redirected by sub-batch:
+   03. Ресурсы/04. Заметки/    105 of 131
+   03. Ресурсы/07. Карты/       13 of 17
+   03. Ресурсы/02. Статьи/       3 of 5
+   03. Ресурсы/01. Книги/        2 of 3
+   03. Ресурсы/03. Лит.заметки/  2 of 3
+   03. Ресурсы/05. Видео/        1 of 1
 
-Сохранено as-is: ~60 (вне ресурсной области — намеренные общие ссылки) +
-                  ~10 ресурсных, где категория неясна (см. «Под вопросом»)
+Kept as-is: ~60 (outside the resource area — intentional general links) +
+                  ~10 resource notes where the category was unclear (see "Under question")
 
-Под вопросом (10):
-  • [[Заметка X]] — между «Деплой» и «Процессы»; оставил [[DevOps]].
+Under question (10):
+  • [[Note X]] — between "Deployment" and "Processes"; left as [[DevOps]].
   ...
 ```
 
-Если по ходу выявилось что-то новое (соседняя заметка тоже — hub, противоречие между двумя соседями, дубликаты внутри категории) — упомяни в отчёте, но **не лезь** туда в той же итерации.
+If anything new turned up along the way (a neighboring note is also a hub, a contradiction between two neighbors, duplicates within a category), mention it in the report, but **don't go there** in the same iteration.
 
 ---
 
-## Особые случаи
+## Special cases
 
-### Заметка не MOC, но обросла связями
+### A note isn't a MOC but has accumulated links
 
-Атомарка/концепт стихийно стал хабом (типа `Kubernetes` с 30 связями). Два варианта:
+An atomic note/concept has spontaneously become a hub (e.g. `Kubernetes` with 30 links). Two options:
 
-1. **Превратить в MOC** — если заметка по сути уже карта. Поменять `#thought` → `#moc`, обновить frontmatter по `Шаблон карты.md`, переместить в `03. Ресурсы/07. Карты/`. Backlinks при этом не ломаются — Obsidian обновит по переименованию.
-2. **Оставить концепт** — если содержание самостоятельное и заслуживает быть концептом. Разгружаем связи (категоризуем соседей в под-MOC), но саму заметку не переделываем.
+1. **Turn it into a MOC** — if the note is essentially already a map. Change `#thought` → `#moc`, update the frontmatter per `Шаблон карты.md`, move it to `03. Ресурсы/07. Карты/`. Backlinks won't break — Obsidian updates them on rename.
+2. **Keep it as a concept** — if the content stands on its own and deserves to remain a concept. Offload the links (categorize neighbors into sub-MOCs), but don't rework the note itself.
 
-Спроси пользователя в момент выбора hub.
+Ask the user at the moment the hub is chosen.
 
-### Категория не выделяется
+### No category emerges
 
-Если ни одна ось не даёт ≥3 заметки на категорию — материал не клубок. Скажи прямо:
+If no axis yields ≥3 notes per category, the material isn't a tangle. Say so directly:
 
-> Связей много, но категорийной структуры в них нет — соседи в одном смысловом поле. Это не клубок, а действительно центр темы. Распутывать нечего.
+> There are a lot of links, but there's no categorical structure among them — the neighbors are all in one semantic field. This isn't a tangle, it's genuinely the center of the topic. There's nothing to untangle.
 
-Предложи `obsidian-note-critic` для углубления или `obsidian-split-note`, если заметка большая.
+Suggest `obsidian-note-critic` for a deeper look, or `obsidian-split-note` if the note is large.
 
-### in-links на hub из проектных заметок
+### In-links to the hub from project notes
 
-Не перепривязывай ссылки из `01. Проекты/`, `02. Сферы/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`. Эти ссылки сделаны как «общая точка входа», их перепривязка ломает исторический контекст. Перепривязываем только in-links из ресурсных заметок (`03. Ресурсы/`).
+Don't re-link references from `01. Проекты/`, `02. Сферы/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`. These links were made as a "general entry point"; re-linking them breaks the historical context. Only re-link in-links from resource notes (`03. Ресурсы/`).
 
-### Hub уже частично структурирован
+### The hub is already partly structured
 
-Если у hub есть подсекции в теле (`## Принципы`, `## Инструменты`), это **готовая категоризация автора** — используй её, не выдумывай с нуля. Достаточно вынести каждый подзаголовок в отдельный под-MOC и добавить компактный pointer в начало секции.
+If the hub has subsections in its body (`## Принципы`, `## Инструменты`), that's the **author's ready-made categorization** — use it, don't invent one from scratch. It's enough to move each subheading out into its own sub-MOC and add a compact pointer at the start of the section.
 
-### Out-клубок (низкий in, высокий out)
+### Out-tangle (low in, high out)
 
-В этой базе встречается редко (out обычно растёт медленнее), но возможен — например, свежая большая карта, которую только что собрали. Сценарий:
+Rare in this base (out usually grows more slowly), but possible — e.g., a freshly assembled large map that was just put together. Scenario:
 
-- Перепривязка in-links не нужна (их мало)
-- Главное действие — переписать тело hub в оглавление по под-MOC
-- Под-MOC создаются для красоты графа, а не для перенаправления потока ссылок
+- Re-linking in-links isn't needed (there are few of them)
+- The main action is rewriting the hub's body into a table of contents by sub-MOC
+- Sub-MOCs are created for the sake of graph tidiness, not to redirect a flow of links
 
-Если попал на out-клубок — спроси у пользователя, какой эффект он хочет (навигация vs нагрузка graph view). Действие выбирается по этому ответу.
+If you land on an out-tangle, ask the user what effect they want (navigation vs. graph-view load). The action is chosen based on that answer.
 
-### Concept-hub (атомарка с большим in)
+### Concept-hub (an atomic note with a large in-count)
 
-Атомарка/концепт (типа `Kubernetes`) обросла in-links. Два варианта:
+An atomic note/concept (like `Kubernetes`) has accumulated in-links. Two options:
 
-1. **Превратить в MOC** — если содержание уже больше похоже на карту. Сменить `#thought` → `#moc`, переместить в `03. Ресурсы/07. Карты/`. Backlinks Obsidian обновит при переименовании.
-2. **Оставить концептом + создать MOC рядом** — если содержание самостоятельное и ценно как концепт. Создаётся `Kubernetes – MOC.md`, и in-links перенаправляются на него; концепт остаётся узким объектом «определение/идея».
+1. **Turn it into a MOC** — if the content already reads more like a map. Change `#thought` → `#moc`, move it to `03. Ресурсы/07. Карты/`. Obsidian will update backlinks on rename.
+2. **Keep it as a concept + create a MOC alongside it** — if the content stands on its own and is valuable as a concept. Create `Kubernetes – MOC.md`, and redirect the in-links there; the concept stays a narrow "definition/idea" object.
 
-Спроси пользователя в момент выбора hub.
+Ask the user at the moment the hub is chosen.
 
-### Двусторонние ссылки (заметка в `up` и `down` оригинала)
+### Bidirectional links (a note in both `up` and `down` of the original)
 
-Симптом запутанности. Покажи их явно: «в up и в down одновременно: N заметок». Спроси, какое направление оставить. По умолчанию: более общая остаётся в `up`, более частная — в `down`. Двусторонней ссылки быть не должно.
-
----
-
-## Что НЕ делать
-
-- **Не удалять оригинал** — он остаётся как корневой MOC, верхний уровень оглавления и общая точка входа.
-- **Не переписывать тело hub целиком**, если оно уже структурировано подзаголовками — добавляй pointer на под-MOC, не ломай ментальную модель автора.
-- **Не перепривязывать ссылки за пределами `03. Ресурсы/`** — проекты, дневник, конференции, архив, инбокс не трогаем; их ссылки на общий MOC намеренны.
-- **Не игнорировать существующий `up` у соседа.** Если он указывает на dangling — подхвати намерение автора. Если на существующий альтернативный под-MOC — уважай и не трогай, добавь его в `other` нового под-MOC как родственную карту.
-- **Не считать упоминания людей и компаний** (`#person`, `[[Какая-то Компания]]`) категоризуемыми соседями — они остаются в hub как контекстные ссылки.
-- **Не трогать Telegram/контентные заметки** в `02. Сферы/05. Медийность/` — у них свой жизненный цикл (`status`, `publication_date`, `link`).
-- **Не пытаться перепривязать ссылку на dangling out-link у hub** — заметки нет, заглушка остаётся в hub до ручного создания через `obsidian-ingest`.
-- **Не трогать ссылки внутри `> [!quote]`, `> [!note]`, `> [!warning]` и других callout-блоков** — это исторический контекст или цитаты.
-- **Не трогать `sources`** при перепривязке up — это летопись источников, она синхронна с up по политике из `note-types-frontmatter.md`.
-- **Не двигать соседние заметки между папками PARA** — мы перевязываем связи, а не миграцию структуры.
-- **Не делать рекурсивную разгрузку** — один hub за прогон.
-- **Не объединять каркас и in-links в одну итерацию** — после каркаса дай пользователю увидеть результат и решить, идти ли в тяжёлую часть.
-- **Не очищать `links` и `other`** в соседях — только `up` подлежит замене.
-- **Не выдумывать категории**, когда у hub есть готовые подзаголовки — используй то, что есть.
-- **Не обещать большое падение in-degree после итерации 1** — это каркас, реальный эффект приходит во второй итерации.
+A symptom of confusion. Show them explicitly: "in both up and down at once: N notes". Ask which direction to keep. By default: the more general one stays in `up`, the more specific one in `down`. There should be no bidirectional link.
 
 ---
 
-## Чек-лист перед завершением
+## What NOT to do
 
-**Под-MOC:**
+- **Don't delete the original** — it stays as the root MOC, the top level of the table of contents and the general entry point.
+- **Don't rewrite the hub's body from scratch** if it's already structured with subheadings — add a pointer to the sub-MOC, don't break the author's mental model.
+- **Don't re-link references outside `03. Ресурсы/`** — projects, journal, conferences, archive, inbox are left untouched; their links to the general MOC are intentional.
+- **Don't ignore a neighbor's existing `up`.** If it points to a dangling link, pick up the author's intent. If it points to an existing alternative sub-MOC, respect it and leave it alone — add that map to the new sub-MOC's `other` as a related map.
+- **Don't treat mentions of people and companies** (`#person`, `[[Some Company]]`) as categorizable neighbors — they stay on the hub as contextual links.
+- **Don't touch Telegram/content notes** in `02. Сферы/05. Медийность/` — they have their own lifecycle (`status`, `publication_date`, `link`).
+- **Don't try to re-link a dangling out-link on the hub** — there's no note, the placeholder stays on the hub until it's manually created via `obsidian-ingest`.
+- **Don't touch links inside** `> [!quote]`, `> [!note]`, `> [!warning]`, and other callout blocks — that's historical context or quotes.
+- **Don't touch `sources`** when re-linking `up` — it's a record of sources, kept in sync with `up` per the policy in `note-types-frontmatter.md`.
+- **Don't move neighboring notes between PARA folders** — we're re-linking connections, not migrating structure.
+- **Don't do recursive offloading** — one hub per run.
+- **Don't merge the scaffold and in-links into one iteration** — after the scaffold, let the user see the result and decide whether to go into the heavy part.
+- **Don't clear `links` and `other`** on neighbors — only `up` is subject to replacement.
+- **Don't invent categories** when the hub already has ready-made subheadings — use what's there.
+- **Don't promise a big drop in in-degree after iteration 1** — that's the scaffold; the real effect comes in the second iteration.
 
-- [ ] Созданы в `03. Ресурсы/07. Карты/` с `#moc` и frontmatter по `Шаблон карты.md`
-- [ ] `up` указывает на оригинальный hub
-- [ ] `down` заполнен (вручную списком или Dataview)
-- [ ] Имена без запрещённых символов (`file-naming.md`); формат `<Родитель> – <Категория>`
+---
 
-**Out-соседи (заметки, на которые ссылается hub):**
+## Checklist before finishing
 
-- [ ] `up` перепривязан с оригинала на соответствующий под-MOC (если применимо по структурному тегу)
-- [ ] Литературные источники синхронны в `up` и `sources` (политика Б из `note-types-frontmatter.md`)
+**Sub-MOCs:**
 
-**In-links (главное):**
+- [ ] Created in `03. Ресурсы/07. Карты/` with `#moc` and frontmatter per `Шаблон карты.md`
+- [ ] `up` points to the original hub
+- [ ] `down` is filled in (manually as a list, or via Dataview)
+- [ ] Names contain no forbidden characters (`file-naming.md`); format `<Parent> – <Category>`
 
-- [ ] Прошлись по ресурсным in-links (только `03. Ресурсы/`)
-- [ ] Где категория ясна — заменили `[[hub]]` на `[[под-MOC]]`
-- [ ] Где категория неясна — оставили как есть, выписали в «Под вопросом»
-- [ ] Не тронули `01. Проекты/`, `02. Сферы/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`
-- [ ] Не тронули callout-блоки и `sources`
+**Out-neighbors (notes the hub links to):**
 
-**Оригинальный hub:**
+- [ ] `up` re-linked from the original to the matching sub-MOC (where applicable per the structural tag)
+- [ ] Literature sources are in sync in `up` and `sources` (policy B from `note-types-frontmatter.md`)
 
-- [ ] Тело — минимально обновлено (pointer в начало каждого подзаголовка), не переписано целиком
-- [ ] `down` дополнен новыми под-MOC
-- [ ] Bases/Dataview, `aliases`, `up`, `links`, `other`, `tags` — без изменений
+**In-links (the main part):**
+
+- [ ] Went through the resource in-links (only `03. Ресурсы/`)
+- [ ] Where the category was clear — replaced `[[hub]]` with `[[sub-MOC]]`
+- [ ] Where the category was unclear — left as-is, listed under "Under question"
+- [ ] Didn't touch `01. Проекты/`, `02. Сферы/`, `05. Дневник/`, `04. Архив/`, `00. Входящие/`
+- [ ] Didn't touch callout blocks or `sources`
+
+**Original hub:**
+
+- [ ] Body — minimally updated (a pointer at the start of each subheading), not rewritten wholesale
+- [ ] `down` extended with the new sub-MOCs
+- [ ] Bases/Dataview, `aliases`, `up`, `links`, `other`, `tags` — unchanged

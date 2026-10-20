@@ -1,57 +1,57 @@
 # content-voice
 
-Авторский голос и тон для контента (Telegram, статьи, туториалы). Скиллы домена `content` ссылаются как `~/.claude/rules/content-voice.md`.
+Authorial voice and tone for content (Telegram, articles, tutorials). Skills in the `content` domain reference this as `~/.claude/rules/content-voice.md`.
 
-## Базовые принципы
+## Basic principles
 
-- **Обращение «ты»** или безличные конструкции. Не «вы», не канцелярский тон.
-- **Русский язык**; технические термины — английскими (`SRE`, `Kubernetes`, `goroutine`, `Pod`), формулы — LaTeX.
-- **Авторский голос**, не Wikipedia. Это личная позиция, опыт, иногда сомнения и шутки.
+- **Address the reader as "you" (informal)** or use impersonal constructions. Not the formal "you," not a bureaucratic tone.
+- **Russian language**; technical terms stay in English (`SRE`, `Kubernetes`, `goroutine`, `Pod`), formulas in LaTeX.
+- **Authorial voice**, not Wikipedia. This is a personal stance, experience, sometimes doubts and jokes.
 
-## Что делает текст узнаваемым
+## What makes text recognizable
 
-- **Конкретика вместо абстракций.** «Сервис лёг» → «API вернул 503 на 4 минуты, потеряли ~3000 запросов».
-- **Технические детали без снобства.** Не объясняй очевидное опытным, но не закрывай дверь новичку — кратко даёт контекст в одной фразе.
-- **Личный опыт, не теория.** «Я попробовал X — оно не работает, потому что Y» > «Принято считать, что X».
-- **Признание неизвестного.** «Не разобрался почему, но» лучше, чем выдуманное объяснение.
+- **Specifics instead of abstractions.** "The service went down" → "The API returned 503 for 4 minutes, we lost ~3000 requests."
+- **Technical detail without snobbery.** Don't explain the obvious to experienced readers, but don't shut the door on newcomers either — give context in one brief phrase.
+- **Personal experience, not theory.** "I tried X — it doesn't work because Y" beats "It is commonly believed that X."
+- **Admitting the unknown.** "I didn't figure out why, but" is better than a made-up explanation.
 
-## Запреты
+## Bans
 
-- **Никаких «дорогие читатели»**, «уважаемые коллеги», «как известно».
-- **Никаких маркетинговых обещаний** («революционный», «бесшовный», «лучший в индустрии»).
-- **Никакого Wikipedia-стиля** («представляет собой», «является», «можно отметить»).
-- **Не используй ИИ-штампы**: «давайте погрузимся», «в этой статье мы рассмотрим», «в заключение хочется отметить».
-- **Не цитируй случайных гуру** без необходимости. Если автор реально важен — назови по имени.
+- **No "dear readers,"** "esteemed colleagues," "as is well known."
+- **No marketing promises** ("revolutionary," "seamless," "best in the industry").
+- **No Wikipedia style** ("represents," "is," "it can be noted that").
+- **Don't use AI clichés**: "let's dive in," "in this article we will look at," "in conclusion, I'd like to note."
+- **Don't quote random gurus** without reason. If the author is genuinely important, name them.
 
-## Структурные предпочтения
+## Structural preferences
 
-- **Короткие абзацы.** 1-4 предложения. На экране телефона длинный абзац — это стена.
-- **Минимум буллетов.** Лучше прозой, если можно. Буллеты — когда реально список из 3+ паритетных элементов.
-- **Подзаголовки** в статьях/туториалах. В Telegram — обычно не нужны.
-- **Code blocks с языком**: ` ```go`, ` ```bash`. Подсветка важна.
+- **Short paragraphs.** 1-4 sentences. On a phone screen, a long paragraph is a wall of text.
+- **Minimal bullet points.** Prose is better where possible. Use bullets only for a genuine list of 3+ parallel items.
+- **Subheadings** in articles/tutorials. Usually unnecessary in Telegram.
+- **Code blocks with a language tag**: ` ```go`, ` ```bash`. Syntax highlighting matters.
 
-## Длина
+## Length
 
-- **Telegram-пост**: 500-1500 символов. Один тезис, одна мысль, никаких «вступлений».
-- **Статья**: 3-10 тыс. символов. Тезис → аргументы → пример → следствие.
-- **Туториал**: столько, сколько нужно, чтобы повторить. Не больше.
+- **Telegram post**: 500-1500 characters. One point, one idea, no "introductions."
+- **Article**: 3-10k characters. Thesis → arguments → example → implication.
+- **Tutorial**: as long as it needs to be to reproduce the result. No longer.
 
-## Структура мысли
+## Structure of thought
 
-- **Тезис первым.** Не интригуй читателя 5 абзацев — он закроет.
-- **Аргументы конкретные.** Числа, ссылки, код. Не «как показывает практика».
-- **Контраргумент / нюанс** — если есть. Доверие растёт, когда автор не делает вид, что знает всё.
-- **Финал — не обязателен.** Если мысль закончилась — стоп. Не пиши «таким образом» только ради завершённости.
+- **Thesis first.** Don't keep the reader in suspense for 5 paragraphs — they'll close the tab.
+- **Concrete arguments.** Numbers, links, code. Not "as practice shows."
+- **Counterargument / nuance** — if there is one. Trust grows when the author doesn't pretend to know everything.
+- **An ending isn't mandatory.** If the thought is finished — stop. Don't write "thus" just for the sake of closure.
 
-## Эмодзи
+## Emoji
 
-- В Telegram — **изредка**, если уместно. Не более 1-2 на пост.
-- В статьях — почти никогда (в коде / технике особенно).
-- Не используй эмодзи как буллет-маркеры (✅, ❌, 🚀) — выглядит как маркетинг.
+- In Telegram — **sparingly**, when appropriate. No more than 1-2 per post.
+- In articles — almost never (especially in code/technical content).
+- Don't use emoji as bullet markers (✅, ❌, 🚀) — it reads as marketing.
 
-## Самопроверка перед публикацией
+## Self-check before publishing
 
-- если убрать первые 1-3 предложения, текст потеряет смысл? Если **не** потеряет — выкинь их.
-- есть ли в тексте хоть один конкретный пример / число / команда?
-- мог бы это написать любой другой автор? Если да — добавь личное.
-- читатель сможет повторить / применить, или это просто эссе?
+- if you remove the first 1-3 sentences, does the text lose meaning? If it does **not** — cut them.
+- is there at least one concrete example / number / command in the text?
+- could any other author have written this? If so — add something personal.
+- will the reader be able to reproduce / apply this, or is it just an essay?

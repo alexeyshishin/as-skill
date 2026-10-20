@@ -1,44 +1,44 @@
-# Структура персональной базы знаний
+# Personal knowledge base structure
 
-## Обзор хранилища
+## Vault overview
 
-- **Тип**: Персональная база знаний (PKB) на базе Obsidian
-- **Язык контента**: Преимущественно **русский** (технические термины на английском, формулы в LaTeX)
-- **Методология**: **PARA** (Projects, Areas, Resources, Archives)
-- **Корень хранилища:** задаётся при установке через `--vault <path>` или env `BEAR_VAULT`. Дальше по тексту обозначается как `<vault>/`.
+- **Type**: Personal knowledge base (PKB) built on Obsidian
+- **Content language**: Mostly **Russian** (technical terms in English, formulas in LaTeX)
+- **Methodology**: **PARA** (Projects, Areas, Resources, Archives)
+- **Vault root:** set at install time via `--vault <path>` or the `BEAR_VAULT` env var. Referred to below as `<vault>/`.
 
-## Структура хранилища
+## Vault structure
 
 ```
 <vault>/
-├── _Система                        # все для обеспечения работы моего Obsidian
-│   ├── 1. Шаблоны                  # Шаблоны
-│   ├── 2. Статика                  # Картинки
-│   ├── 3. Холсты                   # Canvas и Excalidraw
-│   ├── 4. Copilot                  # Для плагина Obsidian Copilot
-│   ├── 5. Bases                    # Bases запросы и файлы
-│   ├── 6. Clippings                # Сохранение через Obsidian Web Clipper
-│   ├── 7. Zotero                   # Импорт из Zotero
-│   └── 8. iBooks                   # Импорт из Apple Books
-├── 00. Входящие                    # PARA - Основной инбокс
-├── 01. Проекты                     # PARA - Проекты
-├── 02. Сферы                       # PARA - Сферы жизни
-│   ├── 01. Люди                    # Заметки о людях
-│   ├── 02. Личное развитие
-│   ├── 03. Работа
-│   ├── 04. Образование
-│   ├── 05. Медийность              # Мои посты в блог, канал и другие медиа
-│   ├── 06. Конференции             # Заметки по конференциям и деятельность в составе программного комитета
-│   ├── 07. Здоровье                # Мое здоровье
-│   └── 08. Личный бренд            # Развитие личного бренда
-├── 03. Ресурсы                     # PARA - Ресурсы
-│   ├── 01. Книги
-│   ├── 02. Статьи
-│   ├── 03. Литературные заметки
-│   ├── 04. Заметки
-│   ├── 05. Видео
-│   ├── 06. Промты                  # Собранные или составленные мною полезные промты для LLM/GPT
-│   └── 07. Карты                   # Карты, MOC'и
-├── 04. Архив                       # PARA - Архив
-└── 05. Дневник                     # Ежедневные заметки, личный дневник
+├── _Система                        # everything supporting my Obsidian setup
+│   ├── 1. Шаблоны                  # Templates
+│   ├── 2. Статика                  # Images
+│   ├── 3. Холсты                   # Canvas and Excalidraw
+│   ├── 4. Copilot                  # For the Obsidian Copilot plugin
+│   ├── 5. Bases                    # Bases queries and files
+│   ├── 6. Clippings                # Saved via Obsidian Web Clipper
+│   ├── 7. Zotero                   # Import from Zotero
+│   └── 8. iBooks                   # Import from Apple Books
+├── 00. Входящие                    # PARA - Main inbox
+├── 01. Проекты                     # PARA - Projects
+├── 02. Сферы                       # PARA - Life areas
+│   ├── 01. Люди                    # Notes about people
+│   ├── 02. Личное развитие
+│   ├── 03. Работа
+│   ├── 04. Образование
+│   ├── 05. Медийность              # My posts to blog, channel, and other media
+│   ├── 06. Конференции             # Conference notes and program-committee activity
+│   ├── 07. Здоровье                # My health
+│   └── 08. Личный бренд            # Personal brand development
+├── 03. Ресурсы                     # PARA - Resources
+│   ├── 01. Книги
+│   ├── 02. Статьи
+│   ├── 03. Литературные заметки
+│   ├── 04. Заметки
+│   ├── 05. Видео
+│   ├── 06. Промты                  # Useful prompts I've collected or written for LLM/GPT
+│   └── 07. Карты                   # Maps, MOCs
+├── 04. Архив                       # PARA - Archive
+└── 05. Дневник                     # Daily entries, personal journal
 ```

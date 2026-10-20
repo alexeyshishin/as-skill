@@ -1,38 +1,38 @@
 ---
 name: obsidian-enrich-note
-description: Обогащение frontmatter заметок в Obsidian — заполнение полей aliases, up, down, other без перемещения заметки. Используй этот скилл когда пользователь просит обновить/заполнить frontmatter заметки, добавить aliases или связи (up/down/other), обогатить заметку ссылками — особенно для заметок в папке 00. Входящие. Заметка остаётся на месте, меняются только frontmatter-поля aliases, up, down, other. Не используй для полного рефакторинга с перемещением — для этого есть obsidian-refactor-inbox.
+description: Enrich Obsidian note frontmatter — fill in the aliases, up, down, other fields without moving the note. Use this skill when the user asks to update/fill in a note's frontmatter, add aliases or links (up/down/other), or enrich a note with links — especially for notes in the `00. Входящие` folder. The note stays in place; only the frontmatter fields aliases, up, down, other change. Do not use for a full refactor with relocation — that's what obsidian-refactor-inbox is for.
 ---
 
 # obsidian-enrich-note
 
-Точечное обновление frontmatter **без перемещения файла и без изменения тегов**. Меняются только: `aliases`, `up`, `down`, `other`. Тело заметки, теги, `links`, `sources` — не трогаем.
+A targeted frontmatter update **without moving the file and without changing tags**. Only these change: `aliases`, `up`, `down`, `other`. The note body, tags, `links`, `sources` are left untouched.
 
-Семантика полей `up`/`down`/`other`/`links` — в `.agents/rules/content-style.md`. Структура хранилища — в `.agents/rules/vault-struct.md`.
+Semantics of the `up`/`down`/`other`/`links` fields — in `.agents/rules/content-style.md`. Vault structure — in `.agents/rules/vault-struct.md`.
 
-## Когда НЕ использовать
+## When NOT to use this
 
-| Ситуация | Используй вместо |
+| Situation | Use instead |
 |----------|-----------------|
-| Нужно сменить теги и переместить заметку | `obsidian-refactor-inbox` |
-| Сначала понять, что в инбоксе | `obsidian-inbox-review` |
-| Заметку нужно разбить | `obsidian-split-note` |
+| Need to change tags and move the note | `obsidian-refactor-inbox` |
+| First need to understand what's in the inbox | `obsidian-inbox-review` |
+| The note needs to be split | `obsidian-split-note` |
 
 ---
 
-## Алгоритм
+## Algorithm
 
-### 1. Прочти заметку
+### 1. Read the note
 
-Зафиксируй главную тему и ключевые концепции из заголовка и тела.
+Note down the main topic and the key concepts from the title and body.
 
-### 2. Составь aliases
+### 2. Compose aliases
 
-Думай как поисковый запрос пользователя:
+Think like the user's search query:
 
-- Синонимы понятия на русском
-- Английский эквивалент (если термин устоявшийся)
-- Аббревиатуры
-- Альтернативные написания
+- Synonyms of the concept
+- English equivalent (if the term is well-established)
+- Abbreviations
+- Alternative spellings
 
 ```yaml
 aliases:
@@ -41,30 +41,30 @@ aliases:
   - Goodhart Law
 ```
 
-### 3. Найди связи
+### 3. Find links
 
 ```bash
 rg -l "KEYWORD" "03. Ресурсы/" "02. Сферы/01. Люди/" | head -20
 ```
 
-Где искать:
-- `03. Ресурсы/07. Карты/` — кандидаты для `up` (MOC)
-- `03. Ресурсы/04. Заметки/` — атомарные заметки по смежным темам (`other`)
-- `02. Сферы/01. Люди/` — для `other` (если тема связана с человеком)
+Where to look:
+- `03. Ресурсы/07. Карты/` — candidates for `up` (MOC)
+- `03. Ресурсы/04. Заметки/` — atomic notes on adjacent topics (`other`)
+- `02. Сферы/01. Люди/` — for `other` (if the topic relates to a person)
 
-### 4. Заполни поля
+### 4. Fill in the fields
 
-Правила (из `content-style.md`):
+Rules (from `content-style.md`):
 
-- `up` — родительская тема / MOC, из которой вытекает заметка (от частного к общему)
-- `down` — что эта заметка порождает (от общего к частному)
-- `other` — горизонтальные связи (смежные темы, люди, MOC, не подходящие под up/down)
+- `up` — the parent topic / MOC this note derives from (from specific to general)
+- `down` — what this note gives rise to (from general to specific)
+- `other` — horizontal links (adjacent topics, people, MOCs that don't fit under up/down)
 
-Пустое поле — норма, если связи нет. Не выдумывай.
+An empty field is fine if there's no link. Don't make things up.
 
-### 5. Обнови frontmatter через Edit
+### 5. Update frontmatter via Edit
 
-Если поле уже заполнено — **дополняй**, не перезаписывай. Wikilinks — в кавычках если содержат двоеточие или начинаются с `[[`:
+If a field is already filled — **add to it**, don't overwrite it. Wikilinks — in quotes if they contain a colon or start with `[[`:
 
 ```yaml
 aliases:
@@ -81,12 +81,12 @@ other:
 
 ---
 
-## Чек-лист
+## Checklist
 
-- [ ] `aliases` непустые (хотя бы один)
-- [ ] `up` — wikilinks или обоснованно пуст
-- [ ] `down` — wikilinks или обоснованно пуст
-- [ ] `other` — wikilinks (часто здесь больше всего связей)
-- [ ] Все wikilinks указывают на существующие файлы
-- [ ] Файл остался в исходной папке
-- [ ] Теги, тело, `links`, `sources` не изменились
+- [ ] `aliases` non-empty (at least one)
+- [ ] `up` — wikilinks or justifiably empty
+- [ ] `down` — wikilinks or justifiably empty
+- [ ] `other` — wikilinks (this often has the most links)
+- [ ] All wikilinks point to existing files
+- [ ] The file stayed in its original folder
+- [ ] Tags, body, `links`, `sources` unchanged

@@ -1,121 +1,121 @@
-# Рабочие процессы
+# Workflows
 
-## Протокол «план → подтверждение → действие»
+## The "plan → confirmation → action" protocol
 
-Применяется во всех скиллах, которые создают/перемещают/удаляют файлы пачкой: `obsidian-ingest`, `obsidian-split-note`, `obsidian-refactor-lecture`, `obsidian-refactor-inbox`, `obsidian-note-critic` (когда создаёт ревью-заметку).
+Applies to all skills that create/move/delete files in batches: `obsidian-ingest`, `obsidian-split-note`, `obsidian-refactor-lecture`, `obsidian-refactor-inbox`, `obsidian-note-critic` (when it creates a review note).
 
-1. **План.** Перед любой пачкой изменений покажи структурированный список: какие файлы создать, какие обновить, куда переместить, что удалить. Кратко (1 строка на пункт), с целевыми путями и тегами.
-2. **Подтверждение.** Дождись подтверждения пользователя. Исключение: пользователь явно сказал «делай сразу», «без подтверждения», «погнали», или скилл обрабатывает один файл, для которого результат очевиден.
-3. **Действие.** Выполни план в порядке: сначала создание новых файлов, потом обновление существующих, потом перемещение, потом удаление/архивация.
-4. **Отчёт.** Краткая сводка: что создано, что обновлено, что осталось под вопросом.
+1. **Plan.** Before any batch of changes, show a structured list: which files to create, which to update, where to move them, what to delete. Keep it brief (1 line per item), with target paths and tags.
+2. **Confirmation.** Wait for the user's confirmation. Exception: the user explicitly said "just do it," "no confirmation needed," "go ahead," or the skill is processing a single file whose outcome is obvious.
+3. **Action.** Execute the plan in order: first create new files, then update existing ones, then move, then delete/archive.
+4. **Report.** A brief summary: what was created, what was updated, what's still an open question.
 
-Если по ходу действия план меняется (нашлась существующая заметка вместо создания новой, кейс не подходит под шаблон) — остановись, обнови план, спроси.
+If the plan changes mid-execution (an existing note was found instead of needing a new one, a case doesn't fit the template) — stop, update the plan, ask.
 
 
 
-## Рефакторинг заметок
+## Note refactoring
 
-### Лёгкий рефакторинг (без явного запроса)
+### Light refactoring (no explicit request needed)
 
-- Исправление опечаток и грамматики
-- Добавление недостающих заголовков для структуры
-- Перегруппировка абзацев по смыслу
-- Конвертация «стены текста» в списки, где это уместно
-- Добавление недостающего frontmatter по шаблону типа заметки
+- Fixing typos and grammar
+- Adding missing headings for structure
+- Regrouping paragraphs by meaning
+- Converting a "wall of text" into lists, where appropriate
+- Adding missing frontmatter per the note type's template
 
-### Средний рефакторинг (предложи, выполняй по подтверждению)
+### Medium refactoring (propose it, execute upon confirmation)
 
-- Разделение большой заметки на несколько атомарных
-- Создание MOC для разросшейся темы
-- Перемещение заметки между папками PARA
-- Добавление Bases- или Dataview-запросов
-- Переименование заметки (требует обновления backlinks)
+- Splitting a large note into several atomic ones
+- Creating a MOC for a topic that's grown
+- Moving a note between PARA folders
+- Adding Bases or Dataview queries
+- Renaming a note (requires updating backlinks)
 
-### Тяжёлый рефакторинг (только по явному запросу)
+### Heavy refactoring (only on explicit request)
 
-- Массовое переименование тегов
-- Изменение структуры frontmatter по всему хранилищу
-- Удаление заметок или больших блоков текста
-- Изменение Bases- или Dataview-запросов
+- Bulk tag renaming
+- Changing the frontmatter structure across the whole vault
+- Deleting notes or large blocks of text
+- Changing Bases or Dataview queries
 
-### Структурирование «грязной» заметки
+### Structuring a "messy" note
 
-1. **Организуй** — расставь заголовки, выдели списки
-2. **Суммаризуй** — добавь `## Сводка` или `## Итоги` в начало
-3. Выдели **вопросы** в `## Вопросы`
-4. Выдели **действия** в `## Действия`
-5. Предложи **выделить** атомарные заметки для переиспользуемых идей
-6. **Свяжи** с проектами и MOC через wikilinks
-7. Выяви **противоречия** с уже имеющимися знаниями и зафиксируй их явно в конце с указанием связей через wikilinks 
-
----
-
-## Обработка входящих заметок (Inbox)
-
-1. Заметки из `00. Входящие/` — необработанный inbox
-2. Определи тип заметки (мысль, проект, ресурс, задача)
-3. Добавь frontmatter по соответствующему шаблону
-4. Перемести в правильную папку PARA
-5. Свяжи с существующими заметками и MOC
-6. Убери тег `#inbox/review` после обработки
+1. **Organize** — add headings, pull out lists
+2. **Summarize** — add a `## Сводка` or `## Итоги` section at the top
+3. Pull out **questions** into `## Вопросы`
+4. Pull out **action items** into `## Действия`
+5. Suggest **splitting out** atomic notes for reusable ideas
+6. **Link** it to projects and MOCs via wikilinks
+7. Identify **contradictions** with existing knowledge and note them explicitly at the end, linking via wikilinks
 
 ---
 
-## Ингест внешнего источника
+## Processing inbox notes
 
-Когда пользователь просит обработать внешний источник (статья, книга, видео, транскрипт):
-
-1. **Прочитай источник** полностью
-2. **Создай литературную заметку** в `03. Ресурсы/03. Литературные заметки/` по шаблону `Шаблон литературной цитаты.md`
-3. **Заполни поле `sources`** — название и ссылка на источник
-4. **Выдели концепты** — для каждой идеи проверь, есть ли уже заметка. Если есть — обнови. Если нет — создай атомарную заметку в `03. Ресурсы/04. Заметки/`
-5. **Обнови существующие концепты** — поищи заметки в `03. Ресурсы/04. Заметки/` и `03. Ресурсы/07. Карты/`, которые касаются той же темы. Добавь новый источник в `sources`, уточни формулировки, повысь `confidence` если идея подтверждается, добавь `> [!warning]` если противоречит. Цель: затронуть 5–10 существующих заметок
-6. **Расставь ссылки** в обоих направлениях: из литературной заметки → на концепты, из концептов → `up` на литературную заметку
-7. **Установи `confidence`** — `medium` если источник один, `high` если идея подтверждается другими заметками
-8. **Обнови MOC** — если концепт относится к существующей карте, добавь туда ссылку
-9. **Зафиксируй противоречия** — если новая информация противоречит существующим заметкам: `> [!warning] Противоречие: эта идея расходится с [[Другая заметка]]`
+1. Notes in `00. Входящие/` — unprocessed inbox
+2. Determine the note type (thought, project, resource, task)
+3. Add frontmatter per the corresponding template
+4. Move it to the correct PARA folder
+5. Link it to existing notes and MOCs
+6. Remove the `#inbox/review` tag once processed
 
 ---
 
-## Создание или обновление MOC
+## Ingesting an external source
 
-1. Собери все заметки по теме (поиск по тегам, ссылкам, папкам)
-2. Создай MOC по `Шаблон карты.md`
-3. Добавь краткие аннотации к каждой ссылке
-4. Добавь Bases-запрос для автоматического обновления
-5. Свяжи MOC с родительскими и дочерними темами
+When the user asks to process an external source (article, book, video, transcript):
 
----
-
-## Структурирование проекта или сферы жизни
-
-1. Убедись, что есть центральная заметка с целями, статусом и ссылками
-2. Сгруппируй поддерживающие заметки (ресурсы, встречи, идеи)
-3. Свяжи все через центральную заметку
-4. Используй frontmatter `up`/`down`/`other` для навигации
+1. **Read the source** in full
+2. **Create a literature note** in `03. Ресурсы/03. Литературные заметки/` using the `Шаблон литературной цитаты.md` template
+3. **Fill in the `sources` field** — the source's title and link
+4. **Extract concepts** — for each idea, check whether a note already exists. If it does — update it. If not — create an atomic note in `03. Ресурсы/04. Заметки/`
+5. **Update existing concepts** — search `03. Ресурсы/04. Заметки/` and `03. Ресурсы/07. Карты/` for notes touching the same topic. Add the new source to `sources`, refine the wording, raise `confidence` if the idea is confirmed, add a `> [!warning]` if it contradicts. Goal: touch 5–10 existing notes
+6. **Add links** in both directions: from the literature note → to the concepts, from the concepts → `up` to the literature note
+7. **Set `confidence`** — `medium` if there's a single source, `high` if the idea is confirmed by other notes
+8. **Update the MOC** — if the concept belongs to an existing map, add a link there
+9. **Record contradictions** — if the new information contradicts existing notes: `> [!warning] Противоречие: эта идея расходится с [[Другая заметка]]`
 
 ---
 
-## Сохранение ответа в базу (Query → File-back)
+## Creating or updating a MOC
 
-Если в ходе разговора дан развёрнутый анализ, сравнение или инсайт — предложи сохранить его как заметку:
-
-- **Атомарная мысль** → `03. Ресурсы/04. Заметки/` (концепт или единичный инсайт)
-- **Синтез** → `03. Ресурсы/07. Карты/` (сравнение, вывод по нескольким источникам)
-
-Маркер: если пользователь скопировал ответ в `00. Входящие/` — обработай по стандартному Ingest.
-После сохранения — добавь запись в `_Система/wiki-log.md`.
+1. Gather all notes on the topic (search by tags, links, folders)
+2. Create the MOC using `Шаблон карты.md`
+3. Add brief annotations to each link
+4. Add a Bases query for automatic updates
+5. Link the MOC to its parent and child topics
 
 ---
 
-## Проверка базы знаний (Lint / Health check)
+## Structuring a project or life area
 
-Запускается по явному запросу: «проверь базу», «lint», «health check».
+1. Make sure there's a central note with goals, status, and links
+2. Group supporting notes together (resources, meetings, ideas)
+3. Link everything through the central note
+4. Use the `up`/`down`/`other` frontmatter fields for navigation
 
-1. **Заметки-сироты** — ищи заметки без входящих ссылок (backlinks = 0). Предложи добавить в подходящую MOC
-2. **Устаревшие заметки** — заметки со статусом `WIP` и `deadline` в прошлом. Предложи обновить статус
-3. **Незавершённые секции** — заметки, где есть `## TODO` или пустые разделы
-4. **Низкая достоверность** — заметки с `confidence: low`, которые можно укрепить дополнительными ссылками
-5. **Дубликаты** — заметки с похожими названиями или содержанием. Предложи объединить
-6. **Противоречия** — концепты, которые утверждают противоположное в разных заметках. Предложи создать синтез-заметку
-7. **Отчёт** — кратко: что нашлось, что исправлено автоматически, что требует решения пользователя
+---
+
+## Saving a response to the vault (Query → File-back)
+
+If a conversation produced an in-depth analysis, comparison, or insight — suggest saving it as a note:
+
+- **Atomic thought** → `03. Ресурсы/04. Заметки/` (a concept or a single insight)
+- **Synthesis** → `03. Ресурсы/07. Карты/` (a comparison, a conclusion drawn from several sources)
+
+Marker: if the user copied the response into `00. Входящие/` — process it via the standard ingest flow.
+After saving — add an entry to `_Система/wiki-log.md`.
+
+---
+
+## Knowledge base check (Lint / Health check)
+
+Runs on explicit request: "check the vault," "lint," "health check."
+
+1. **Orphan notes** — look for notes with no incoming links (backlinks = 0). Suggest adding them to a suitable MOC
+2. **Stale notes** — notes with status `WIP` and a `deadline` in the past. Suggest updating the status
+3. **Unfinished sections** — notes with a `## TODO` or empty sections
+4. **Low confidence** — notes with `confidence: low` that could be strengthened with more links
+5. **Duplicates** — notes with similar titles or content. Suggest merging them
+6. **Contradictions** — concepts that assert opposite things across different notes. Suggest creating a synthesis note
+7. **Report** — briefly: what was found, what was fixed automatically, what needs the user's decision

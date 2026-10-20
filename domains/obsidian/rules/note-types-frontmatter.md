@@ -1,61 +1,61 @@
-# Типы заметок, шаблоны и frontmatter
+# Note types, templates, and frontmatter
 
-Шаблоны лежат в `_Система/1. Шаблоны/`.
+Templates live in `_Система/1. Шаблоны/`.
 
-## Шаблоны по типам заметок
+## Templates by note type
 
-| Шаблон | Назначение |
+| Template | Purpose |
 |--------|-----------|
-| `Шаблон проекта.md` | Структура проекта (цели, статус, дедлайн, наработки) |
-| `Ежедневная заметка.md` | Дневниковая запись с навигацией |
-| `Еженедельная заметка.md` | Обзор недели |
-| `Ежегодная заметка.md` | Итоги года |
-| `Шаблон идея.md` | Основной шаблон для записи атомарных заметок и идей |
-| `Шаблон человека.md` | Профиль контакта |
+| `Шаблон проекта.md` | Project structure (goals, status, deadline, progress) |
+| `Ежедневная заметка.md` | Journal entry with navigation |
+| `Еженедельная заметка.md` | Weekly review |
+| `Ежегодная заметка.md` | Year-end summary |
+| `Шаблон идея.md` | Main template for recording atomic notes and ideas |
+| `Шаблон человека.md` | Contact profile |
 | `Шаблон карты.md` | MOC (Map of Content) |
-| `Шаблон топика.md` | Тема для изучения |
-| `Шаблон эссе.md` | Развёрнутое эссе |
-| `Шаблон литературной цитаты.md` | Заметки по книгам/статьям |
-| `Созвон или встреча.md` | Конспект встреч |
-| `Черновик поста.md` | Черновики публикаций |
-| `Обзор конференции.md` | Обзорная заметка на посещаемую конференцию (общее впечатление, посещенные доклады, новые знакомства) |
-| `Шаблон тезисов по докладу.md` | Сборник тезисов по докладу |
-| `Шаблон тезисов по видео.md` | Сборник тезисов по просмотренному видео |
-| `Шаблон тезисов по книге.md` | Сборник тезисов по прочитанной книге |
-| `Шаблон тезисов по статье.md` | Сборник тезисов по прочитанной статье |
-| `Конспект по лекции.md` | Конспект по лекции на учебе |
+| `Шаблон топика.md` | A topic to study |
+| `Шаблон эссе.md` | A full-length essay |
+| `Шаблон литературной цитаты.md` | Notes on books/articles |
+| `Созвон или встреча.md` | Meeting notes |
+| `Черновик поста.md` | Post drafts |
+| `Обзор конференции.md` | An overview note for an attended conference (overall impression, talks attended, new contacts) |
+| `Шаблон тезисов по докладу.md` | A collection of takeaways from a talk |
+| `Шаблон тезисов по видео.md` | A collection of takeaways from a watched video |
+| `Шаблон тезисов по книге.md` | A collection of takeaways from a book |
+| `Шаблон тезисов по статье.md` | A collection of takeaways from an article |
+| `Конспект по лекции.md` | Lecture notes from a course |
 
-## Стандартные поля frontmatter
+## Standard frontmatter fields
 
-| Ключ | Тип | Описание | Когда использовать |
+| Key | Type | Description | When to use |
 |------|-----|----------|--------------------|
-| `aliases` | list | Альтернативные названия | Всегда |
-| `tags` | list | Теги заметки | Всегда |
-| `status` | string | `Todo`, `WIP`, `Done` | Проекты/Посты |
-| `deadline` | string | Дедлайн как wikilink `"[[2026-03-05]]"` | Проекты |
-| `up` | list | Родительские заметки | Всегда |
-| `down` | list | Дочерние заметки | Всегда |
-| `links` | list | Ссылки на веб-ресурсы | Всегда |
-| `other` | list | Горизонтальные связи | Всегда |
-| `confidence` | string | `high`, `medium`, `low` | Концепты, литературные заметки, синтезы |
-| `sources` | list | Список исходных заметок/документов | Литературные заметки, синтезы |
+| `aliases` | list | Alternative names | Always |
+| `tags` | list | Note tags | Always |
+| `status` | string | `Todo`, `WIP`, `Done` | Projects/Posts |
+| `deadline` | string | Deadline as a wikilink `"[[2026-03-05]]"` | Projects |
+| `up` | list | Parent notes | Always |
+| `down` | list | Child notes | Always |
+| `links` | list | Web links | Always |
+| `other` | list | Horizontal connections | Always |
+| `confidence` | string | `high`, `medium`, `low` | Concepts, literature notes, syntheses |
+| `sources` | list | List of source notes/documents | Literature notes, syntheses |
 
-### Правила frontmatter
+### Frontmatter rules
 
-- Сохраняй все существующие ключи — не удаляй то, что уже есть
-- Не изобретай новые ключи без причины
-- Не меняй формат существующих значений (например, не превращай список в строку)
-- Добавляй новые поля только если они консистентны с остальными заметками того же типа
-- **Поле `sources`** — никогда не очищай. Только добавляй новые источники
+- Keep all existing keys — don't delete anything already there
+- Don't invent new keys without reason
+- Don't change the format of existing values (e.g. don't turn a list into a string)
+- Only add new fields if they're consistent with other notes of the same type
+- **The `sources` field** — never clear it. Only add new sources
 
-### Политика: литературные источники в up + sources (вариант Б)
+### Policy: literature sources in up + sources (option B)
 
-Литературная заметка, книга, статья, видео — это **одновременно источник и тематический родитель** в этой базе. Соответствующая ссылка должна быть:
+A literature note, book, article, video — is **simultaneously a source and a topical parent** in this vault. The corresponding link must be:
 
-- в `up` — как родитель темы (для навигации по графу)
-- в `sources` — как источник (для запросов «откуда я это узнал»)
+- in `up` — as the parent of the topic (for graph navigation)
+- in `sources` — as the source (for "where did I learn this" queries)
 
-Например, для атомарки из книги «Проект Феникс»:
+For example, for an atomic note from the book "The Phoenix Project":
 
 ```yaml
 up:
@@ -65,17 +65,17 @@ sources:
   - "[[Книга – Проект Феникс]]"
 ```
 
-**Правила:**
+**Rules:**
 
-- Если источник попал в `up` — обязательно продублировать его в `sources`. Они синхронны.
-- Исключение: **навигационные MOC-индексы** (`Книжная полка`, `Статьи`, `Видео`, `Конференция` и аналогичные с тегом `MapOfContent` в папке источников) — это родители, **не источники**. Их не дублируем в `sources`.
-- При обновлении любой стороны (up или sources) — следить за синхронностью.
+- If a source is in `up` — it must also be duplicated in `sources`. They stay in sync.
+- Exception: **navigational MOC indexes** (`Книжная полка`, `Статьи`, `Видео`, `Конференция`, and similar ones tagged `MapOfContent` in the sources folders) — these are parents, **not sources**. Don't duplicate them into `sources`.
+- When updating either side (up or sources) — keep them in sync.
 
-**История:** до 2026-05-12 поле `sources` не заполнялось при ингесте, источник жил только в `up`. После принятия варианта Б проведена однократная миграция, формат закреплён в правиле. См. [[00. Входящие/Литературные источники в up – четыре варианта политики хранилища]].
+**History:** before 2026-05-12, the `sources` field wasn't populated during ingest — the source lived only in `up`. After option B was adopted, a one-time migration was run, and the format was locked in as a rule. See [[00. Входящие/Литературные источники в up – четыре варианта политики хранилища]].
 
-### Примеры frontmatter
+### Frontmatter examples
 
-**Проект:**
+**Project:**
 
 ```yaml
 ---
@@ -91,7 +91,7 @@ other: []
 ---
 ```
 
-**Ежедневная заметка:**
+**Daily note:**
 
 ```yaml
 ---
@@ -103,7 +103,7 @@ aliases: []
 **< [[Вчера]] | [[Неделя]] | [[Месяц]] | [[Завтра]] >**
 ```
 
-**Концепт/ресурс:**
+**Concept/resource:**
 
 ```yaml
 ---
@@ -117,20 +117,20 @@ confidence: medium
 ---
 ```
 
-## Уровни достоверности (confidence)
+## Confidence levels
 
-Используется в концептах, литературных заметках и синтезах.
+Used in concepts, literature notes, and syntheses.
 
-| Уровень | Значение |
+| Level | Meaning |
 |---------|----------|
-| `high` | Хорошо изученная идея, несколько подтверждающих источников, проверена на практике |
-| `medium` | Подкреплена источниками, но мало примеров или единственный источник |
-| `low` | Единичное упоминание, анекдотично или спекулятивно — требует проверки |
+| `high` | Well-studied idea, confirmed by several sources, validated in practice |
+| `medium` | Backed by sources, but few examples or a single source |
+| `low` | A single mention, anecdotal or speculative — needs verification |
 
-### Правила достоверности (confidence)
+### Confidence rules
 
-- Обязателен для заметок типа: Концепт, Литературная заметка, Синтез
-- При создании из единственного источника — по умолчанию `medium`
-- Если идея теоретическая или не уверен — ставь `low` и делай пометку в тексте
-- При обновлении новыми источниками — повышай уровень и обновляй `sources`
-- Не ставь `high` без минимум двух независимых источников или личного опыта
+- Required for note types: Concept, Literature note, Synthesis
+- When created from a single source — default to `medium`
+- If the idea is theoretical or you're unsure — set `low` and note it in the text
+- When updated with new sources — raise the level and update `sources`
+- Don't set `high` without at least two independent sources or personal experience

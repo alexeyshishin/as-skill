@@ -1,65 +1,65 @@
 # content-formatting
 
-Форматирование под конкретные платформы. Скиллы домена `content` ссылаются как `~/.claude/rules/content-formatting.md`.
+Formatting for specific platforms. Skills in the `content` domain reference this as `~/.claude/rules/content-formatting.md`.
 
 ## Telegram
 
-Telegram поддерживает ограниченный markdown через "MarkdownV2" / HTML. Особенности:
+Telegram supports a limited markdown via "MarkdownV2" / HTML. Notes:
 
-- **жирный**: `*текст*` (MarkdownV2) или `<b>текст</b>` (HTML)
-- *курсив*: `_текст_` или `<i>текст</i>`
-- `моноширинный`: `` `текст` `` или `<code>текст</code>`
-- ```code blocks``` — тройные обратные кавычки, можно с языком: ` ```go`
-- ~~зачёркнутый~~: `~текст~` или `<s>текст</s>`
-- Спойлеры: `||текст||` или `<tg-spoiler>текст</tg-spoiler>`
-- Ссылки: `[текст](https://...)` или `<a href="...">текст</a>`
+- **bold**: `*text*` (MarkdownV2) or `<b>text</b>` (HTML)
+- *italic*: `_text_` or `<i>text</i>`
+- `monospace`: `` `text` `` or `<code>text</code>`
+- ```code blocks``` — triple backticks, can specify a language: ` ```go`
+- ~~strikethrough~~: `~text~` or `<s>text</s>`
+- Spoilers: `||text||` or `<tg-spoiler>text</tg-spoiler>`
+- Links: `[text](https://...)` or `<a href="...">text</a>`
 
-**Escape в MarkdownV2:** символы `_*[]()~`>#+-=|{}.!` экранируются обратным слэшем. Это часто проще обойти через HTML-форматирование.
+**Escaping in MarkdownV2:** the characters `_*[]()~`>#+-=|{}.!` must be escaped with a backslash. It's often easier to work around this with HTML formatting instead.
 
-**Лимиты:**
-- максимум 4096 символов в одном сообщении
-- если контент длиннее — разбивай на несколько сообщений, не пытайся уместить
-- идеальная длина поста для канала — 500-1500 символов
+**Limits:**
+- maximum 4096 characters per message
+- if content is longer — split into several messages, don't try to squeeze it in
+- ideal post length for a channel is 500-1500 characters
 
-**Структура поста:**
-- **первое предложение — крючок**, тезис или провокация
-- **тело** — короткие абзацы (1-3 предложения), разделённые пустой строкой
-- **финал** — либо вывод, либо вопрос читателю, либо просто стоп
-- **подпись** (если нужна) — отдельной строкой через двойной перенос
+**Post structure:**
+- **first sentence is the hook** — a thesis or a provocation
+- **body** — short paragraphs (1-3 sentences), separated by a blank line
+- **ending** — either a conclusion, a question to the reader, or just a stop
+- **signature** (if needed) — on its own line, separated by a double line break
 
-Не используй заголовки `#` — Telegram их не рендерит как markdown, они показываются буквально.
+Don't use `#` headings — Telegram doesn't render them as markdown, they show up literally.
 
-## Статьи (Markdown, Habr / Medium / личный блог)
+## Articles (Markdown, Habr / Medium / personal blog)
 
-- **Заголовок** — H1 (`#`), один на статью.
-- **Подзаголовки секций** — H2 (`##`). Не уходи глубже H3 без необходимости.
-- **Абзацы** разделены пустой строкой.
-- **Списки** — реальные `-` или `1.`, не «эмодзи-буллеты».
-- **Code blocks** обязательно с указанием языка.
-- **Картинки и схемы** — alt-text каждый раз. Это и для accessibility, и для SEO.
-- **TL;DR** в начале для статей длиннее 5000 символов — нормально.
+- **Title** — H1 (`#`), one per article.
+- **Section subheadings** — H2 (`##`). Don't go deeper than H3 unless necessary.
+- **Paragraphs** separated by a blank line.
+- **Lists** — real `-` or `1.`, not "emoji bullets."
+- **Code blocks** must specify a language.
+- **Images and diagrams** — alt text every time. This matters both for accessibility and for SEO.
+- **TL;DR** at the top is fine for articles longer than 5000 characters.
 
-## Технические туториалы
+## Technical tutorials
 
-- **Цель туториала первой строкой.** «После этого туториала ты сможешь развернуть K8s-кластер с TLS-серт-менеджером на bare-metal».
-- **Prerequisites** явным списком: версии, доступы, окружение.
-- **Шаги нумеруются.** Каждый шаг = одно действие + ожидаемый результат.
-- **Команды копипастабельны** (см. также `~/.claude/rules/sre-runbook-template.md`).
-- **Проверочные команды** после каждого нетривиального шага: «убедись, что под в Ready: `kubectl get pod ...`».
-- **Раздел Troubleshooting** в конце с типичными ошибками.
-- **Cleanup** — как откатить, если нужно.
+- **State the tutorial's goal in the first line.** "After this tutorial you'll be able to deploy a K8s cluster with a TLS cert-manager on bare metal."
+- **Prerequisites** as an explicit list: versions, access, environment.
+- **Number the steps.** Each step = one action + the expected result.
+- **Commands must be copy-pasteable** (see also `~/.claude/rules/sre-runbook-template.md`).
+- **Verification commands** after every non-trivial step: "confirm the pod is Ready: `kubectl get pod ...`".
+- **A Troubleshooting section** at the end with common errors.
+- **Cleanup** — how to roll everything back if needed.
 
-## Общие правила
+## General rules
 
-- **Английские термины** — на английском, не транслитерируй (`pod`, не «под»; хотя в разговоре «под» допустим — в письменном тексте лучше английский).
-- **Backticks для всего технического**: имена файлов, команды, переменные, флаги.
-- **Числа > 999** — с разделителями: `1 000`, `5 000 000` (для русского — пробел, для английского — запятая).
-- **Время и даты** — в ISO: `2026-05-23`, `14:30 UTC`. Не «23 мая в полтретьего».
-- **Дефис / тире** — используй правильные: `-` дефис в словах, `—` em-dash в предложениях.
+- **English terms** stay in English, don't transliterate them (`pod`, not a transliterated form; conversationally a transliteration is fine, but in written text English is better).
+- **Backticks for anything technical**: file names, commands, variables, flags.
+- **Numbers > 999** — with separators: `1 000`, `5 000 000` (a space for Russian, a comma for English).
+- **Time and dates** — in ISO format: `2026-05-23`, `14:30 UTC`. Not "May 23rd at half past two."
+- **Hyphen vs. dash** — use the correct one: `-` hyphen within words, `—` em-dash within sentences.
 
-## Что проверить перед публикацией
+## What to check before publishing
 
-- открой превью на телефоне — длинные строки не убитые?
-- code blocks подсвечиваются?
-- ссылки кликабельны и ведут куда надо?
-- заголовок и первое предложение работают сами по себе (если кто-то увидит только их)?
+- open the preview on a phone — are long lines not getting mangled?
+- do code blocks get syntax highlighting?
+- are links clickable and do they lead where they should?
+- do the title and first sentence work on their own (in case someone only sees those)?

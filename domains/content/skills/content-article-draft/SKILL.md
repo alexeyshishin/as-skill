@@ -1,130 +1,131 @@
 ---
 name: content-article-draft
 description: >
-  Превращает идею, серию заметок или сырой материал в драфт статьи (Habr / Medium /
-  личный блог) — с TL;DR, структурой тезис→аргументы→пример→следствие, авторским
-  голосом. Используй, когда «написать статью», «оформить мысли в лонгрид»,
-  «сделать пост для Habr», «черновик статьи», «article draft».
+  Turns an idea, a series of notes, or raw material into an article draft
+  (Habr / Medium / personal blog) — with a TL;DR, a thesis → arguments →
+  example → implication structure, and an authorial voice. Use when "write an
+  article," "shape these thoughts into a long-read," "make a Habr post,"
+  "article draft."
 ---
 
-# content-article-draft — Драфт статьи
+# content-article-draft — Article draft
 
-Цель: превратить материал в **первый рабочий драфт** статьи 3-10 тыс. символов. Не финальную версию — её пользователь шлифует сам. Драфт должен иметь правильный скелет и тон.
+Goal: turn material into a **first working draft** of a 3-10k character article. Not a final version — the user polishes that themselves. The draft needs the right skeleton and tone.
 
-Перед началом прочитай:
+Before starting, read:
 
 - `~/.claude/rules/content-voice.md`
-- `~/.claude/rules/content-formatting.md` — раздел про статьи
+- `~/.claude/rules/content-formatting.md` — the articles section
 
-## Шаг 1. Контекст
+## Step 1. Context
 
-Спроси:
+Ask:
 
-- **тема** в одно предложение
-- **аудитория**: технические специалисты определённого уровня? Менеджеры? Начинающие?
-- **платформа**: Habr / Medium / dev.to / личный блог / Telegraph?
-- **исходник**: заметки, опыт, проект, существующий драфт?
-- **цель статьи**: научить чему-то / поделиться опытом / разобрать кейс / провокация-эссе?
+- **the topic** in one sentence
+- **the audience**: technical specialists at a certain level? Managers? Beginners?
+- **the platform**: Habr / Medium / dev.to / personal blog / Telegraph?
+- **the source material**: notes, experience, a project, an existing draft?
+- **the article's goal**: teach something / share experience / break down a case / a provocative essay?
 
-## Шаг 2. Сформулируй тезис
+## Step 2. Formulate the thesis
 
-Тезис статьи — **одно утверждение**, которое автор защищает или иллюстрирует. Не тема, а утверждение.
+An article's thesis is **a single claim** that the author defends or illustrates. Not a topic, but a claim.
 
-| Тема (плохо) | Тезис (хорошо) |
+| Topic (bad) | Thesis (good) |
 |--------------|----------------|
-| «Микросервисы» | «Микросервисы стоят сложности только когда у тебя реально разные циклы релизов или языки» |
-| «Postgres vs Mongo» | «Для большинства стартапов Postgres покрывает 95% задач, а оставшиеся 5% не оправдывают второй БД» |
-| «Опыт работы с k8s» | «Через год с k8s в проде я понял, что главный риск — не сложность, а размытие ответственности SRE vs dev» |
+| "Microservices" | "Microservices are only worth the complexity when you genuinely have different release cycles or languages" |
+| "Postgres vs Mongo" | "For most startups, Postgres covers 95% of the needs, and the remaining 5% don't justify a second database" |
+| "My experience with k8s" | "After a year running k8s in production, I realized the main risk isn't complexity, but the blurring of SRE vs. dev responsibility" |
 
-Покажи тезис пользователю и **попроси подтвердить или поправить**. Тезис — фундамент.
+Show the thesis to the user and **ask them to confirm or correct it**. The thesis is the foundation.
 
-## Шаг 3. Сложи скелет
+## Step 3. Build the skeleton
 
-Стандартная структура:
+Standard structure:
 
 ```markdown
-# <Заголовок>
+# <Title>
 
-> **TL;DR:** <тезис в 1-2 фразах + краткий итог>
+> **TL;DR:** <thesis in 1-2 phrases + a brief summary>
 
-## <Подзаголовок 1: контекст / проблема>
+## <Subheading 1: context / problem>
 
-<Почему это интересно. Конкретный пример из жизни.>
+<Why this is interesting. A concrete real-life example.>
 
-## <Подзаголовок 2: аргумент / разбор / решение>
+## <Subheading 2: argument / breakdown / solution>
 
-<Главная мысль. Код, схемы, числа.>
+<The main point. Code, diagrams, numbers.>
 
-## <Подзаголовок 3: нюансы / контраргументы>
+## <Subheading 3: nuances / counterarguments>
 
-<Где тезис не работает. Где есть оговорки.>
+<Where the thesis doesn't hold. Where there are caveats.>
 
-## <Подзаголовок 4: применение / итог>
+## <Subheading 4: application / summary>
 
-<Что читатель может сделать со всем этим.>
+<What the reader can do with all of this.>
 
 ---
 
-<подпись / автор / ссылки на ресурсы>
+<signature / author / links to resources>
 ```
 
-Покажи скелет (заголовок + подзаголовки + 1-фразовое описание каждой секции) и спроси, подходит ли. Не переходи к написанию текста, пока скелет не согласован.
+Show the skeleton (title + subheadings + a one-phrase description of each section) and ask if it works. Don't move on to writing the full text until the skeleton is agreed on.
 
-## Шаг 4. Напиши драфт по секциям
+## Step 4. Write the draft section by section
 
-После подтверждения скелета — пиши секцию за секцией.
+Once the skeleton is confirmed — write section by section.
 
-Применяя `content-voice.md`:
+Applying `content-voice.md`:
 
-- обращение «ты» / безличное
-- авторский голос, не Wikipedia
-- конкретика, цифры, код
-- никаких ИИ-штампов
+- informal "you" / impersonal address
+- authorial voice, not Wikipedia
+- specifics, numbers, code
+- no AI clichés
 
-Применяя `content-formatting.md`:
+Applying `content-formatting.md`:
 
-- code blocks с языком
-- картинки/схемы — alt-text
-- backticks для технических терминов
-- abzац — 1-4 предложения
+- code blocks with a language tag
+- images/diagrams — alt text
+- backticks for technical terms
+- paragraphs — 1-4 sentences
 
-## Шаг 5. TL;DR в начале
+## Step 5. TL;DR at the top
 
-Для статей длиннее 5000 символов — обязательно TL;DR блоком в начале. 2-3 строки: тезис + главный вывод + кому будет полезно.
+For articles longer than 5000 characters — a TL;DR block at the top is mandatory. 2-3 lines: thesis + main takeaway + who will find it useful.
 
-## Шаг 6. Самопроверка
+## Step 6. Self-check
 
-- **тезис прослеживается** через всю статью, не размывается
-- **есть конкретные примеры** (не только теория)
-- **есть код / схемы / числа** где возможно
-- **контраргумент** упомянут — иначе текст выглядит как пропаганда
-- **читатель может что-то применить** после прочтения
-- если убрать вступление — статья не разваливается?
-- финал имеет смысл? (или это просто «таким образом»)
+- **the thesis carries through** the whole article, it doesn't get diluted
+- **there are concrete examples** (not just theory)
+- **there's code / diagrams / numbers** where possible
+- **a counterargument** is mentioned — otherwise the text reads like propaganda
+- **the reader can apply something** after reading
+- does the article still hold together if you remove the intro?
+- does the ending make sense? (or is it just "thus")
 
-## Шаг 7. Покажи и спроси
+## Step 7. Show it and ask
 
-Покажи драфт. Под ним:
+Show the draft. Below it:
 
-- длина: X символов
-- проверки: ✓ тезис / ✓ конкретика / ✓ контраргумент / ✓ код
+- length: X characters
+- checks: ✓ thesis / ✓ specifics / ✓ counterargument / ✓ code
 
-Спроси:
+Ask:
 
-1. Принять как первый драфт
-2. Поправить конкретный раздел
-3. Усилить тезис / сменить ракурс
-4. Сократить (если ушёл в 12+ тыс)
-5. Раскрыть какой-то аргумент глубже
+1. Accept as a first draft
+2. Fix a specific section
+3. Strengthen the thesis / change the angle
+4. Cut it down (if it ran to 12k+)
+5. Go deeper on a particular argument
 
-## Шаг 8. Сохрани
+## Step 8. Save
 
-Спроси куда сохранить. Если есть конвенция Obsidian-vault или blog repo — спроси путь. Иначе предложи `drafts/YYYY-MM-DD-<short-slug>.md` рядом с текущим рабочим контекстом.
+Ask where to save it. If there's an Obsidian-vault or blog-repo convention, ask for the path. Otherwise suggest `drafts/YYYY-MM-DD-<short-slug>.md` next to the current working context.
 
-## Чего не делать
+## What not to do
 
-- не делай статью без явного тезиса — это эссе, а не статья
-- не цитируй случайных гуру для авторитета
-- не пиши «в этой статье мы рассмотрим» — режь и переходи к делу
-- не клей серию слабо связанных мыслей в одну статью — лучше серия из 3 коротких
-- не финализируй статью без проверки тезиса от автора — это его текст, не твой
+- don't produce an article without an explicit thesis — that's an essay, not an article
+- don't quote random gurus for authority
+- don't write "in this article we will look at" — cut it and get to the point
+- don't glue a series of loosely related thoughts into one article — a series of 3 short pieces is better
+- don't finalize the article without the author confirming the thesis — it's their text, not yours
