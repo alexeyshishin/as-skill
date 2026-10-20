@@ -40,8 +40,8 @@ func printUsage(w io.Writer) {
 Usage:
   as-skill install domain  <name>              symlink one domain (default mode)
   as-skill install domains <name> [name...]    symlink several domains
-  as-skill install all                         symlink every domain + core skills
-  as-skill install skill   <name>              symlink one skill (domain-owned or core)
+  as-skill install all                         symlink every domain
+  as-skill install skill   <name>              symlink one skill (domain-owned)
   as-skill install ... --copy                  copy a static snapshot instead of
                                                 symlinking (same shapes as above; for
                                                 sharing, or projects that shouldn't
@@ -64,8 +64,6 @@ Usage:
 Flags (install/uninstall):
   --project PATH        target project root, gets a .claude/ (default ".")
   --harness-root PATH   this repo's checkout (default: auto-detected upward from ".")
-  --with-core            also install/uninstall core/skills/* (domain/domains/skill
-                          modes; "all" always includes them)
   --copy                 install: copy a static snapshot instead of symlinking
                           (default: symlink)
   --dry-run              print what would happen, write nothing

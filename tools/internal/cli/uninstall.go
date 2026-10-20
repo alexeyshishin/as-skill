@@ -50,9 +50,6 @@ func runUninstall(args []string) error {
 		if err := in.UninstallDomain(reg, positionals[0]); err != nil {
 			return err
 		}
-		if opts.withCore {
-			in.UninstallCoreSkills(reg)
-		}
 	case "domains":
 		if len(positionals) == 0 {
 			return errors.New("uninstall domains needs at least one domain name")
@@ -61,9 +58,6 @@ func runUninstall(args []string) error {
 			if err := in.UninstallDomain(reg, name); err != nil {
 				return err
 			}
-		}
-		if opts.withCore {
-			in.UninstallCoreSkills(reg)
 		}
 	case "all":
 		if len(positionals) != 0 {
@@ -74,7 +68,6 @@ func runUninstall(args []string) error {
 				return err
 			}
 		}
-		in.UninstallCoreSkills(reg)
 	case "skill":
 		if len(positionals) != 1 {
 			return errors.New("uninstall skill needs exactly one skill name")

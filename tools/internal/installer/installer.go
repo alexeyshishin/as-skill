@@ -122,20 +122,6 @@ func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict b
 }
 
 func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
-	for _, cs := range reg.CoreSkills {
-		if cs != name {
-			continue
-		}
-		src := filepath.Join(in.HarnessRoot, "core", "skills", name)
-		dest := filepath.Join(in.ProjectRoot, ".claude", "skills", name)
-		n, err := in.place("core", "skill", name, src, dest)
-		if err != nil {
-			return fmt.Errorf("core skill %q: %w", name, err)
-		}
-		in.report("core", "skill", dest, n)
-		return nil
-	}
-
 	owner := ""
 	for _, dname := range reg.DomainNames() {
 		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {
@@ -171,19 +157,6 @@ func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
 	return nil
 }
 
-func (in *Installer) InstallCoreSkills(reg *registry.Registry) error {
-	for _, name := range reg.CoreSkills {
-		src := filepath.Join(in.HarnessRoot, "core", "skills", name)
-		dest := filepath.Join(in.ProjectRoot, ".claude", "skills", name)
-		n, err := in.place("core", "skill", name, src, dest)
-		if err != nil {
-			return fmt.Errorf("core skill %q: %w", name, err)
-		}
-		in.report("core", name, dest, n)
-	}
-	return nil
-}
-
 func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error {
 	m, ok := reg.Domains[name]
 	if !ok {
@@ -216,15 +189,6 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 }
 
 func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
-	for _, cs := range reg.CoreSkills {
-		if cs != name {
-			continue
-		}
-		dest := filepath.Join(in.ProjectRoot, ".claude", "skills", name)
-		in.uninstallOne("core", "skill", name, dest)
-		return nil
-	}
-
 	owner := ""
 	for _, dname := range reg.DomainNames() {
 		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {
@@ -243,13 +207,6 @@ func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
 	dest := filepath.Join(destBase, name)
 	in.uninstallOne(owner, "skill", name, dest)
 	return nil
-}
-
-func (in *Installer) UninstallCoreSkills(reg *registry.Registry) {
-	for _, name := range reg.CoreSkills {
-		dest := filepath.Join(in.ProjectRoot, ".claude", "skills", name)
-		in.uninstallOne("core", "skill", name, dest)
-	}
 }
 
 func (in *Installer) uninstallOne(domain, kind, name, dst string) {

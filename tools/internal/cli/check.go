@@ -54,8 +54,6 @@ func runCheck(args []string) error {
 		matches, _ := filepath.Glob(filepath.Join(domainsDir, name, "skills", "*", "SKILL.md"))
 		skillMDs = append(skillMDs, matches...)
 	}
-	coreMatches, _ := filepath.Glob(filepath.Join(harnessRoot, "core", "skills", "*", "SKILL.md"))
-	skillMDs = append(skillMDs, coreMatches...)
 	sort.Strings(skillMDs)
 
 	for _, path := range skillMDs {
