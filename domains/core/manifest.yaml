@@ -1,0 +1,12 @@
+# Core domain — domain-independent utility skills, installed like any other domain.
+# Requires no env. Global in ~/.claude/.
+
+name: core
+description: Core skills — domain-independent utilities always available: ultra-compressed output mode, project memory bank, memory bank defrag.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
