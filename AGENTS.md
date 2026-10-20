@@ -13,7 +13,7 @@ Always run with the `caveman` core skill (`core/skills/caveman/`) active — ult
 ## Architecture
 
 ```
-claude-harness/
+as-skill/
 └── domains/
     ├── <domain-name>/
     │   ├── manifest.yaml      ← name, description, requires_env, targets
