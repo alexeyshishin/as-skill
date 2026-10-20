@@ -10,7 +10,6 @@
 ## Оглавление
 
 - [Домены](#домены)
-- [Core-скиллы](#core-скиллы)
 - [Структура репозитория](#структура-репозитория)
 - [Установка (CLI `as-skill`)](#установка-cli-as-skill)
 - [Разработка самого харнесса](#разработка-самого-харнесса)
@@ -24,7 +23,8 @@
 | **[`obsidian`](domains/obsidian/)** | env `OBSIDIAN_VAULT` | PKB на Obsidian по PARA — приём источников в базу, разбор inbox, обогащение фронтматтера, критика заметок, разбиение больших заметок и лекций, распутывание хабов-MOC. | **8 правил, 8 скиллов, 4 агента.** |
 | **[`git`](domains/git/)** | — | Git workflow — Conventional Commits, описания PR. | **1 правило, 2 скилла, 1 агент.** |
 | **[`content`](domains/content/)** | — | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста. | **2 правила, 5 скиллов, 1 агент.** |
-| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domain code --copy --with-core`. | **4 скилла, 4 агента, 1 hook** (test-gate). |
+| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domains code core --copy`. | **4 скилла, 4 агента, 1 hook** (test-gate). |
+| **[`core`](domains/core/)** | — | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения, project memory bank, дефрагментация memory bank. | **4 скилла.** |
 | **[`devops`](domains/devops/)** | — | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). | **7 агентов**, пока без правил и скиллов. |
 
 Требования проверяются на установке: нет `OBSIDIAN_VAULT` — пропускается домен `obsidian`, остальные домены `requires_env` не имеют и ставятся всегда.
@@ -49,17 +49,6 @@ echo "$OBSIDIAN_VAULT"
 `obsidian` (для `all` — с предупреждением, для явного запроса домена —
 жёсткая ошибка), см. [`tools/README.md`](tools/README.md).
 
-## Core-скиллы
-
-Вне доменов, в `core/skills/` — не завязаны на конкретную область, ставятся всегда, без `manifest.yaml`:
-
-| Скилл | Что делает |
-|-------|-----------|
-| **[`caveman`](core/skills/caveman/)** | Режим ультра-сжатого общения — режет объём ответа, сохраняя техническую точность. Always-on по умолчанию, см. `AGENTS.md`. |
-| **[`memory-bank`](core/skills/memory-bank/)** | Ведёт лёгкую «энциклопедию проекта» в `.memory-bank/`: архитектура, стек, соглашения, активные задачи. |
-| **[`memory-bank-defrag`](core/skills/memory-bank-defrag/)** | Дефрагментирует и актуализирует memory bank — сворачивает накопившиеся патчи в чистое текущее состояние. |
-| **[`swarm-report`](core/skills/swarm-report/)** | Заготовка — содержимое ещё не написано. |
-
 ## Структура репозитория
 
 ```
@@ -73,14 +62,8 @@ as-skill/
 │   ├── git/     {manifest, rules, skills, agents}
 │   ├── content/ {manifest, rules, skills, agents}
 │   ├── code/    {manifest, skills, agents, hooks/}
+│   ├── core/    {manifest, skills}    # caveman, memory-bank, memory-bank-defrag, swarm-report
 │   └── devops/  {manifest, agents}
-│
-├── core/
-│   └── skills/               # Скиллы без домена — ставятся всегда
-│       ├── caveman/
-│       ├── memory-bank/
-│       ├── memory-bank-defrag/
-│       └── swarm-report/
 │
 ├── tools/
 │   ├── main.go             # Инсталлятор — CLI as-skill, см. tools/README.md
@@ -95,15 +78,15 @@ as-skill/
 └── README.md
 ```
 
-Правится напрямую: `domains/`, `core/skills/` (для скиллов без домена) и `AGENTS.md`.
+Правится напрямую: `domains/` и `AGENTS.md`.
 
 ## Установка (CLI `as-skill`)
 
 Домены и скиллы ставятся в `.claude/` целевого проекта тулом `tools/` (бинарь `as-skill`).
 
-По умолчанию `install` ставит **symlink** — правки в `domains/`/`core/skills/` видны в проекте сразу, без переустановки (подробнее — в разделе [«Разработка самого харнесса»](#разработка-самого-харнесса)).
+По умолчанию `install` ставит **symlink** — правки в `domains/` видны в проекте сразу, без переустановки (подробнее — в разделе [«Разработка самого харнесса»](#разработка-самого-харнесса)).
 
-`install --copy` вместо этого делает статический снэпшот — для шаринга или для проектов, которые не должны зависеть от жизненного цикла этой копии репозитория. Так, например, ставится домен `code` в чужой проект: `as-skill install domain code --project <path> --copy --with-core`.
+`install --copy` вместо этого делает статический снэпшот — для шаринга или для проектов, которые не должны зависеть от жизненного цикла этой копии репозитория. Так, например, ставится домен `code` в чужой проект: `as-skill install domains code core --project <path> --copy`.
 
 ### Быстрый старт — из корня репозитория
 
@@ -136,13 +119,13 @@ go build -o as-skill ./tools
 Самое частое:
 
 ```bash
-as-skill install all                              # всё сразу: домены + core-скиллы, symlink
-as-skill install domain code --copy --with-core   # один домен снэпшотом — так code ставится в чужой проект
-as-skill status                                   # что уже стоит и в каком состоянии (OK/MISSING/BROKEN)
+as-skill install all                        # всё сразу: домены, symlink
+as-skill install domains code core --copy   # два домена снэпшотом — так code ставится в чужой проект
+as-skill status                             # что уже стоит и в каком состоянии (OK/MISSING/BROKEN)
 ```
 
 Полный список команд (включая `uninstall`, `doctor`, `check`, `list`) и флагов
-(`--project`, `--harness-root`, `--with-core`, `--copy`, `--dry-run`,
+(`--project`, `--harness-root`, `--copy`, `--dry-run`,
 `--force`) с описанием каждого — в [`tools/README.md`](tools/README.md).
 
 ### Поддерживаемые платформы
@@ -169,7 +152,7 @@ as-skill status                                   # что уже стоит и 
   ```powershell
   as-skill install all --copy
   ```
-  Копия работает без ограничений, но не подхватывает live-правки в `domains/`/`core/skills/` — под неё нужно переустанавливать заново после изменений в харнессе.
+  Копия работает без ограничений, но не подхватывает live-правки в `domains/` — под неё нужно переустанавливать заново после изменений в харнессе.
 
 - **fish** — автосохранение PATH из `install.sh` рассчитано на POSIX rc-файлы (`~/.zshrc`, `~/.bash_profile`/`~/.bashrc`, `~/.profile`) и не трогает `config.fish` (другой синтаксис). Скрипт это определяет по `$SHELL`, пропускает правку rc-файла и печатает подсказку — добавьте PATH вручную: `fish_add_path <путь к чекауту as-skill>`.
 
@@ -179,7 +162,7 @@ as-skill status                                   # что уже стоит и 
 
 ```bash
 rm -rf .claude
-./as-skill install domains code git --project .
+./as-skill install domains code git core --project .
 ```
 
 ## Контрибьютинг и безопасность

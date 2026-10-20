@@ -4,8 +4,8 @@ CLI, который устанавливает домены и скиллы `as-
 
 ## Сборка
 
-Из корня репозитория (`go.mod` лежит там же, чтобы `domains/` и `core/` были
-достижимы):
+Из корня репозитория (`go.mod` лежит там же, чтобы `domains/` был
+достижим):
 
 ```bash
 go build -o as-skill ./tools
@@ -19,8 +19,8 @@ go build -o as-skill ./tools
 |---------|-----------|
 | `as-skill install domain <имя>` | symlink один домен (режим по умолчанию) |
 | `as-skill install domains <имя> [имя...]` | symlink несколько доменов |
-| `as-skill install all` | symlink все домены + core-скиллы |
-| `as-skill install skill <имя>` | symlink один скилл (доменный или core) |
+| `as-skill install all` | symlink все домены |
+| `as-skill install skill <имя>` | symlink один скилл |
 | `as-skill install ... --copy` | те же формы аргументов, но копия-снэпшот вместо symlink |
 | `as-skill uninstall domain\|domains\|all\|skill ...` | удалить то, что поставил `install` (symlink для link-записей, реальные файлы/директории для copy-записей; чужого/неотслеживаемого не трогает) |
 | `as-skill status [--project PATH]` | список записей lockfile: домен/вид/имя, режим, путь, здоровье (OK/MISSING/BROKEN) |
@@ -30,7 +30,7 @@ go build -o as-skill ./tools
 
 `as-skill` должен запускаться изнутри (или из поддиректории) этой копии
 репозитория, либо с явным `--harness-root` — он читает
-`domains/*/manifest.yaml` и `core/skills/*` оттуда. `--project` — независимый
+`domains/*/manifest.yaml` оттуда. `--project` — независимый
 путь: проект, который вы оснащаете.
 
 ## Флаги
@@ -41,7 +41,6 @@ go build -o as-skill ./tools
 |------|-----------|--------------|
 | `--project PATH` | корень целевого проекта | `.` |
 | `--harness-root PATH` | эта копия репозитория | автоопределяется вверх от `.` |
-| `--with-core` | доустановить/удалить `core/skills/*` вместе с `domain`/`domains`/`skill` | выключено (у `all` — всегда включено) |
 | `--copy` | только `install`: копия-снэпшот вместо symlink | выключено (по умолчанию — symlink) |
 | `--dry-run` | ничего не пишет, только печатает план | выключено |
 | `--force` | только `install`: перезаписать существующее в целевом пути, даже если as-skill его не отслеживает | выключено (по умолчанию — отказ) |
