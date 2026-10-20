@@ -16,7 +16,6 @@ Goal: give the reader a **reproducible** path from their starting state to the g
 Before starting, read:
 - `~/.claude/rules/content-voice.md`
 - `~/.claude/rules/content-formatting.md` — the tutorials section
-- `~/.claude/rules/sre-runbook-template.md` — the style for executable procedures (a tutorial is close to a runbook in terms of command conventions)
 
 ## Step 1. Define the scope
 
