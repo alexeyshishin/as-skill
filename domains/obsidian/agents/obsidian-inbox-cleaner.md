@@ -13,7 +13,7 @@ I make no changes until the user has a plan in hand. First — inspection and a 
 
 ## Knowledge base
 
-The vault root (`<vault>/`) is set at install time (`--vault` or the `BEAR_VAULT` env var).
+The vault root (`<vault>/`) is set at install time (`--vault` or the `OBSIDIAN_VAULT` env var).
 Language: Russian, with technical terms in English.
 
 Before any action, read:
