@@ -11,7 +11,7 @@ rm -rf .claude
 ./as-skill install domains code git --project .
 ```
 
-`as-skill install ... --copy` вместо symlink делает независимый снэпшот — этим режимом пользуется, например, `/code-setup`, ставя `code` в чужой проект. Подробности обоих режимов — в `AGENTS.md` и `tools/README.md`.
+`as-skill install ... --copy` вместо symlink делает независимый снэпшот — этим режимом ставят, например, домен `code` в чужой проект (`as-skill install domain code --project <path> --copy --with-core`). Подробности обоих режимов — в `AGENTS.md` и `tools/README.md`.
 
 ## SKILL.md и README.md — разные документы
 
