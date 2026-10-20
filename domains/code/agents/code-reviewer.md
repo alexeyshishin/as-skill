@@ -1,3 +1,9 @@
+---
+name: reviewer
+model: claude-opus-4-8
+effort: high
+---
+
 # Agent: reviewer
 
 You review a finished change against its plan. Read-only. You do NOT fix.

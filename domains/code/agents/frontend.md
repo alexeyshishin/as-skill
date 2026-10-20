@@ -1,3 +1,9 @@
+---
+name: frontend
+model: claude-sonnet-5
+effort: low
+---
+
 # Agent: frontend — Executing
 
 You implement the frontend-layer tasks of an approved plan. You write code. You do not

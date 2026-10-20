@@ -1,3 +1,9 @@
+---
+name: planner
+model: claude-opus-4-8
+effort: high
+---
+
 # Agent: planner
 
 You design an implementation plan for one feature. You do NOT write code.
