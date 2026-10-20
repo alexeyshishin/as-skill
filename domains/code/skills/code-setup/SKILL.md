@@ -1,6 +1,6 @@
 ---
 name: code-setup
-description: Install this mini dev-loop harness into a target project. Copies the agents, skills (plan/build/review/debug), the test-gate hook, settings, and AGENTS.md into the given project path, then seeds a Memory Bank index if none exists. Run this from a clone of the harness repo — pass the absolute path to the project you want to equip.
+description: Install this mini dev-loop harness into a target project via as-skill's copy mode. Installs the code domain (code-plan/code-build/code-review/code-debug/code-setup skills, their agents, the test-gate hook) plus core skills, then makes sure swarm-report/ exists. Run this from a clone of the harness repo — pass the absolute path to the project you want to equip.
 ---
 
 # Skill: /setup
@@ -24,48 +24,51 @@ If no path is given, ask for one. Do not guess.
 2. **Git check.** If `DST` is not a git repo (`git -C "$DST" rev-parse` fails), tell the
    user and offer to `git init` it. Do not init without a yes.
 
-3. **Copy the harness files** into `DST` (create parent dirs as needed):
-   - `AGENTS.md`
-   - `.claude/agents/` — the whole directory.
-   - `.claude/skills/plan`, `.claude/skills/build`, `.claude/skills/review`,
-     `.claude/skills/debug`, `.claude/skills/design-cover`, `.claude/skills/visual-verify`
-     — but NOT `.claude/skills/setup` (the target never re-installs).
-   - `.claude/hooks/test-gate.sh` and `.claude/hooks/visual-gate.sh` — then `chmod +x` both.
-   - `.claude/design-gate.json.example` — the example only. The real
-     `.claude/design-gate.json` is the project's to write (`/design-cover` writes it), and
-     until it exists the visual gate is inert.
-   - `swarm-report/` — create it with a `.gitkeep`.
-   Example:
+3. **Get `as-skill`.** If `SRC/as-skill` doesn't exist yet, build it first:
+   `(cd "$SRC" && go build -o as-skill ./tools)`.
+
+4. **Install the `code` domain in copy mode.**
    ```bash
-   mkdir -p "$DST/.claude/agents" "$DST/.claude/skills" "$DST/.claude/hooks" "$DST/swarm-report"
-   cp -R "$SRC/.claude/agents/." "$DST/.claude/agents/"
-   for s in plan build review debug design-cover visual-verify; do cp -R "$SRC/.claude/skills/$s" "$DST/.claude/skills/"; done
-   for h in test-gate visual-gate; do cp "$SRC/.claude/hooks/$h.sh" "$DST/.claude/hooks/" && chmod +x "$DST/.claude/hooks/$h.sh"; done
-   cp "$SRC/.claude/design-gate.json.example" "$DST/.claude/"
-   cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
-   touch "$DST/swarm-report/.gitkeep"
+   "$SRC/as-skill" install domain code --project "$DST" --with-core --copy
    ```
+   `--copy` is deliberate, not the default — see Notes. This places, as real files
+   (not symlinks):
+   - `$DST/.claude/skills/{code-plan,code-build,code-review,code-debug,code-setup}/`
+   - `$DST/.claude/agents/{code-planner,code-skeptic,code-reviewer,code-debugger}.md`
+   - `$DST/.claude/hooks/test-gate.sh` (chmod +x'd automatically by copy mode)
+   - `$DST/.claude/skills/{caveman,memory-bank,memory-bank-defrag,swarm-report}/`
+     (core skills, via `--with-core`)
 
-4. **Wire settings.json (merge, don't clobber).**
-   - If `DST/.claude/settings.json` is absent → copy `SRC/.claude/settings.json`.
-   - If present → merge both Stop hooks (`test-gate`, `visual-gate`) into the existing file
-     with `jq`, without dropping the user's other hooks. Dedupe by command string — a
-     re-run must not register the same hook twice. Verify the result is valid JSON.
+   `code-setup` itself gets copied along with the other four — `as-skill`'s domain
+   install has no per-skill exclusion. That's harmless: the copy inside `DST` can't
+   function as a re-installer there (it needs a live harness checkout as
+   `--harness-root`), so leave it rather than hand-deleting it after every run.
 
-4b. **Append the design-loop ignores** to `DST/.gitignore` (append-only, never rewrite):
-   `swarm-report/visual/` and `design-ref/**/*.png` if the user does not want reference
-   exports in git. Ask before adding the second one — some teams do commit them.
+5. **`swarm-report/`.** Create it if missing: `mkdir -p "$DST/swarm-report"`. No
+   manual Memory Bank seeding needed — the `memory-bank` core skill (just installed
+   in step 4) bootstraps `.memory-bank/index.md` itself the first time it's needed
+   inside `DST` (see its own SKILL.md, "Bootstrapping a new Memory Bank").
 
-5. **Seed the Memory Bank (never overwrite).**
-   - If `DST/.memory-bank/` does not exist → copy `SRC/.memory-bank/index.md` into it as a
-     starter template and tell the user to fill it in.
-   - If it exists → leave it untouched; the harness reads whatever is already there.
+6. **Stop hook wiring.** `test-gate.sh` only runs if `DST/.claude/settings.json`
+   registers it as a Stop hook. If that file doesn't exist yet, create one that wires
+   it in. If it exists, merge the hook entry by hand (dedupe by command string) —
+   don't overwrite the user's existing hooks.
 
-6. **Report.** List exactly what was written, note whether the Memory Bank was seeded or
-   left alone, and give the next step:
-   > Installed. Open `<DST>` in Claude Code and run `/plan "<your first feature>"`.
+7. **Report.** Summarize what `as-skill` installed (its own stdout already lists each
+   piece), note whether `swarm-report/` was newly created, and give the next step:
+   > Installed (copy mode) into `<DST>`. Open it in Claude Code and run
+   > `/plan "<your first feature>"`.
 
 ## Notes
-- Idempotent: re-running overwrites the copied agents/skills/hook with the current version
-  but never touches `.memory-bank/` or the user's own settings hooks.
-- This skill only moves files. It runs no build and edits no user code.
+- **Why `--copy`, not `as-skill`'s default (symlink).** `code-setup` targets projects
+  unrelated to this checkout, elsewhere on the user's machine. Symlinking would
+  couple that project's `.claude/` to this checkout's lifetime — move or delete it
+  and the target breaks. `--copy` gives a static, independent snapshot instead. This
+  is the same one-verb-plus-flag principle `AGENTS.md`'s "Where things deploy"
+  section documents for `as-skill install` generally; `code-setup` just always
+  chooses the `--copy` side of it, on purpose.
+- Idempotent: re-running overwrites the copied skills/agents/hook with the current
+  version (`as-skill`'s copy mode does this per file) but never touches
+  `.memory-bank/` or `DST`'s own settings hooks.
+- This skill only moves files (via `as-skill`) and ensures `swarm-report/` exists. It
+  runs no build and edits no user code inside `DST`.
