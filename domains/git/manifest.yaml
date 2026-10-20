@@ -1,0 +1,13 @@
+# Git workflow домен — скиллы и правила для коммитов, PR и релизов.
+# Ничего не требует от окружения, кроме рабочего git-репо в момент выполнения скилла.
+# rules, skills, agents едут в ~/.claude/ — глобально, не привязаны к проекту.
+
+name: git
+description: Git workflow — Conventional Commits, PR-описания, semver-релизы.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
