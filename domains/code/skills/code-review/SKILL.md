@@ -1,14 +1,14 @@
 ---
 name: code-review
-description: Review a finished change against its plan. Spawns 1 reviewer subagent, reports ship/rework with severity-tagged findings. Use AFTER /build.
+description: Review a finished change against its plan. Spawns 1 reviewer subagent, reports ship/rework with severity-tagged findings. Use AFTER /code-build.
 ---
 
-# Skill: /review
+# Skill: /code-review
 
 ORCHESTRATOR. One reviewer subagent. Read-only — the reviewer does not fix.
 
 ## Invocation
-`/review <slug>`
+`/code-review <slug>`
 
 ## Steps
 1. **Gather**: plan `swarm-report/<slug>-plan.md` + build report `swarm-report/<slug>-build.md`
@@ -21,5 +21,5 @@ ORCHESTRATOR. One reviewer subagent. Read-only — the reviewer does not fix.
 
    Paste the diff INTO the prompt — the reviewer must not re-read the whole repo.
 3. **Report** the reviewer's verdict + findings verbatim.
-4. If `verdict: rework` — the findings ARE the input to a `/build <slug>` retry. Do not
+4. If `verdict: rework` — the findings ARE the input to a `/code-build <slug>` retry. Do not
    auto-fix here; hand them back and let the user decide.
