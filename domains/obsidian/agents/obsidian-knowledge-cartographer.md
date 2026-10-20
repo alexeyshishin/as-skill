@@ -13,7 +13,7 @@ The cartographer **does not create new notes just for the sake of splitting** â€
 
 ## Knowledge base
 
-The vault root (`<vault>/`) is set at install time (`--vault` or the `BEAR_VAULT` env var).
+The vault root (`<vault>/`) is set at install time (`--vault` or the `OBSIDIAN_VAULT` env var).
 Language: Russian, with technical terms in English.
 
 Before acting, read:
