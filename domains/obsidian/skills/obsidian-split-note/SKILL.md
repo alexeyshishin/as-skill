@@ -11,7 +11,7 @@ Splits one large note into several smaller ones (atomic or thematic) while prese
 - each new note is created in the correct PARA folder;
 - the frontmatter of the original and the new notes is kept consistent (`up`/`down` are set).
 
-Base rules (PARA, tags, frontmatter, style, file names) — in `.agents/rules/`. In particular: `tags.md` (the "Structural tags" section), `note-types-frontmatter.md`, `knowledge-structures.md` (atomic notes), `file-naming.md`.
+Base rules (PARA, tags, frontmatter, style, file names) — in `.claude/rules/`. In particular: `tags.md` (the "Structural tags" section), `note-types-frontmatter.md`, `knowledge-structures.md` (atomic notes), `file-naming.md`.
 
 ---
 

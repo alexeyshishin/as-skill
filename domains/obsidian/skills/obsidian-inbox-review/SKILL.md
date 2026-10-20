@@ -7,7 +7,7 @@ description: Analyze and review notes from the inbox (`00. Входящие`) �
 
 Read-only, report only. Files are not modified. The output is a structured list of recommendations.
 
-Vault structure, tags, and frontmatter — in `.agents/rules/` (`vault-struct.md`, `tags.md`, `note-types-frontmatter.md`).
+Vault structure, tags, and frontmatter — in `.claude/rules/` (`vault-struct.md`, `tags.md`, `note-types-frontmatter.md`).
 
 **Triggers:** "go through the inbox", "inbox review", "what's in my inbox", "help with #inbox/review", "review my notes".
 
@@ -35,7 +35,7 @@ rg -l "#inbox/review" "00. Входящие/"
 
 ### 3. Categorization
 
-Pick the structural tag and folder per `.agents/rules/tags.md` (the "Structural tags" section). Summary decision table:
+Pick the structural tag and folder per `.claude/rules/tags.md` (the "Structural tags" section). Summary decision table:
 
 | What's in the note | Tag | Folder |
 |---------------|-----|-------|

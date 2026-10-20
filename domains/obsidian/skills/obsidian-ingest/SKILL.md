@@ -18,10 +18,10 @@ You do the formatting, frontmatter, and link enrichment yourself — that's an i
 
 Before starting, read the vault rules:
 - `AGENTS.md` — general principles for working with the base
-- `.agents/rules/note-types-frontmatter.md` — frontmatter templates and fields
-- `.agents/rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
-- `.agents/rules/content-style.md` — language, style, wikilinks
-- `.agents/rules/tags.md` — tag taxonomy
+- `.claude/rules/note-types-frontmatter.md` — frontmatter templates and fields
+- `.claude/rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
+- `.claude/rules/content-style.md` — language, style, wikilinks
+- `.claude/rules/tags.md` — tag taxonomy
 
 ---
 
@@ -202,7 +202,7 @@ After creating the files, give a short report:
 - **Don't rewrite existing notes from scratch** — only add to them
 - **Don't create "dead" wikilinks** — links only to notes that actually exist (or were
   just created)
-- **Don't multiply tags** — use the existing taxonomy from `.agents/rules/tags.md`
+- **Don't multiply tags** — use the existing taxonomy from `.claude/rules/tags.md`
 - **Don't add frontmatter fields that aren't in the templates** — maintain consistency
 - **Preserve the author's voice**: if the source has a lively, conversational text — don't turn
   the notes into dry documentation

@@ -29,9 +29,9 @@ before:                       after:
                              (general, unclassified ~45 — stay on the hub)
 ```
 
-Base rules (PARA, tags, templates, style, naming) — in `.agents/rules/`. In particular: `knowledge-structures.md` (MOC), `note-types-frontmatter.md` (frontmatter), `workflows.md` (plan → confirmation → action protocol), `file-naming.md` (names).
+Base rules (PARA, tags, templates, style, naming) — in `.claude/rules/`. In particular: `knowledge-structures.md` (MOC), `note-types-frontmatter.md` (frontmatter), `workflows.md` (plan → confirmation → action protocol), `file-naming.md` (names).
 
-**Vault root folder (`<vault>/`):** set at install time (`--vault` or the `OBSIDIAN_VAULT` env var). See `.agents/rules/vault-struct.md`.
+**Vault root folder (`<vault>/`):** set at install time (`--vault` or the `OBSIDIAN_VAULT` env var). See `.claude/rules/vault-struct.md`.
 **Output language:** Russian, technical terms in English.
 
 ---

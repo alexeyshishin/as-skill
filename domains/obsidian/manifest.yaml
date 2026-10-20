@@ -1,12 +1,5 @@
 # Obsidian PKB domain — rules, skills, and agents for working with
 # a personal knowledge base using the PARA methodology.
-#
-# This domain requires the OBSIDIAN_VAULT environment variable, pointing
-# to the root of the Obsidian vault. Without it, the domain will not deploy.
-#
-# rules go to $OBSIDIAN_VAULT/.agents/rules/ — vault-local, because
-# skills reference them as `.agents/rules/<file>.md` (a path relative to the vault).
-# skills and agents go to ~/.claude/{skills,agents}/ per Claude Code convention.
 
 name: obsidian
 description: Obsidian PKB using PARA — ingest, inbox triage, hub untangling, daily journal.
@@ -15,6 +8,6 @@ requires_env:
   - OBSIDIAN_VAULT
 
 targets:
-  rules:  ${OBSIDIAN_VAULT}/.agents/rules
+  rules:  ${CLAUDE_HOME}/rules
   skills: ${CLAUDE_HOME}/skills
   agents: ${CLAUDE_HOME}/agents

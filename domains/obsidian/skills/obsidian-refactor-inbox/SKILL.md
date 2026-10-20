@@ -7,7 +7,7 @@ description: Process inbox notes in Obsidian. Use this skill when the user asks 
 
 The full processing cycle for a note from `00. Входящие/`: typing → frontmatter → links → moving into PARA.
 
-Base rules (structure, tags, frontmatter, style) — in `.agents/rules/`. This covers only what's specific to inbox processing.
+Base rules (structure, tags, frontmatter, style) — in `.claude/rules/`. This covers only what's specific to inbox processing.
 
 ## Related skills
 
@@ -42,7 +42,7 @@ Structural tag + folder — from the `tags.md` table (the "Structural tags" sect
 
 ### 2. Update frontmatter
 
-Templates and fields — `.agents/rules/note-types-frontmatter.md`. The note must have at least:
+Templates and fields — `.claude/rules/note-types-frontmatter.md`. The note must have at least:
 
 - `aliases` — synonyms, English variant, abbreviations (see `enrich-note` below)
 - `tags` — structural tag + domain (see `tags.md`)

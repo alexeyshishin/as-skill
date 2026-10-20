@@ -17,7 +17,7 @@ The skill turns a large set of lecture notes into a structured knowledge graph:
 
 ## Base rules
 
-Vault structure, tag taxonomy, frontmatter, file names — in `.agents/rules/`:
+Vault structure, tag taxonomy, frontmatter, file names — in `.claude/rules/`:
 `vault-struct.md`, `tags.md` (the "Structural tags" section), `note-types-frontmatter.md`, `file-naming.md`.
 
 ---

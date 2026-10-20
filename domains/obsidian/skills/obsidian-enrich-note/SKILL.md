@@ -7,7 +7,7 @@ description: Enrich Obsidian note frontmatter — fill in the aliases, up, down,
 
 A targeted frontmatter update **without moving the file and without changing tags**. Only these change: `aliases`, `up`, `down`, `other`. The note body, tags, `links`, `sources` are left untouched.
 
-Semantics of the `up`/`down`/`other`/`links` fields — in `.agents/rules/content-style.md`. Vault structure — in `.agents/rules/vault-struct.md`.
+Semantics of the `up`/`down`/`other`/`links` fields — in `.claude/rules/content-style.md`. Vault structure — in `.claude/rules/vault-struct.md`.
 
 ## When NOT to use this
 
