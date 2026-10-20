@@ -1,44 +1,56 @@
 # Note types, templates, and frontmatter
 
-Templates live in `_Система/1. Шаблоны/`.
+Templates live in `_Система/templates/`.
 
 ## Templates by note type
 
+The vault currently has 12 templates — leaner than what used to be documented here. Several old per-type templates were merged or dropped; there's no dedicated template right now for a project index note, an essay, a topic-to-MOC staging note, an ADR, a micro-progress log, or a weekly/monthly/yearly journal entry. If one of those is needed, ask the user rather than inventing frontmatter, or build off the closest existing template by hand (e.g. `03. шаблон идея.md` plus manually added `sources`/`confidence` fields for an ad hoc concept note).
+
 | Template | Purpose |
 |--------|-----------|
-| `Шаблон проекта.md` | Project structure (goals, status, deadline, progress) |
-| `Ежедневная заметка.md` | Journal entry with navigation |
-| `Еженедельная заметка.md` | Weekly review |
-| `Ежегодная заметка.md` | Year-end summary |
-| `Шаблон идея.md` | Main template for recording atomic notes and ideas |
-| `Шаблон человека.md` | Contact profile |
-| `Шаблон карты.md` | MOC (Map of Content) |
-| `Шаблон топика.md` | A topic to study |
-| `Шаблон эссе.md` | A full-length essay |
-| `Шаблон литературной цитаты.md` | Notes on books/articles |
-| `Созвон или встреча.md` | Meeting notes |
-| `Черновик поста.md` | Post drafts |
-| `Обзор конференции.md` | An overview note for an attended conference (overall impression, talks attended, new contacts) |
-| `Шаблон тезисов по докладу.md` | A collection of takeaways from a talk |
-| `Шаблон тезисов по видео.md` | A collection of takeaways from a watched video |
-| `Шаблон тезисов по книге.md` | A collection of takeaways from a book |
-| `Шаблон тезисов по статье.md` | A collection of takeaways from an article |
-| `Конспект по лекции.md` | Lecture notes from a course |
+| `01. ежедневная заметка.md` | Daily journal entry |
+| `02. черновик поста.md` | Draft for a blog/channel post |
+| `03. шаблон идея.md` | Idea, thought, or concept — one shared template; the tag you set marks maturity (see "Idea vs. thought vs. concept" below) |
+| `04. конспект по лекции.md` | Lecture notes from a course |
+| `05. обзор конференции.md` | Overview of an attended conference |
+| `06. шаблон тезисов по докладу.md` | Takeaways from a single talk |
+| `07. созвон или встреча.md` | Meeting/call notes |
+| `08. шаблон карты.md` | MOC (Map of Content) |
+| `09. шаблон инцидента.md` | Standalone SRE incident/lesson note |
+| `10. шаблон человека.md` | Contact profile |
+| `11. шаблон тезисов по видео-книге-статье.md` | Takeaways from a book, video, or article — one merged template; set `tags` to whichever fits (`book`/`video`/`article`) |
+| `12. шаблон постмортемы.md` | Project postmortem — filed under the project's own `Постмортемы/` subfolder, `up` points to the project's index note |
+
+The template's leading number is just Templater menu ordering and can shift — treat this table, not a hardcoded filename elsewhere, as the source of truth for what a template is currently called.
+
+### Idea vs. thought vs. concept
+
+All three now come from the same `03. шаблон идея.md` file — the old separate "мысль"/"идея"/"концепт" templates are gone. What used to be a template choice is now a tag choice, set by hand after creating the note:
+
+| | Tag | Nature |
+|--|-----|--------|
+| **Thought** | `thought` | An insight, already formed |
+| **Idea** | `fleeting` + `inbox/review` | Raw, not yet thought through — process later |
+| **Concept** | `concept` | A model/framework backed by sources — add `confidence` and (if relevant) `up`/`other` links to the source |
+
+**Rule:** when in doubt, tag `fleeting` + `inbox/review` and sort it out later during inbox processing.
 
 ## Standard frontmatter fields
 
 | Key | Type | Description | When to use |
 |------|-----|----------|--------------------|
-| `aliases` | list | Alternative names | Always |
+| `aliases` | list | Alternative names | Widely used (~70% of notes) |
 | `tags` | list | Note tags | Always |
-| `status` | string | `Todo`, `WIP`, `Done` | Projects/Posts |
-| `deadline` | string | Deadline as a wikilink `"[[2026-03-05]]"` | Projects |
-| `up` | list | Parent notes | Always |
-| `down` | list | Child notes | Always |
+| `status` | string | `Todo`, `WIP`, `Done` | Projects, postmortems |
+| `up` | list | Parent notes | Widely used |
+| `down` | list | Child notes | Widely used |
 | `links` | list | Web links | Always |
 | `other` | list | Horizontal connections | Always |
-| `confidence` | string | `high`, `medium`, `low` | Concepts, literature notes, syntheses |
-| `sources` | list | List of source notes/documents | Literature notes, syntheses |
+| `confidence` | string | `high`, `medium`, `low` | Widely used on reference/concept notes under `03. Ресурсы/<Тема>/База знаний/` |
+| `date of update` | string | Last-edit date, `DD.MM.YYYY` | Widely used on reference/concept notes |
+| `source` | string | Where a book/video/article came from (e.g. `Бумажная книга`) | Book/video/article takeaway notes |
+| `author` | string | The source's author | Book/video/article takeaway notes |
+| `deadline` | string | Deadline as a wikilink `"[[2026-03-05]]"` | Documented, but not currently used anywhere in the vault |
 
 ### Frontmatter rules
 
@@ -46,32 +58,12 @@ Templates live in `_Система/1. Шаблоны/`.
 - Don't invent new keys without reason
 - Don't change the format of existing values (e.g. don't turn a list into a string)
 - Only add new fields if they're consistent with other notes of the same type
-- **The `sources` field** — never clear it. Only add new sources
 
-### Policy: literature sources in up + sources (option B)
+### Provenance for book/video/article notes
 
-A literature note, book, article, video — is **simultaneously a source and a topical parent** in this vault. The corresponding link must be:
+A source's provenance (`source`, `author`) lives directly on its own takeaway note — there's no separate `sources` field duplicated onto every concept note it feeds. On a concept/reference note that draws on a source, link back with `up` (or `other`, if the source isn't the primary parent) to the source's takeaway note; that link is enough on its own.
 
-- in `up` — as the parent of the topic (for graph navigation)
-- in `sources` — as the source (for "where did I learn this" queries)
-
-For example, for an atomic note from the book "The Phoenix Project":
-
-```yaml
-up:
-  - "[[Книга – Проект Феникс]]"
-  - "[[DevOps]]"
-sources:
-  - "[[Книга – Проект Феникс]]"
-```
-
-**Rules:**
-
-- If a source is in `up` — it must also be duplicated in `sources`. They stay in sync.
-- Exception: **navigational MOC indexes** (`Книжная полка`, `Статьи`, `Видео`, `Конференция`, and similar ones tagged `MapOfContent` in the sources folders) — these are parents, **not sources**. Don't duplicate them into `sources`.
-- When updating either side (up or sources) — keep them in sync.
-
-**History:** before 2026-05-12, the `sources` field wasn't populated during ingest — the source lived only in `up`. After option B was adopted, a one-time migration was run, and the format was locked in as a rule. See [[00. Входящие/Литературные источники в up – четыре варианта политики хранилища]].
+**History:** an earlier "option B" policy required duplicating a literature source into both `up` and a `sources` list field on every note it touched (see `00. Входящие/Литературные источники в up – четыре варианта политики хранилища`). As of this doc's last sync with the vault (2026-08-15), `sources:` doesn't appear in a single note — the policy isn't in current practice. Don't reintroduce it without checking with the user first.
 
 ### Frontmatter examples
 
@@ -79,12 +71,11 @@ sources:
 
 ```yaml
 ---
-aliases: []
 tags:
   - project
-status: Todo
-deadline: "[[2026-04-29]]"
-up: []
+status: WIP
+up: "[[01. Проекты]]"
+aliases: []
 down: []
 links: []
 other: []
@@ -97,29 +88,37 @@ other: []
 ---
 tags:
   - journal/daily
-aliases: []
+date: "{{date:DD-MM-YYYY}}"
 ---
-
-**< [[Вчера]] | [[Неделя]] | [[Месяц]] | [[Завтра]] >**
+### Задачи на день:
+- [ ]
+### Дополнительно:
+-
+### Привычки
+-
+### Оценка дня:
+-
 ```
 
-**Concept/resource:**
+**Concept/reference note:**
 
 ```yaml
 ---
+date of update: 27.12.2025
 tags:
-  - concept
-aliases: []
-up: []
-links: []
-sources: []
+  - devops
 confidence: medium
+up: "[[Родительская тема]]"
+aliases: []
+down: []
+links: []
+other: []
 ---
 ```
 
 ## Confidence levels
 
-Used in concepts, literature notes, and syntheses.
+Used on reference/concept notes and syntheses.
 
 | Level | Meaning |
 |---------|----------|
@@ -129,8 +128,8 @@ Used in concepts, literature notes, and syntheses.
 
 ### Confidence rules
 
-- Required for note types: Concept, Literature note, Synthesis
+- Required for note types: concept/reference notes (tag `concept` or a domain tag under `03. Ресурсы`), literature/source takeaway notes, syntheses
 - When created from a single source — default to `medium`
 - If the idea is theoretical or you're unsure — set `low` and note it in the text
-- When updated with new sources — raise the level and update `sources`
+- When updated with new sources — raise the level
 - Don't set `high` without at least two independent sources or personal experience

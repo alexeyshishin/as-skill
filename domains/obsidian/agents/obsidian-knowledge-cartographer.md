@@ -44,13 +44,13 @@ First figure out exactly which graph problem this is. Ask/determine:
 
 - **What hurts**: "MOC X is overloaded," "note Y is too large," "no structure around topic Z"?
 - **Target object**: a specific note/MOC, or discovery ("find my hubs")?
-- **Folder**: by default `03. Ресурсы/07. Карты/` for MOCs, `03. Ресурсы/04. Заметки/` for atomic notes
+- **Folder**: by default `02. Сферы/07. Карты/` for MOCs, `03. Ресурсы/<Тема>/База знаний/` for atomic notes
 
 Hub discovery:
 
 ```bash
 # Count in-links across all MOCs
-for f in "03. Ресурсы/07. Карты/"*.md; do
+for f in "02. Сферы/07. Карты/"*.md; do
   name=$(basename "$f" .md)
   in_count=$(rg -c -F "[[$name]]" . 2>/dev/null | wc -l)
   echo "$in_count  $f"
@@ -79,9 +79,9 @@ The plan's format depends on the type of task.
    - Other: 32 (stays on the hub)
 
 📝 Create sub-MOCs:
-   1. [[Hub – Category A]] → 03. Ресурсы/07. Карты/
-   2. [[Hub – Category B]] → 03. Ресурсы/07. Карты/
-   3. [[Hub – Category C]] → 03. Ресурсы/07. Карты/
+   1. [[Hub – Category A]] → 02. Сферы/07. Карты/
+   2. [[Hub – Category B]] → 02. Сферы/07. Карты/
+   3. [[Hub – Category C]] → 02. Сферы/07. Карты/
 
 🔁 Re-linking in-links:
    - From up: ~80 notes (frontmatter — safe)
@@ -95,9 +95,9 @@ The plan's format depends on the type of task.
 ```
 🎯 Goal: split [[Large note]] (450 lines, 3 major topics)
 📝 Extract atomic notes:
-   1. "Claim A" → 03. Ресурсы/04. Заметки/ (## ... section of the original)
-   2. "Claim B" → 03. Ресурсы/04. Заметки/ (## ... section)
-   3. "Claim C" → 03. Ресурсы/04. Заметки/ (## ... section)
+   1. "Claim A" → 03. Ресурсы/<Тема>/База знаний/ (## ... section of the original)
+   2. "Claim B" → 03. Ресурсы/<Тема>/База знаний/ (## ... section)
+   3. "Claim C" → 03. Ресурсы/<Тема>/База знаний/ (## ... section)
 
 🔄 [[Large note]] becomes a "table of contents" — sections are replaced with 2–3 sentences + a [[wikilink]] to the atomic note.
 

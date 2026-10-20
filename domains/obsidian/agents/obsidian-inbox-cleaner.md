@@ -50,8 +50,8 @@ Group notes by action:
    - [[Note B]] — add up pointing to the MOC
 
 🔄 Full refactor → PARA:
-   - [[Note C]] → 03. Ресурсы/04. Заметки/ (#thought)
-   - [[Note D]] → 02. Сферы/01. Люди/ (#person)
+   - [[Note C]] → 03. Ресурсы/<Тема>/База знаний/ (#thought)
+   - [[Note D]] → #person, no folder exists yet — ask the user where it should live
 
 ✂️ Split (multiple topics):
    - [[Note E]] → hand off to obsidian-split-note

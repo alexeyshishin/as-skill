@@ -66,13 +66,13 @@ If the plan changes mid-execution (an existing note was found instead of needing
 When the user asks to process an external source (article, book, video, transcript):
 
 1. **Read the source** in full
-2. **Create a literature note** in `03. Ресурсы/03. Литературные заметки/` using the `Шаблон литературной цитаты.md` template
-3. **Fill in the `sources` field** — the source's title and link
-4. **Extract concepts** — for each idea, check whether a note already exists. If it does — update it. If not — create an atomic note in `03. Ресурсы/04. Заметки/`
-5. **Update existing concepts** — search `03. Ресурсы/04. Заметки/` and `03. Ресурсы/07. Карты/` for notes touching the same topic. Add the new source to `sources`, refine the wording, raise `confidence` if the idea is confirmed, add a `> [!warning]` if it contradicts. Goal: touch 5–10 existing notes
-6. **Add links** in both directions: from the literature note → to the concepts, from the concepts → `up` to the literature note
+2. **Create or update the source's takeaway note** in `03. Ресурсы/<Тема>/<Источник>/` (e.g. `Книги/<Книга>/00. Оглавление.md`) using the `11. шаблон тезисов по видео-книге-статье.md` template — one folder per source. Quotes go straight into that note's `Цитаты` section, not into a separate literature note
+3. **Fill in `source` and `author`** on that note
+4. **Extract concepts** — for each idea, check whether a note already exists (search the relevant subject's `База знаний` subfolder under `03. Ресурсы/<Тема>/`, and adjacent topics). If it does — update it. If not — create an atomic note there
+5. **Update existing concepts** — search the relevant `03. Ресурсы/<Тема>/База знаний/` subfolders and `02. Сферы/07. Карты/` for notes touching the same topic. Refine the wording, raise `confidence` if the idea is confirmed, add a `> [!warning]` if it contradicts. Goal: touch 5–10 existing notes
+6. **Add links** in both directions: from the source note → to the concepts, from the concepts → `up` (or `other`) to the source note
 7. **Set `confidence`** — `medium` if there's a single source, `high` if the idea is confirmed by other notes
-8. **Update the MOC** — if the concept belongs to an existing map, add a link there
+8. **Update the MOC** — if the concept belongs to an existing map under `02. Сферы/07. Карты/`, add a link there
 9. **Record contradictions** — if the new information contradicts existing notes: `> [!warning] Противоречие: эта идея расходится с [[Другая заметка]]`
 
 ---
@@ -80,7 +80,7 @@ When the user asks to process an external source (article, book, video, transcri
 ## Creating or updating a MOC
 
 1. Gather all notes on the topic (search by tags, links, folders)
-2. Create the MOC using `Шаблон карты.md`
+2. Create the MOC in `02. Сферы/07. Карты/` (or the relevant subfolder there, e.g. `02. Сферы/07. Карты/03. Ресурсы/`) using `08. шаблон карты.md`
 3. Add brief annotations to each link
 4. Add a Bases query for automatic updates
 5. Link the MOC to its parent and child topics
@@ -100,11 +100,11 @@ When the user asks to process an external source (article, book, video, transcri
 
 If a conversation produced an in-depth analysis, comparison, or insight — suggest saving it as a note:
 
-- **Atomic thought** → `03. Ресурсы/04. Заметки/` (a concept or a single insight)
-- **Synthesis** → `03. Ресурсы/07. Карты/` (a comparison, a conclusion drawn from several sources)
+- **Atomic thought** → `03. Ресурсы/<Тема>/База знаний/<Подтема>/` (a concept or a single insight, filed by subject)
+- **Synthesis** → `02. Сферы/07. Карты/` (a comparison, a conclusion drawn from several sources)
 
 Marker: if the user copied the response into `00. Входящие/` — process it via the standard ingest flow.
-After saving — add an entry to `_Система/wiki-log.md`.
+After saving — add an entry to `_Система/wiki-log.md` (create the file if it doesn't exist yet).
 
 ---
 

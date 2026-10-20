@@ -9,7 +9,7 @@ The skill turns a large set of lecture notes into a structured knowledge graph:
 
 - the **original lecture** becomes a "table of contents" — sections are replaced with a short summary + `[[wikilink]]`;
 - **extracted concepts** are created as separate notes named `<Discipline> – <Concept>.md`;
-- the **discipline MOC** is updated with links to the new notes.
+- if a discipline MOC exists, it's updated with links to the new notes (no such MOC is guaranteed to exist right now — see "Lecture notes format" below).
 
 **Limit:** no more than **3 sets of notes** per run. If the user names more, ask which three to process now — the rest go in a follow-up run.
 
@@ -24,23 +24,21 @@ Vault structure, tag taxonomy, frontmatter, file names — in `.claude/rules/`:
 
 ## Lecture notes format
 
-A lecture file follows the pattern `Lecture – <Discipline> – <Date> – <Topic>.md` and contains:
+A lecture file follows the pattern `<NN>. <Discipline> лекция <YYYY-MM-DD>.md`, filed under `02. Сферы/03. Образование/02. Конспекты/`, and contains:
 
 ```yaml
 ---
-aliases: [...]
 tags:
-  - lecture
-discipline: "[[<Discipline>]]"   # link to the discipline MOC in 02. Сферы/04. Образование/МТИ/Предметы/
-up:
-  - "[[<Discipline>]]"
-down:
-  - "[[...]]"                   # notes already extracted from this lecture
+  - university   # real lecture notes use this, not #lecture — check what's already on sibling notes before picking
+up: "[[02. Сферы]]"   # observed real notes point straight at 02. Сферы, not at a per-discipline MOC
+aliases: []
+down: []
 links: []
 other: []
-date: "[[YYYY-MM-DD]]"
 ---
 ```
+
+There's no confirmed per-discipline MOC or `discipline:` field in the current vault — only one real lecture note was available to check, and it links `up` straight to `02. Сферы`. If a `## Discipline` MOC turns out to exist (check `02. Сферы/07. Карты/` and `02. Сферы/03. Образование/`), link to it instead and update this file; otherwise ask the user before inventing one.
 
 ---
 
@@ -55,10 +53,10 @@ Criteria for "extract / keep" — `knowledge-structures.md` (the "When to split 
 Plan → confirmation → action protocol — `workflows.md`. Format:
 
 ```
-Lecture: [[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]
-Discipline: [[ВышМат]]
+Lecture: [[01. ВышМат лекция 2025-11-20]]
+Discipline: ВышМат
 
-Extract into 03. Ресурсы/04. Заметки/ (atomic facts):
+Extract into 03. Ресурсы/<Тема>/База знаний/ (atomic facts):
   1. [[ВышМат – Транспонированная матрица]] → #thought + #lecture
   2. [[ВышМат – Определитель матрицы]] → #thought + #lecture
 
@@ -76,7 +74,7 @@ Ask for confirmation **unless the user said "just do it"** or similar.
 
 | Where | Tag | When |
 |------|-----|------|
-| `03. Ресурсы/04. Заметки/` | `#thought` + `#lecture` | Self-contained fact: definition, theorem, formula with proof. The note is already "finished". |
+| `03. Ресурсы/<Тема>/База знаний/` | `#thought` + `#lecture` | Self-contained fact: definition, theorem, formula with proof. The note is already "finished". |
 | `00. Входящие/` | `#inbox/review` + `#lecture` | Conceptual topic that needs links. Anything that raises doubts. |
 
 **Default to inbox** if it's not obvious.
@@ -86,7 +84,7 @@ Ask for confirmation **unless the user said "just do it"** or similar.
 For each extracted section:
 
 1. **File name:** `<Discipline> – <Concept>.md`
-   - The discipline comes from the lecture's `discipline` field (without `[[ ]]`)
+   - The discipline comes from the lecture's title
    - Example: `ВышМат – Транспонированная матрица.md`, `ПиАС ИБ – Многофакторная аутентификация.md`
 
 2. **Check whether such a note already exists** (grep the vault). If it does, don't create a duplicate — only update the links.
@@ -99,16 +97,13 @@ aliases:
   - Транспонированная матрица      # Concept name
   - Transposed Matrix               # English equivalent (if applicable)
 tags:
-  - thought                         # for 03. Ресурсы/04. Заметки/
-  - lecture
-  # for 00. Входящие/ — add #inbox/review instead of thought
-discipline: "[[ВышМат]]"           # copied from the lecture
+  - thought                         # for 03. Ресурсы/<Тема>/База знаний/
+  # for 00. Входящие/ — add #inbox/review instead
 up:
-  - "[[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]"  # the parent lecture
+  - "[[01. ВышМат лекция 2025-11-20]]"  # the parent lecture
 down: []
 links: []
 other: []
-date: "[[2025-11-20]]"             # date of the lecture
 ---
 ```
 
@@ -128,23 +123,21 @@ date: "[[2025-11-20]]"             # date of the lecture
 
 3. If `down` already contains links to nonexistent files (placeholders), replace them with links to the files just created.
 
-### Step 6. Update the discipline MOC
+### Step 6. Update a discipline MOC, if one exists
 
-Find the discipline file (`02. Сферы/04. Образование/МТИ/Предметы/<Discipline>.md`).
+Check `02. Сферы/07. Карты/` and `02. Сферы/03. Образование/` for a MOC covering this discipline. If one exists, add links to the new notes there. If not, don't invent one — that's a medium-refactoring call (`workflows.md`), propose it to the user instead of creating it unprompted.
 
-Add links to the new notes in the relevant list. If the MOC has a Dataview block that automatically picks up links, nothing needs doing — the links will appear on their own via the `discipline` field on the new notes.
-
-**How to tell whether links need to be added manually:** read the MOC — if it has a Dataview query (`FROM ... AND #discipline`), don't add anything manually. If it's a manual list, add them.
+**How to tell whether links need to be added manually:** read the MOC — if it has a Dataview query picking up notes by tag/folder, don't add anything manually. If it's a manual list, add them.
 
 ### Step 7. Verify connectivity
 
 - [ ] All new files are created in the correct folders.
-- [ ] Every new note's frontmatter is filled in (tags, aliases, discipline, up, down, date).
+- [ ] Every new note's frontmatter is filled in (tags, aliases, up, down).
 - [ ] The original is updated: each extracted section → short summary + wikilink.
 - [ ] The original's `down` contains wikilinks to all the new notes.
 - [ ] No duplicate notes (grep before creating).
 - [ ] LaTeX formulas preserved verbatim (not simplified or rewritten).
-- [ ] The discipline MOC is checked.
+- [ ] Checked whether a discipline MOC exists and updated it if so.
 
 ---
 
@@ -178,7 +171,7 @@ Add links to the new notes in the relevant list. If the MOC has a Dataview block
 Матрица $A^T$, где строки и столбцы поменяны местами; $(A^T)_{ij} = A_{ji}$. Подробнее: [[ВышМат – Транспонированная матрица]]
 ```
 
-**New file** `ВышМат – Транспонированная матрица.md` in `03. Ресурсы/04. Заметки/`:
+**New file** `ВышМат – Транспонированная матрица.md` in `03. Ресурсы/<Тема>/База знаний/`:
 
 ```markdown
 ---
@@ -188,13 +181,11 @@ aliases:
 tags:
   - thought
   - lecture
-discipline: "[[ВышМат]]"
 up:
-  - "[[Lecture – ВышМат – 2025-11-20 – Алгебра матриц]]"
+  - "[[01. ВышМат лекция 2025-11-20]]"
 down: []
 links: []
 other: []
-date: "[[2025-11-20]]"
 ---
 
 ## Определение

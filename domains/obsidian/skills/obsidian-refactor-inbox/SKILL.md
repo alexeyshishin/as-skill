@@ -27,17 +27,14 @@ Structural tag + folder — from the `tags.md` table (the "Structural tags" sect
 
 | Content type | Tag | Folder |
 |-----------------|-----|-------|
-| Atomic thought / concept | `#thought` | `03. Ресурсы/04. Заметки/` |
-| MOC / overview map | `#moc` | `03. Ресурсы/07. Карты/` |
-| Person / contact | `#person` | `02. Сферы/01. Люди/` |
-| Literature note | `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| Book | `#book` | `03. Ресурсы/01. Книги/` |
-| Article | `#article` | `03. Ресурсы/02. Статьи/` |
-| Video | `#video` | `03. Ресурсы/05. Видео/` |
-| Project | `#project` | `01. Проекты/` |
-| Meeting / 1:1 | `#meeting` | `02. Сферы/03. Работа/` |
-| Conference / talk notes | `#conference` | `02. Сферы/06. Конференции/` |
-| Journal entry | `#journal/daily` | `05. Дневник/<year>/<month>/` |
+| Atomic thought / concept | `#thought` | `03. Ресурсы/<Тема>/База знаний/` |
+| MOC / overview map | `#moc` | `02. Сферы/07. Карты/` |
+| Person / contact | `#person` | No folder currently exists — ask the user where it should live |
+| Book / article / video | `#book` / `#article` / `#video` | `03. Ресурсы/<Тема>/<Источник>/` — one subfolder per source |
+| Project | `#project` | `01. Проекты/<Проект>/` |
+| Meeting / 1:1 | `#meeting` | `02. Сферы/02. Работа/` |
+| Conference / talk notes | `#conference` | No folder currently exists — ask the user where it should live |
+| Journal entry | `#journal/daily` | `05. Дневник/` (flat, filename `DD-MM-YYYY.md`) |
 | No longer relevant | `#archive` | `04. Архив/` |
 
 ### 2. Update frontmatter
@@ -52,8 +49,8 @@ Templates and fields — `.claude/rules/note-types-frontmatter.md`. The note mus
 
 This is a sub-task — proceed as `obsidian-enrich-note` would:
 
-- Find related notes in `03. Ресурсы/07. Карты/` and `03. Ресурсы/04. Заметки/`
-- For people — check `02. Сферы/01. Люди/`
+- Find related notes in `02. Сферы/07. Карты/` and the relevant `03. Ресурсы/<Тема>/База знаний/`
+- For people — there's no dedicated folder yet; search the whole vault for an existing note about them before creating a new one
 - `up` — the parent topic / MOC, `down` — what this note gives rise to, `other` — horizontal links
 - `links` — external URLs only
 
@@ -65,7 +62,7 @@ rg -l "KEYWORD" "03. Ресурсы/" | head -20
 ### 4. Move into PARA
 
 ```bash
-mv "00. Входящие/Note.md" "03. Ресурсы/04. Заметки/Note.md"
+mv "00. Входящие/Note.md" "03. Ресурсы/<Тема>/База знаний/Note.md"
 ```
 
 ### 5. Remove `#inbox/review`

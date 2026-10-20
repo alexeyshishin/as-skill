@@ -62,18 +62,18 @@ Before naming — run `rg -l "<keyword>"` across the vault. If a similar note al
 Plan → confirmation → action protocol — `workflows.md`. Plan format:
 
 ```
-📄 Literature note: "Source title" → 03. Ресурсы/03. Литературные заметки/
+📄 Source takeaway note: "Source title" → 03. Ресурсы/<Тема>/<Источник>/
    Topic: ...
 
 📝 New atomic notes:
-   1. "Note A title" → 03. Ресурсы/04. Заметки/
+   1. "Note A title" → 03. Ресурсы/<Тема>/База знаний/
       Gist: one sentence
-   2. "Note B title" → 03. Ресурсы/04. Заметки/
+   2. "Note B title" → 03. Ресурсы/<Тема>/База знаний/
       Gist: one sentence
 
 🔄 Update existing notes:
-   - [[Existing note]] — add the source to sources, clarify ...
-   - [[Another note]] — add a wikilink to the literature note
+   - [[Existing note]] — link to the source note via up/other, clarify ...
+   - [[Another note]] — add a wikilink to the source note
 
 🗺 MOC (if needed):
    - [[Topic MOC]] — add the new notes to the list
@@ -87,45 +87,37 @@ If you want to update an existing note — read its content before editing it an
 
 After the plan is confirmed, create files in this order:
 
-### 5a. Literature note
+### 5a. Source takeaway note
 
-Create it in `03. Ресурсы/03. Литературные заметки/` from this template:
+Create it in `03. Ресурсы/<Тема>/<Источник>/` (its own subfolder — `00. Оглавление.md` for the overview, plus one file per chapter/section if the source is long) from the `11. шаблон тезисов по видео-книге-статье.md` template — see `template-usage.md`:
 
 ```markdown
 ---
 aliases: []
 tags:
-  - literature-note
+  - book        # or article / video — whichever fits
+source: "Source type or where it came from (e.g. Бумажная книга)"
+author: "Author name"
 up: []
-links:
-  - "Source URL (if any)"
-sources:
-  - "Source title and author"
-confidence: medium
 ---
 
-## What it's about
-
-2–3 sentences: what this text is and why it's worth reading.
-
-## Key ideas
-
+### Основные идеи:
 - [[Atomic note A]] — one sentence on what it's about
 - [[Atomic note B]] — one sentence on what it's about
 
-## Quotes and excerpts
+### Цитаты:
+- "An important quote or excerpt worth keeping verbatim"
 
-> An important quote or excerpt worth keeping verbatim
+### Мои мысли:
+- Your own take, not a restatement of the source
 
-## Questions and next steps
-
-- What's still unclear?
-- What's worth exploring next?
+### Применение:
+- Where this connects to existing projects/topics
 ```
 
 ### 5b. Atomic notes
 
-For each entity from the plan, create a note in `03. Ресурсы/04. Заметки/`:
+For each entity from the plan, create a note in `03. Ресурсы/<Тема>/База знаний/`:
 
 ```markdown
 ---
@@ -133,10 +125,8 @@ aliases: []
 tags:
   - thought
 up:
-  - "[[Literature note — source]]"
+  - "[[Source takeaway note]]"
 links: []
-sources:
-  - "Source title"
 confidence: medium
 other: []
 ---
@@ -158,8 +148,7 @@ Where this idea came from, in what context it arose.
 ### 5c. Update existing notes
 
 For each note in the plan:
-- Add the new source to the `sources` field
-- Add a wikilink to the new atomic note or literature note
+- Add a wikilink to the new atomic note or source takeaway note (`up` or `other`, as fits)
 - If the information expands or clarifies — add a paragraph with a reference to the source
 - If it contradicts — add a callout:
   ```
@@ -181,12 +170,12 @@ After creating the files, give a short report:
 
 ```
 ✅ Created:
-- [[Literature note]]
+- [[Source takeaway note]]
 - [[Note A]]
 - [[Note B]]
 
 🔄 Updated:
-- [[Existing note]] — source added
+- [[Existing note]] — link to the source added
 
 ⚠️ Decisions worth double-checking:
 - "Note C" — I couldn't find anything similar in the base, so I created a new one. You might
@@ -206,7 +195,6 @@ After creating the files, give a short report:
 - **Don't add frontmatter fields that aren't in the templates** — maintain consistency
 - **Preserve the author's voice**: if the source has a lively, conversational text — don't turn
   the notes into dry documentation
-- **Never clear the `sources` field** — only add new sources
 
 ---
 
@@ -214,7 +202,7 @@ After creating the files, give a short report:
 
 | Type | Folder |
 |-----|-------|
-| Literature note (article, book, transcript) | `03. Ресурсы/03. Литературные заметки/` |
-| Atomic thought / concept / insight | `03. Ресурсы/04. Заметки/` |
-| MOC / map / synthesis | `03. Ресурсы/07. Карты/` |
-| If the topic is clearly tied to a project | `01. Проекты/[project name]/` |
+| Source takeaway note (article, book, video) | `03. Ресурсы/<Тема>/<Источник>/` |
+| Atomic thought / concept / insight | `03. Ресурсы/<Тема>/База знаний/` |
+| MOC / map / synthesis | `02. Сферы/07. Карты/` |
+| If the topic is clearly tied to a project | `01. Проекты/<Проект>/` |

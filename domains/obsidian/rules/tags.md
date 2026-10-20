@@ -19,19 +19,21 @@ Prefer the existing, stable set of tags. Don't multiply new ones unnecessarily.
 
 Used to route a note to the right folder. Choose from this list — don't invent new ones. One structural tag per note.
 
+`03. Ресурсы` is organized by subject/domain, not by note type (see `vault-struct.md`) — so `#book`/`#article`/`#video`/`#thought` don't each get their own dedicated folder anymore. Which subject folder a note lands in is a judgment call: pick the existing `<Тема>` it belongs to, or ask the user if none fits.
+
 | Tag | Folder |
 |-----|-------|
-| `#project` | `01. Проекты/` |
-| `#person` | `02. Сферы/01. Люди/` |
-| `#meeting` | `02. Сферы/03. Работа/` (call, 1:1, sync) |
-| `#conference` | `02. Сферы/06. Конференции/` (talk, meetup) |
-| `#book` | `03. Ресурсы/01. Книги/` |
-| `#article` | `03. Ресурсы/02. Статьи/` |
-| `#literature-note` | `03. Ресурсы/03. Литературные заметки/` |
-| `#thought` | `03. Ресурсы/04. Заметки/` (atomic thought / concept) |
-| `#video` | `03. Ресурсы/05. Видео/` |
-| `#moc` | `03. Ресурсы/07. Карты/` (Map of Content) |
-| `#lecture` | lecture notes (alongside `#resource`) |
+| `#project` | `01. Проекты/<Проект>/` |
+| `#meeting` | `02. Сферы/02. Работа/` (call, 1:1, sync) |
+| `#lecture` | `02. Сферы/03. Образование/02. Конспекты/` |
+| `#book` | `03. Ресурсы/Книги/<Источник>/` — one subfolder per book: an `00. Оглавление` overview note plus per-chapter notes |
+| `#article` / `#video` | `03. Ресурсы/<Тема>/` — same one-subfolder-per-source pattern as `#book`, filed under whichever subject domain the source belongs to; use `Книги` if nothing narrower fits |
+| `#thought` | `03. Ресурсы/<Тема>/База знаний/<Подтема>/` — atomic concept/reference note, filed by subject rather than by note type |
+| `#moc` | `02. Сферы/07. Карты/` — vault-wide maps hub (not under `03. Ресурсы` anymore) |
+
+No current folder for `#person` or `#conference` — the vault doesn't have `Люди`/`Конференции` folders right now, even though the `#person` tag and its template still exist. If a note like that comes up, ask the user where it should live instead of assuming a path.
+
+`#literature-note` is retired — there's no more standalone per-quote literature note. Quotes now live inline, in the `Цитаты` section of the merged source note (`#book`/`#article`/`#video`) — see `template-usage.md`.
 
 ## Extended taxonomy by domain
 
@@ -87,7 +89,7 @@ Used to route a note to the right folder. Choose from this list — don't invent
 | Tag | Purpose |
 |-----|-----------|
 | `#content` | Drafts and ideas for publications |
-| `#telegram` | Material for the "Мишка на сервере" Telegram channel |
+| `#telegram` | Material for the personal Telegram channel |
 | `#talk` | Talks, conferences, presentations |
 
 **Knowledge and learning:**
