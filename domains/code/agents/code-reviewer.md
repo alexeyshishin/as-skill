@@ -1,5 +1,9 @@
 ---
 name: reviewer
+description: >
+  Read-only reviewer of a finished change against its plan. Reports ship/rework
+  with severity-tagged findings (path:line — SEVERITY: problem. fix.). Use from
+  code-review after code-build. Does not fix.
 model: claude-opus-4-8
 effort: high
 ---

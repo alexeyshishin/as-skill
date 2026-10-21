@@ -1,5 +1,9 @@
 ---
 name: planner
+description: >
+  Designs an implementation plan for one feature without writing code: reads the
+  Memory Bank, defines scope, tasks and file ownership per executing agent. Use
+  from code-plan before code-build, together with code-skeptic.
 model: claude-opus-4-8
 effort: high
 ---

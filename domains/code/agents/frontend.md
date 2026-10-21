@@ -1,5 +1,10 @@
 ---
 name: frontend
+description: >
+  Executing agent for frontend-layer tasks of an approved plan: UI components,
+  templates, styles, client-side state and routing. Writes code. Use from code-
+  build for tasks whose file scope is the UI; not for server code (backend) or
+  CI/infra (devops).
 model: claude-sonnet-5
 effort: low
 ---

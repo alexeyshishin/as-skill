@@ -1,5 +1,10 @@
 ---
 name: backend
+description: >
+  Executing agent for backend-layer tasks of an approved plan: API/route handlers,
+  services, business logic, data models and migrations, background jobs. Writes
+  code. Use from code-build for tasks whose file scope is server-side; not for UI
+  (frontend) or CI/infra (devops).
 model: claude-sonnet-5
 effort: low
 ---

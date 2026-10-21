@@ -1,5 +1,10 @@
 ---
 name: debugger
+description: >
+  Finds the root cause of a bug or failing test: reproduces it, ladders
+  hypotheses, isolates with evidence, applies the minimal fix. Use from code-debug
+  when a test fails, code-build reports blocked, or something stopped working.
+  Does not design features.
 model: claude-opus-4-8
 effort: high
 ---

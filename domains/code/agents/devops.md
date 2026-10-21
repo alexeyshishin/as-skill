@@ -1,5 +1,10 @@
 ---
 name: devops
+description: >
+  Executing agent for devops-layer tasks of an approved plan: CI/CD pipelines,
+  Dockerfiles, infra manifests, deployment config. Writes config and pipelines.
+  Use from code-build for tasks whose file scope is delivery/infra; not for app
+  code (backend, frontend).
 model: claude-sonnet-5
 effort: low
 ---
