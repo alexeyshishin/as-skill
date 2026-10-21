@@ -1,6 +1,6 @@
 ---
 name: code-init
-description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (no git commit, always use /caveman, no code comments, answer in Russian). Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
+description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (no git commit, always use /caveman, no code comments, answer in Russian). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the `test-gate` Stop hook in `.claude/settings.json`. Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
 ---
 
 # Skill: /code-init — generate a project CLAUDE.md
@@ -8,8 +8,11 @@ description: Generate a project CLAUDE.md for Claude Code — detects build/test
 Goal: write a `CLAUDE.md` at the project root that is a **reference of commands and
 processes**, not a wall of prohibitions. Best-practice backbone (ранжировано по тому, что
 реально встречается в успешных проектах): commands → checks → architecture → git →
-pitfalls. Keep it ~90–120 lines (~6 KB). Avoid shouty `NEVER`/`MUST` everywhere — state a
-rule once, clearly, with the criterion for when it applies.
+pitfalls. Keep the core ~90–120 lines (~6 KB); the code-harness block (loop, executors,
+Memory Bank, models) is on top of that — keep it tight too. Avoid shouty `NEVER`/`MUST`
+everywhere — state a rule once, clearly, with the criterion for when it applies and the
+reason in a clause. Instructions for agents follow the same discipline: one trigger, one
+definition of done, one owner per action.
 
 ## Invocation
 `/code-init`
@@ -31,6 +34,28 @@ Gather only what you can observe — never invent commands:
 - **Architecture**: top-level directories and what each holds (one line each). Don't map
   every file — just the map a newcomer needs.
 - **Git**: `git log --oneline -5` for commit-message language/style; note the default branch.
+- **Executors** (only when the code harness is present — `.claude/skills/code-plan` or the
+  `code` domain): which of `.claude/agents/{backend,frontend,devops}.md` are installed, and
+  which real paths in the repo fall into each agent's scope. Confirm every path with
+  `ls`/Glob; write globs only for what exists.
+
+  | Agent | Look for |
+  |-------|----------|
+  | `backend` | server source dirs (`cmd/`, `internal/`, `api/`, `server/`, `app/`, `src/` with server code), `migrations/`, server manifests (`go.mod`, `pyproject.toml`, `Cargo.toml`, `pom.xml`) |
+  | `frontend` | `web/`, `frontend/`, `client/`, `ui/`, `src/components/`, `*.tsx`/`*.vue`/`*.svelte`, `public/`, a `package.json` with react/vue/svelte/next/vite |
+  | `devops` | `.github/workflows/`, `.gitlab-ci.yml`, `Dockerfile*`, `docker-compose*.yml`, `helm/`, `charts/`, `k8s/`, `terraform/` |
+
+  Layers with no installed agent (e.g. `ios/`, `android/`, `pubspec.yaml` — there is no
+  `mobile` agent) are recorded as "no executor", not assigned to the nearest agent.
+- **Memory Bank**: whether `.memory-bank/index.md` and `.claude/skills/memory-bank` exist.
+- **test-gate hook** (only when the code harness is present): whether
+  `.claude/hooks/test-gate.sh` exists and is executable; whether a `hooks.Stop` entry with
+  `test-gate.sh` in its `command` is already in `.claude/settings.json` or
+  `.claude/settings.local.json`; whether `jq` is on PATH (the hook silently no-ops without
+  it). Claude Code runs a hook only when `settings.json` lists it — the installer just
+  places the file. File present and no entry → ask the user once, before composing:
+  register `test-gate` as a Stop hook in `.claude/settings.json`? The answer drives Step 3
+  and Step 4.
 
 If a category yields nothing, omit that section rather than writing a placeholder.
 
@@ -84,9 +109,57 @@ names verbatim. Order sections as below.
         → code-debugger: воспроизводит → лестница гипотез → минимальный фикс
 
 Петля: упал тест или `review: rework` → `/code-debug` → снова `/code-build` →
-`/code-review`. Stop-хук `test-gate` не даёт объявить «готово», пока тесты реально не
-прогнаны. Планировать до билда, ревьюить после; `/code-debug` — только когда что-то
-сломалось, не для проектирования фич.
+`/code-review`. <если test-gate зарегистрирован:> Stop-хук `test-gate` не даёт объявить
+«готово», пока тесты реально не прогнаны. Планировать до билда, ревьюить после;
+`/code-debug` — только когда что-то сломалось, не для проектирования фич.
+`verdict: ship` закрывает петлю: после него — пополнение Memory Bank (см. ниже).
+
+## Исполнители для /code-build
+
+`/code-build` сам код не пишет: берёт `affected_files` из плана, сопоставляет их с
+таблицей и зовёт по одному агенту на зону. Файл, которого в таблице нет, — не гадать, а
+спросить пользователя, кто им владеет.
+
+| Агент | Зона | Файлы проекта |
+|-------|------|---------------|
+| `backend` | API, сервисы, бизнес-логика, модели и миграции, фоновые задачи | <найденные пути> |
+| `frontend` | компоненты, шаблоны, стили, клиентское состояние и роутинг | <найденные пути> |
+| `devops` | CI/CD, Dockerfile, манифесты, деплой-конфиг | <найденные пути> |
+
+<только реально найденные строки; слой без агента — отдельной строкой: «нет исполнителя: <пути> — спросить пользователя»>
+
+- Зон несколько — агенты стартуют параллельно, каждый правит только свою зону.
+- Один слой меняет контракт другого (форма ответа API, env-переменная, порт) — сначала
+  автор контракта (обычно `backend`), его `contract_notes` уходят зависимому агенту в
+  промпт.
+- Агент отвечает YAML: `status`, `changed_files`, `tests_result`. `status: blocked` или
+  упавший тест — работа не готова; «готово» без процитированного вывода тестов не
+  принимается.
+
+## Memory Bank
+
+`.memory-bank/` — долговременная память проекта. Агенты читают `.memory-bank/index.md` до
+работы и пополняют его после — но только когда задача **полностью** выполнена, иначе в
+память попадёт то, что завтра переделают.
+
+Задача полностью выполнена, когда верно всё сразу:
+1. шаги плана сделаны, acceptance criteria выполнены;
+2. проверки из «Проверки перед завершением» прогнаны, вывод зелёный и процитирован;
+3. `/code-review` дал `verdict: ship`;
+4. нет открытых blockers, `rework` и `status: blocked`.
+
+Когда все четыре пункта верны:
+- Пишет один агент за раз, не параллельные исполнители: основной цикл поручает запись
+  одному из них (или делает сам). В поручении явно указана зона `.memory-bank/` — это
+  единственное исключение из «правь только свою зону».
+- Запись идёт через навык `memory-bank`: он отсекает мелочь (нужен importance ≥ 2) и
+  требует сначала прочитать уже записанное. Правки из `MEMORY_SUGGESTION` применяются
+  сразу, без ожидания подтверждения.
+- Пишем устойчивое: архитектурные решения, контракты API и схемы, конвенции, смену
+  стека, статус задачи в `tasks/`. Не пишем: детали реализации, эксперименты, мелкие
+  рефакторинги, секреты.
+- Обновлять нечего — ответить `NO_MEMORY_UPDATE` с причиной в одну фразу. Молчание не
+  считается ответом.
 
 ## Модели
 
@@ -118,25 +191,63 @@ names verbatim. Order sections as below.
 
 - The four house rules in **Обязательные правила** are mandatory and go in **verbatim** —
   this is the whole point of the skill. Keep them first.
-- **Рабочий цикл** and **Модели** describe the installed `code` dev-loop harness — include
-  them verbatim when `.claude/skills/code-plan` (or the `code` domain) is present in the
-  target project; drop both sections if the project doesn't use the code harness. Keep the
-  model ids exact (`claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5`).
+- **Рабочий цикл**, **Исполнители для /code-build**, **Memory Bank** and **Модели**
+  describe the installed `code` dev-loop harness — include them when
+  `.claude/skills/code-plan` (or the `code` domain) is present in the target project; drop
+  all four if the project doesn't use the code harness. Keep the model ids exact
+  (`claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5`).
+- **Рабочий цикл**, **Memory Bank**, **Модели** go in verbatim, except the `test-gate`
+  sentence in **Рабочий цикл**: keep it only if the hook is registered (already, or by
+  Step 4); hook missing or user declined → drop it, the gate would be a false promise.
+  **Исполнители для /code-build** is the one project-specific block: fill the table from
+  the Step 2 executor detection, one row per installed agent that owns at least one real
+  path. Agent not installed or no matching files → no row. Keep the three bullets under
+  the table as written.
+- If `.memory-bank/` or the `memory-bank` skill is missing, still write the Memory Bank
+  section (the agents' first write bootstraps the directory) and say in the Step 5 report
+  that the `core` domain is what provides the skill.
 - Everything else is project-specific: include a section only if Step 2 found real content.
 - No invented commands, no guessed paths, no empty `## TODO` sections.
 - Note the latent tension between rules 2 and 4 in passing only if the user asks — the
   intent is caveman-style brevity expressed in Russian; don't bloat the file explaining it.
 
-## Step 4. Write and report
+## Step 4. Write CLAUDE.md and register test-gate
 
-Write `CLAUDE.md` to the project root. Then report in 3–4 lines: path written, which
-sections were populated from detection, and anything you couldn't detect (so the user can
-fill it in). Don't re-print the whole file.
+Write `CLAUDE.md` to the project root.
+
+Then register the hook — only if Step 2 found `.claude/hooks/test-gate.sh`, found no
+existing entry, and the user said yes. Otherwise skip this block.
+
+1. `.claude/settings.json` missing → start from `{}`. Exists → check it parses
+   (`jq empty`); if it doesn't, stop, leave the file alone, tell the user.
+2. Append one entry to `hooks.Stop`, creating `hooks` / `Stop` if absent. Every other key
+   and every existing Stop entry stays untouched:
+
+   ```bash
+   jq '.hooks.Stop = ((.hooks.Stop // []) + [{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/test-gate.sh"}]}])' \
+     .claude/settings.json > .claude/settings.json.tmp && mv .claude/settings.json.tmp .claude/settings.json
+   ```
+
+   No `jq` → make the same edit by hand with Edit/Write.
+3. Re-read the file: it parses, and exactly one `test-gate.sh` entry sits in `hooks.Stop`.
+   Re-running `/code-init` must not add a second one — Step 2 detection covers that.
+
+## Step 5. Report
+
+3–5 lines: path written, which sections were populated from detection, which executors
+`/code-build` will call and for which paths, whether `test-gate` is registered (done /
+already was / declined / hook file missing / no `jq` so it won't fire), and anything you
+couldn't detect (so the user can fill it in). Don't re-print the whole file.
 
 ## What not to do
 
-- Don't run `git commit` or `git add` — this skill only writes a file.
+- Don't run `git commit` or `git add` — this skill writes `CLAUDE.md` and, with consent,
+  one `hooks.Stop` entry in `.claude/settings.json`; nothing else.
+- Don't register the hook without the user's yes, don't duplicate an existing entry, and
+  don't touch other keys in `settings.json`.
 - Don't overwrite an existing `CLAUDE.md` without confirmation (Step 1).
 - Don't fabricate build/test commands you didn't find in the repo.
+- Don't list an executor whose `.claude/agents/<name>.md` isn't installed, and don't
+  assign a layer with no agent (mobile, data, ML) to the nearest one.
 - Don't pad with generic advice ("write clean code") — every line should be project-true.
 - Don't drop or reword the four house rules.

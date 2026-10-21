@@ -208,7 +208,7 @@ A dev-loop harness meant to be installed into other projects (see the install co
 - `code-review` (`/code-review`) — spawns `code-reviewer`, read-only, ship/rework with severity-tagged findings
 - `code-debug` (`/code-debug`) — spawns `code-debugger`, reproduces → ladders hypotheses → minimal fix
 
-**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the target project's own `AGENTS.md` Executing table); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
+**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`, or its own `AGENTS.md` Executing table); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
 
 **Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit).
 

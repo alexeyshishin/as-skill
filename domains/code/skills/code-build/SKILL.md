@@ -17,8 +17,10 @@ main loop.
 2. **Check Blockers** in the plan. Any unresolved HIGH → abort and name it. The user must
    resolve or explicitly waive it.
 3. **Route by scope**: read the plan's `affected_files`. Match each against the Executing
-   table in `AGENTS.md` (frontend / backend / devops / mobile). Group files by agent.
-   No match for a file → ask the user which agent owns it.
+   table — the `## Исполнители для /code-build` section of the project's `CLAUDE.md`
+   (written by `/code-init`), else the Executing table in `AGENTS.md` (frontend / backend /
+   devops / mobile). Group files by agent. No match for a file → ask the user which agent
+   owns it.
 4. **Spawn the matched exec agents** — one `Task` call each, in parallel when a feature
    spans several layers (single message, N calls, `subagent_type: general-purpose`).
    Prompt each:
