@@ -1,0 +1,33 @@
+<!--
+  Social preview banner (1280x640) for GitHub → Settings → Social preview.
+  The pixel character is drawn from assets/claude-jumping.svg
+  (https://github.com/shanraisshan/claude-code-best-practice,
+  MIT License, Copyright (c) 2025-2026 Shayan Rais — full text in that file).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <rect width="1280" height="640" fill="#1f2a37"/>
+
+  <g transform="translate(110 150) scale(3.6)">
+    <ellipse cx="50" cy="88" rx="16" ry="3.5" fill="#000" opacity="0.3"/>
+    <rect x="22" y="10" width="8" height="14" fill="#E07C4C"/>
+    <rect x="70" y="10" width="8" height="14" fill="#E07C4C"/>
+    <rect x="18" y="24" width="64" height="4" fill="#E07C4C"/>
+    <rect x="14" y="28" width="72" height="32" fill="#E07C4C"/>
+    <rect x="30" y="34" width="8" height="10" fill="#000"/>
+    <rect x="62" y="34" width="8" height="10" fill="#000"/>
+    <rect x="2" y="36" width="12" height="8" fill="#E07C4C" transform="rotate(-25 14 40)"/>
+    <rect x="86" y="36" width="12" height="8" fill="#E07C4C" transform="rotate(25 86 40)"/>
+    <rect x="24" y="60" width="12" height="14" fill="#E07C4C"/>
+    <rect x="64" y="60" width="12" height="14" fill="#E07C4C"/>
+  </g>
+
+  <g font-family="'Roboto Slab', 'Zilla Slab', Rockwell, Georgia, serif" font-weight="700" fill="#ffffff">
+    <text x="530" y="250" font-size="104">as-skill</text>
+    <text x="530" y="330" font-size="44">Skills, agents &amp; hooks</text>
+    <text x="530" y="385" font-size="44">for Claude Code</text>
+  </g>
+
+  <text x="530" y="450" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="28" fill="#c9d1d9">Multi-domain harness, one installer.</text>
+
+  <text x="530" y="540" font-family="'Roboto Slab', Rockwell, Georgia, serif" font-weight="700" font-size="26" fill="#e3b341">obsidian / git / content / code / devops / core</text>
+</svg>
