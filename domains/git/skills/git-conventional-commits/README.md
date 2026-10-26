@@ -12,6 +12,6 @@
 
 ## Границы
 
-Не коммитит без подтверждения. Не пишет `chore: update` — пустое сообщение хуже отсутствующего. В футер каждого коммита добавляет `Co-Authored-By: Claude <noreply@anthropic.com>` — формат и обоснование в [`git-conventions`](../../rules/git-conventions.md#ai-attribution).
+Не коммитит без подтверждения. Не пишет `chore: update` — пустое сообщение хуже отсутствующего. Никаких трейлеров и следов Claude в сообщении (`Co-Authored-By`, ссылки на сессию) — см. [`git-conventions`](../../rules/git-conventions.md#no-ai-attribution).
 
 Конвенция целиком — в правиле [`git-conventions`](../../rules/git-conventions.md).
