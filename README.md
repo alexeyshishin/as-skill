@@ -62,7 +62,7 @@ as-skill/
 │   ├── git/     {manifest, rules, skills, agents}
 │   ├── content/ {manifest, rules, skills, agents}
 │   ├── code/    {manifest, skills, agents, hooks/}
-│   ├── core/    {manifest, skills, hooks/}  # caveman, memory-bank, memory-bank-defrag, swarm-report
+│   ├── core/    {manifest, skills, hooks/}  # caveman, memory-bank, memory-bank-defrag
 │   └── devops/  {manifest, agents}
 │
 ├── tools/
@@ -71,14 +71,14 @@ as-skill/
 │   └── README.md
 │
 ├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
-├── AGENTS.md               # Точка входа для AI-агента
+├── CLAUDE.md               # Точка входа для AI-агента
 ├── CONTRIBUTING.md         # Как править репозиторий: добавление доменов/скиллов
 ├── SECURITY.md             # Модель угроз, что делает инсталлятор с данными
 ├── LICENCE                
 └── README.md
 ```
 
-Правится напрямую: `domains/` и `AGENTS.md`.
+Правится напрямую: `domains/` и `CLAUDE.md`.
 
 ## Установка (CLI `as-skill`)
 

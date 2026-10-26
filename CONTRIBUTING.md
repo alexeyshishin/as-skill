@@ -11,7 +11,7 @@ rm -rf .claude
 ./as-skill install domains code git core --project .
 ```
 
-`as-skill install ... --copy` вместо symlink делает независимый снэпшот — этим режимом ставят, например, домен `code` в чужой проект (`as-skill install domains code core --project <path> --copy`). Подробности обоих режимов — в `AGENTS.md` и `tools/README.md`.
+`as-skill install ... --copy` вместо symlink делает независимый снэпшот — этим режимом ставят, например, домен `code` в чужой проект (`as-skill install domains code core --project <path> --copy`). Подробности обоих режимов — в `CLAUDE.md` и `tools/README.md`.
 
 ## SKILL.md и README.md — разные документы
 
@@ -24,7 +24,7 @@ rm -rf .claude
 ## Добавление скилла
 
 1. `domains/<домен>/skills/<имя>/SKILL.md` с фронтматтером `name` и `description`.
-2. Имя каталога и `name` во фронтматтере должны совпадать — это проверяет `as-skill check`. Префикс домена (`git-`, `obsidian-`, …) в имени — конвенция из `AGENTS.md`, автоматически пока не проверяется, но её всё равно держим.
+2. Имя каталога и `name` во фронтматтере должны совпадать — это проверяет `as-skill check`. Префикс домена (`git-`, `obsidian-`, …) в имени — конвенция из `CLAUDE.md`, автоматически пока не проверяется, но её всё равно держим.
 3. `README.md` рядом.
 4. Обнови счётчик скиллов/агентов/правил домена в таблице «Домены» корневого `README.md`.
 5. `go build -o as-skill ./tools && ./as-skill check && go test ./...` — собрать, прогнать self-check манифестов и `SKILL.md`, прогнать тесты `tools/`. Если правишь домен, установленный в корневой `.claude/` (сейчас это `code` и `git`), и хочешь увидеть новый скилл там же — `as-skill install` симлинкует записи поштучно, так что новый файл подхватится только после повторного `./as-skill install domains code git --project .`.

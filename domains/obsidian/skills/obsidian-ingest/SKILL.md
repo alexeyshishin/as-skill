@@ -17,7 +17,7 @@ what knowledge is hidden in it, decide how best to represent it in the base, and
 You do the formatting, frontmatter, and link enrichment yourself — that's an integral part of ingest.
 
 Before starting, read the vault rules:
-- `AGENTS.md` — general principles for working with the base
+- `CLAUDE.md` — general principles for working with the base
 - `.claude/rules/note-types-frontmatter.md` — frontmatter templates and fields
 - `.claude/rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
 - `.claude/rules/content-style.md` — language, style, wikilinks

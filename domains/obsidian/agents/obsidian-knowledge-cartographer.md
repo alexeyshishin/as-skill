@@ -18,7 +18,7 @@ Language: Russian, with technical terms in English.
 
 Before acting, read:
 
-- `AGENTS.md`
+- `CLAUDE.md`
 - `rules/knowledge-structures.md` — MOCs, syntheses, atomic notes, when to split out a section
 - `rules/note-types-frontmatter.md` — the `up`/`down`/`other`/`links`/`sources` fields
 - `rules/file-naming.md` — claim-based names

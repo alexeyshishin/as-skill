@@ -21,7 +21,7 @@ Language: Russian, with technical terms in English.
 
 Before acting, read:
 
-- `AGENTS.md`
+- `CLAUDE.md`
 - `rules/vault-struct.md` — where things go
 - `rules/note-types-frontmatter.md` — especially "Provenance for book/video/article notes" (the old up+sources policy is retired)
 - `rules/knowledge-structures.md` — atomic notes, MOCs, syntheses

@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 This file is the entry point for any AI agent working with the skills in this repository. Read it in full before your first action.
 
@@ -20,7 +20,7 @@ as-skill/
     │   ├── rules/             ← durable domain rules (optional — not every domain has one)
     │   ├── skills/<name>/     ← atomic operations: SKILL.md + README.md
     │   ├── agents/            ← orchestrators
-    │   └── hooks/             ← optional; only `code` has one today
+    │   └── hooks/             ← optional; only `code` and `core` have one today
     ├── code/
     ├── content/
     ├── core/
@@ -77,7 +77,7 @@ owned-vs-foreign and mode apart even when a project mixes the two across runs.
   `<project>` is whatever `--project` you pass `as-skill` (default: the
   current directory)
 - rules, skills, agents for every domain → `${CLAUDE_HOME}/{rules,skills,agents}/`
-- `domains/core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`, `swarm-report`) → `${CLAUDE_HOME}/skills/`, installed the same way as any other domain's skills
+- `domains/core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`) → `${CLAUDE_HOME}/skills/`, installed the same way as any other domain's skills
 
 `obsidian` is the one domain gated on `requires_env: OBSIDIAN_VAULT` — an
 opt-in check (install it only for users who actually keep a vault), not a
@@ -207,12 +207,13 @@ GitOps rule: production changes go through ArgoCD only.
 A dev-loop harness meant to be installed into other projects (see the install command above), not a set of personal-productivity skills. No `rules/`; context comes from `.memory-bank/index.md` and `swarm-report/`.
 
 **Skills:**
+- `code-init` (`/code-init`) — generates the target project's `CLAUDE.md` (build/test/lint commands, layout, house rules, executing-agents table), registers installed hooks in the project's `.claude/settings.json`
 - `code-plan` (`/code-plan`) — spawns `code-planner` + `code-skeptic`, writes a plan to `swarm-report/`; use before `/code-build`
 - `code-build` (`/code-build`) — implements an approved plan, routes tasks by file scope, runs tests, writes a build report
 - `code-review` (`/code-review`) — spawns `code-reviewer`, read-only, ship/rework with severity-tagged findings
 - `code-debug` (`/code-debug`) — spawns `code-debugger`, reproduces → ladders hypotheses → minimal fix
 
-**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`, or its own `AGENTS.md` Executing table); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
+**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
 
 **Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit). `prettier-format.sh` — PostToolUse hook (`Edit|Write|MultiEdit|Bash`); runs prettier only once the test-gate condition is met (test command already ran, or project has none); no-op without a prettier config. Both source `test-gate-lib.sh`, the single definition of that condition. (`memory-bank-load.sh` lives in `core`.) Hooks are copied by the installer, then registered in the project's `.claude/settings.json` by `/code-init` via `skills/code-init/scripts/register-hooks.sh` — each hook declares its own event/matcher in a `# register: <Event> [<matcher>]` header line, so a new hook needs no script change.
 
@@ -226,4 +227,3 @@ Domain-independent utility skills — not tied to any other domain, but installe
 - `caveman` — ultra-compressed communication mode (lite/full/ultra, plus wenyan variants)
 - `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`
 - `memory-bank-defrag` — folds accumulated `.memory-bank/` patches into clean current-state docs
-- `swarm-report` — placeholder; content not written yet

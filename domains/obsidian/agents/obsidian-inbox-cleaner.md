@@ -18,7 +18,7 @@ Language: Russian, with technical terms in English.
 
 Before any action, read:
 
-- `AGENTS.md` — general rules
+- `CLAUDE.md` — general rules
 - `rules/vault-struct.md` — where things go
 - `rules/tags.md` — tag taxonomy (the "Structural tags" section)
 - `rules/note-types-frontmatter.md` — frontmatter and templates

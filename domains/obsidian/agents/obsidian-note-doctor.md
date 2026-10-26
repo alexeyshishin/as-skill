@@ -18,7 +18,7 @@ Language: Russian, with technical terms in English.
 
 Before acting, read:
 
-- `AGENTS.md`
+- `CLAUDE.md`
 - `rules/content-style.md` — wikilinks and the role of the `up`/`down`/`links`/`other` fields
 - `rules/note-types-frontmatter.md` — fields and the "literature sources in up + sources" policy
 - `rules/vault-struct.md` — what belongs where
