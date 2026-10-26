@@ -1,6 +1,7 @@
 ---
 name: ci-agent
-description: Executing agent. Writes GitLab CI/CD pipelines, shared templates, Dockerfile optimizations. Scope: **/.gitlab-ci.yml, ci-templates/**, abp/ci-templates/**. Corporate registry and Nexus only.
+description: >
+  Executing agent. Writes GitLab CI/CD pipelines, shared templates, Dockerfile optimizations. Scope: **/.gitlab-ci.yml, ci-templates/**, abp/ci-templates/**. Corporate registry and Nexus only.
 ---
 
 # CI Agent — Executing

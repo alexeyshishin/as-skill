@@ -1,6 +1,7 @@
 ---
 name: diagnostics
-description: Consilium role. Root cause analysis for infrastructure incidents: pod crashes, OOMKills, network issues, ArgoCD sync failures, pipeline failures, performance degradation, Redis/DB issues. Does NOT write code.
+description: >
+  Consilium role. Root cause analysis for infrastructure incidents: pod crashes, OOMKills, network issues, ArgoCD sync failures, pipeline failures, performance degradation, Redis/DB issues. Does NOT write code.
 ---
 
 # Diagnostics — Consilium Agent

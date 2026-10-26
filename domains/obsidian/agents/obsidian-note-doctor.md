@@ -1,6 +1,7 @@
 ---
 name: note-doctor
-description: Specialized agent for working with a single specific note in Obsidian — frontmatter enrichment (aliases, up, down, other), critique, finding contradictions and weak points, peer review. Delegate here when the user talks about a specific note: "enrich this note," "fill in the frontmatter," "add aliases," "critique this note," "what did I miss," "find the gaps," "does this contradict other notes," "peer review." The agent decides on its own whether only enrichment is needed, only critique, or both stages. Do not invoke for inbox triage — use `inbox-triager`. Do not invoke for splitting large notes — use `knowledge-cartographer`. Do not invoke for a new source — use `source-ingester`.
+description: >
+  Specialized agent for working with a single specific note in Obsidian — frontmatter enrichment (aliases, up, down, other), critique, finding contradictions and weak points, peer review. Delegate here when the user talks about a specific note: "enrich this note," "fill in the frontmatter," "add aliases," "critique this note," "what did I miss," "find the gaps," "does this contradict other notes," "peer review." The agent decides on its own whether only enrichment is needed, only critique, or both stages. Do not invoke for inbox triage — use `inbox-triager`. Do not invoke for splitting large notes — use `knowledge-cartographer`. Do not invoke for a new source — use `source-ingester`.
 ---
 
 # note-doctor

@@ -1,6 +1,7 @@
 ---
 name: k8s-agent
-description: Executing agent. Writes Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets, ExternalSecret configs. Scope: k8s/**, davinci/** (excluding helm/ subdirs). GitOps — prod deploy only via ArgoCD.
+description: >
+  Executing agent. Writes Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets, ExternalSecret configs. Scope: k8s/**, davinci/** (excluding helm/ subdirs). GitOps — prod deploy only via ArgoCD.
 ---
 
 # K8s Agent — Executing

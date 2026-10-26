@@ -1,6 +1,7 @@
 ---
 name: helm-agent
-description: Executing agent. Writes and maintains Helm charts: Chart.yaml, templates/, values.yaml, helpers. Scope: davinci/kubernetes/apps/helm/**, **/Chart.yaml, **/values*.yaml.
+description: >
+  Executing agent. Writes and maintains Helm charts: Chart.yaml, templates/, values.yaml, helpers. Scope: davinci/kubernetes/apps/helm/**, **/Chart.yaml, **/values*.yaml.
 ---
 
 # Helm Agent — Executing
