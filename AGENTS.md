@@ -46,7 +46,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, Russian-text humanizing |
 | `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
-| `git` | — | Git workflow — Conventional Commits, PR descriptions |
+| `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
 
 Details live in each `domains/<name>/manifest.yaml` and the files inside it.
@@ -166,9 +166,10 @@ In these cases follow both domains' rules — they complement, not contradict, e
 **Skills:**
 - `git-conventional-commits` — Conventional Commits message from the current (staged, else unstaged) diff
 - `git-pr-description` — PR description from the branch diff against the base branch
+- `git-release-tag` — next semver tag from commits since the last one, slop-linted release notes, annotated tag + GitHub release via `gh`
 
 **Agents:**
-- `git-flow` — orchestrates branch → commits → PR → merge, calling the two skills above at the right moments
+- `git-flow` — orchestrates branch → commits → PR → merge, calling the three skills above at the right moments
 
 ### domain: content
 
