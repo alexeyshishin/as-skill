@@ -175,10 +175,16 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 		if err != nil {
 			return fmt.Errorf("domain %q: %w", name, err)
 		}
+		var goneHooks []string
 		for _, e := range entries {
 			itemName := e.Name()
 			dst := filepath.Join(destPath, itemName)
-			in.uninstallOne(name, kind, itemName, dst)
+			if gone := in.uninstallOne(name, kind, itemName, dst); gone && kind == "hooks" {
+				goneHooks = append(goneHooks, itemName)
+			}
+		}
+		if kind == "hooks" {
+			in.unregisterHooks(goneHooks)
 		}
 
 		if _, tracked := in.Lock.Find(name, kind, ""); tracked {
@@ -209,7 +215,7 @@ func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
 	return nil
 }
 
-func (in *Installer) uninstallOne(domain, kind, name, dst string) {
+func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 	entry, tracked := in.Lock.Owns(dst)
 	if !tracked {
 		if parent, ok := in.Lock.Find(domain, kind, ""); ok {
@@ -218,32 +224,32 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) {
 	}
 	if !tracked {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — not tracked by as-skill\n", dst)
-		return
+		return false
 	}
 	fi, err := os.Lstat(dst)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked but nothing on disk\n", dst)
-		return
+		return os.IsNotExist(err)
 	}
 	isSymlink := fi.Mode()&os.ModeSymlink != 0
 	switch entry.Mode {
 	case "link":
 		if !isSymlink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", dst)
-			return
+			return false
 		}
 	case "copy":
 		if isSymlink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a copy but is a symlink on disk\n", dst)
-			return
+			return false
 		}
 	default:
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", dst, entry.Mode)
-		return
+		return false
 	}
 	if in.DryRun {
 		fmt.Printf("would uninstall %s\n", dst)
-		return
+		return true
 	}
 	var removeErr error
 	if entry.Mode == "link" {
@@ -253,10 +259,11 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) {
 	}
 	if removeErr != nil {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
-		return
+		return false
 	}
 	in.Lock.Remove(domain, kind, name)
 	fmt.Printf("uninstalled    %s\n", dst)
+	return true
 }
 
 func (in *Installer) report(scope, kind, dest string, n int) {

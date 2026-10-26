@@ -48,3 +48,11 @@ as-skill install domains code core --project <target> --copy
 ```
 
 Затем `/code-init` в целевом проекте — зарегистрирует хуки (с согласия пользователя).
+
+## Удаление
+
+```
+as-skill uninstall domain code --project <target>
+```
+
+Снимает файлы хуков и заодно их записи из `<project>/.claude/settings.json`: только команды, указывающие на снятые файлы (`"$CLAUDE_PROJECT_DIR"/.claude/hooks/<name>` и эквиваленты). Остальные ключи и чужие хуки остаются, порядок ключей сохраняется (файл перезаписывается с отступом 2 пробела), `settings.local.json` не трогается. Хук, который `as-skill` не отслеживает, не снимается и остаётся зарегистрированным. `--dry-run` печатает `would unregister`.

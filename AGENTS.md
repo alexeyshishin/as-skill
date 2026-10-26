@@ -66,7 +66,10 @@ writes a static snapshot, independent of this checkout's lifetime — for sharin
 or for projects that shouldn't depend on a harness checkout sticking around.
 `as-skill uninstall ...` mirrors `install`'s positional shapes and removes only
 what a prior `install`/`install --copy` placed (symlink or files, matching the
-mode it was recorded under), never foreign content. Both modes write to the same
+mode it was recorded under), never foreign content. Uninstalling a domain's `hooks`
+also drops their registrations from the project's `.claude/settings.json` (only
+entries pointing at the hook files it just removed; `settings.local.json` is
+never touched). Both modes write to the same
 per-project `<project>/.claude/skills-lock.json`, so `status`/`doctor` can tell
 owned-vs-foreign and mode apart even when a project mixes the two across runs.
 

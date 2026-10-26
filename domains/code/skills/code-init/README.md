@@ -54,6 +54,9 @@ PostToolUse, `memory-bank-load` — SessionStart). Новый хук в `domains
 снабдить этой строкой. Скрипт можно запускать и отдельно: `bash
 .claude/skills/code-init/scripts/register-hooks.sh [--project DIR] [--dry-run]`.
 
+Обратная операция — `as-skill uninstall domain code`: вместе с файлами хуков он снимает и
+их записи из `settings.json`.
+
 Отказ, нет хуков или нет `jq` (хуки без него молча ничего не делают) — фраза про `test-gate`
 в разделе «Рабочий цикл» не пишется, итог попадает в отчёт.
 
