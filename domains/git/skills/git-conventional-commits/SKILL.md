@@ -3,7 +3,7 @@ name: git-conventional-commits
 description: >
   Builds a Conventional Commits commit message for the current changes in git.
   Analyzes the staged diff (or unstaged, if staged is empty), determines type/scope,
-  writes the subject and, if needed, a body. Use when the user wants to
+  writes a one-line subject — never a body, description or footer. Use when the user wants to
   "make a commit", "commit the changes", "commit this", "write a commit message",
   "commit following the convention".
 ---
@@ -13,6 +13,10 @@ description: >
 Goal: instead of the user writing the commit message themselves, you analyze the diff and build a message following the convention in `~/.claude/rules/git-conventions.md`.
 
 Before starting, read `~/.claude/rules/git-conventions.md` — it has the full list of allowed `type` values, the scope format, and the principles.
+
+Two assets ship with this skill:
+- [`references/commit-examples.md`](references/commit-examples.md) — the author's real commit corpus: observed type/scope distribution, clean examples per type, and the anti-patterns that actually recur in this history, ranked. Read it when choosing the type/scope or when a subject feels generic.
+- [`scripts/lint-commit-msg.py`](scripts/lint-commit-msg.py) — mechanical checker for the message you drafted (Step 5.5). Also audits an existing log: `--history N`.
 
 ## Step 1. Gather context
 
@@ -41,6 +45,8 @@ Read the diff and decide:
 
 If the diff is mixed (e.g. both `fix` and `refactor`) — **stop and suggest the user split it into several commits**. Don't write "feat: fixed a bug and refactored" — that's an anti-pattern.
 
+The single most common mis-typing in this author's history is a docs-only diff filed under `chore` or `feat` (10 of 146 commits — see `references/commit-examples.md`, A1). If the diff touches only `.md`, it's `docs`, however much the work felt like housekeeping; `chore` is for `.gitignore`, init commits, and tooling. `perf`, `ci` and `revert` have never been used in these repos — don't reach for them unless the diff really is one.
+
 ## Step 3. Determine the scope (optional)
 
 Scope — a short name for the module/folder/SDK. Heuristic:
@@ -58,30 +64,37 @@ Scope — a short name for the module/folder/SDK. Heuristic:
 Bad: `feat: added a new endpoint for user login`
 Good: `feat(auth): add POST /login endpoint`
 
-## Step 5. Body and footer
+## Step 5. No body, no footer
 
-Write a body if:
-- the change isn't obvious from the subject — explain **why**
-- there's a breaking change — mandatory in that case
-- there are issue/ticket references
-
-No AI-attribution trailer or any other Claude/session mark in the footer (see `~/.claude/rules/git-conventions.md`).
+The message is the subject line and nothing else. No body, no description, no bullet list, no `BREAKING CHANGE:` / `Refs:` footer, no trailers (see "Subject only" in `~/.claude/rules/git-conventions.md`). 84% of this author's commits are already one line (123 of 147), and the ones with a body are the ones that read worst.
 
 Format:
 ```
 <type>(<scope>): <subject>
-
-<body — what/why, 2-5 sentences>
-
-BREAKING CHANGE: <what breaks and how to migrate>
-Refs: #123
 ```
+
+- the change doesn't fit a subject → the commit is too big, split it (Step 2); don't explain it in a body
+- a breaking change → `!` after type/scope (`feat(cli)!: …`); the migration note goes into the PR description
+- an issue reference → goes in the PR (`Closes #N`), not in a commit
+- no AI-attribution trailer or any other Claude/session mark, ever — the harness will suggest one by default, ignore it
+
+## Step 5.5. Lint the draft
+
+Before showing anything to the user, run the message through the linter — it catches the slips that recur in this history (past-tense subjects, `chore:` on a docs-only diff, two changes joined by "and", a body or footer that shouldn't be there, an AI trailer the harness added by default):
+
+```bash
+printf '%s' "$MSG" | python3 scripts/lint-commit-msg.py -
+```
+
+Exit 0 — proceed. Exit 2 — fix the message and re-run; don't show the user a draft that fails its own convention. Report a remaining warning only when you deliberately disagree with it, and say why (e.g. `subject-non-atomic` on a change whose halves can't be reverted separately).
+
+The linter checks form, not truth. It can't tell whether `feat` matches what the diff did, whether the scope names the right module, or whether a noun-phrase subject (`fix: metric name`) describes an actual change — that stays your judgment.
 
 ## Step 6. Show and ask
 
 Show the user the proposed commit message in a block. Ask:
 1. Accept as is → commit it (mechanics in Step 7)
-2. Adjust subject/body
+2. Adjust the subject
 3. Split into several commits
 4. Cancel
 
@@ -89,14 +102,19 @@ Show the user the proposed commit message in a block. Ask:
 
 ## Step 7. Execute
 
-After confirmation:
-- subject-only — `git commit -m "<subject>"`
-- with a body/footer lines — use `git commit -F -` with a heredoc, or a temp file
+After confirmation, one `-m`, one line:
 
-Show the result of `git log -1 --stat`.
+```bash
+git commit -m "<subject>"
+```
+
+Never a second `-m`, never `-F` with a multi-line file. For several commits, stage each group on its own and commit it separately.
+
+Show the result of `git log -1 --stat`, and check that `git log -1 --pretty=%b` prints nothing.
 
 ## What not to do
 
+- Don't write a body, a description, a bullet list or a footer — not even a "short" one, not even for a big change; a big change is several commits
 - Don't suggest `chore: update` — that's an empty message
 - Don't combine unrelated changes into one commit
 - Don't use `feat` for bug fixes or vice versa
