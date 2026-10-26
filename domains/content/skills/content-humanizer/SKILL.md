@@ -122,7 +122,7 @@ When time or tokens are limited: fix top to bottom (A → B → C → D).
 **Step 0. Mechanical scan.** If the text is in a file — run the scanner before reading it:
 
 ```bash
-python3 scripts/scan_tells.py <file>
+python3 scripts/scan-tells.py <file>
 ```
 
 It finds occurrences of the regex-matchable subset of the catalog and counts density per 100 words. This doesn't replace diagnosis: the scanner can't see an even rhythm, a lack of specificity, or emotional flatness — half of what matters. But it never misses an occurrence and costs no tokens, so use your eyes for what it can't do, not for what it's already found.
@@ -175,7 +175,7 @@ Pass 4, "Skeleton" (for texts with lists, numbered items, sections): read ONLY t
 **Step 4.5. Re-scan.** If you worked with files — run a comparison:
 
 ```bash
-python3 scripts/scan_tells.py <before> <after>
+python3 scripts/scan-tells.py <before> <after>
 ```
 
 Look not at what was "removed," but at what was **"added during the rewrite."** A rewriting model carries the same clichés back in through the paraphrase: it removes «важно отметить» ["it's important to note"], and brings in «стоит подчеркнуть» ["it's worth emphasizing"]. The text changed, it feels better, but the marker density stayed the same — and this is almost impossible to catch by eye.
