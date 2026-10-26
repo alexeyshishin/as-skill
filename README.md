@@ -11,6 +11,7 @@
 
 - [Домены](#домены)
 - [Структура репозитория](#структура-репозитория)
+- [Хуки](#хуки)
 - [Установка (CLI `as-skill`)](#установка-cli-as-skill)
 - [Разработка самого харнесса](#разработка-самого-харнесса)
 - [Контрибьютинг и безопасность](#контрибьютинг-и-безопасность)
@@ -21,10 +22,10 @@
 | Домен | Требования | Описание | Что внутри |
 |-------|---------|-----------|-----------|
 | **[`obsidian`](domains/obsidian/)** | env `OBSIDIAN_VAULT` | PKB на Obsidian по PARA — приём источников в базу, разбор inbox, обогащение фронтматтера, критика заметок, разбиение больших заметок и лекций, распутывание хабов-MOC. | **8 правил, 8 скиллов, 4 агента.** |
-| **[`git`](domains/git/)** | — | Git workflow — Conventional Commits, описания PR. | **1 правило, 2 скилла, 1 агент.** |
+| **[`git`](domains/git/)** | — | Git workflow — Conventional Commits (только subject, без AI-атрибуции), описания PR, semver-релизы с тегом и GitHub release. | **1 правило, 3 скилла, 1 агент.** |
 | **[`content`](domains/content/)** | — | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста. | **2 правила, 5 скиллов, 1 агент.** |
-| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domains code core --copy`. | **5 скиллов, 4 агента, 1 hook** (test-gate). |
-| **[`core`](domains/core/)** | — | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения, project memory bank, дефрагментация memory bank. | **4 скилла.** |
+| **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект через `as-skill install domains code core --project <path> --copy`. | **5 скиллов, 7 агентов** (4 оркестрирующих + 3 исполнителя: backend/frontend/devops), **2 хука** (`test-gate`, `prettier-format`). |
+| **[`core`](domains/core/)** | — | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения (`caveman`), project memory bank, дефрагментация memory bank. | **3 скилла, 2 хука** (`memory-bank-load`, `memory-bank-logger`). |
 | **[`devops`](domains/devops/)** | — | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). | **7 агентов**, пока без правил и скиллов. |
 
 Требования проверяются на установке: нет `OBSIDIAN_VAULT` — пропускается домен `obsidian`, остальные домены `requires_env` не имеют и ставятся всегда.
@@ -59,26 +60,39 @@ as-skill/
 │   │   ├── rules/
 │   │   ├── skills/<имя>/{SKILL.md, README.md}
 │   │   └── agents/
-│   ├── git/     {manifest, rules, skills, agents}
+│   ├── git/     {manifest, rules, skills, agents}  # 3 скилла: commits, PR, release-tag
 │   ├── content/ {manifest, rules, skills, agents}
-│   ├── code/    {manifest, skills, agents, hooks/}
-│   ├── core/    {manifest, skills, hooks/}  # caveman, memory-bank, memory-bank-defrag
+│   ├── code/    {manifest, skills, agents, hooks/}  # hooks: test-gate, prettier-format
+│   ├── core/    {manifest, skills, hooks/}  # caveman, memory-bank, memory-bank-defrag; hooks: memory-bank-load, memory-bank-logger
 │   └── devops/  {manifest, agents}
 │
 ├── tools/
-│   ├── main.go             # Инсталлятор — CLI as-skill, см. tools/README.md
-│   ├── internal/ 
+│   ├── main.go             # Точка входа CLI as-skill, см. tools/README.md
+│   ├── internal/           # Диспетчер команд и логика инсталлятора
 │   └── README.md
 │
 ├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
 ├── CLAUDE.md               # Точка входа для AI-агента
 ├── CONTRIBUTING.md         # Как править репозиторий: добавление доменов/скиллов
 ├── SECURITY.md             # Модель угроз, что делает инсталлятор с данными
-├── LICENCE                
+├── LICENCE
 └── README.md
 ```
 
-Правится напрямую: `domains/` и `CLAUDE.md`.
+Правится напрямую: `domains/` и `CLAUDE.md`. Корневой `.claude/` — результат установки, не источник.
+
+## Хуки
+
+Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта; регистрирует их в `.claude/settings.json` скилл `/code-init` (каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `uninstall` регистрации снимаются автоматически.
+
+| Хук | Домен | Событие | Что делает |
+|-----|-------|---------|-----------|
+| `test-gate` | `code` | Stop | Не даёт завершить задачу, если правились файлы кода, а тесты за сессию не запускались (fail-open, максимум 2 блокировки на коммит). |
+| `prettier-format` | `code` | PostToolUse | Запускает prettier, когда условие test-gate выполнено; без конфига prettier — no-op. |
+| `memory-bank-load` | `core` | SessionStart | Подгружает `.memory-bank/index.md` (до 16 КБ) и список остальных файлов Memory Bank в контекст. |
+| `memory-bank-logger` | `core` | SessionEnd | Фоновый `claude -p` читает транскрипт сессии и обновляет `.memory-bank/` через скилл `memory-bank` (короткие сессии пропускает). |
+
+Подробнее — `domains/code/hooks/README.md` и `domains/core/hooks/README.md`.
 
 ## Установка (CLI `as-skill`)
 
@@ -120,7 +134,7 @@ go build -o as-skill ./tools
 
 ```bash
 as-skill install all                        # всё сразу: домены, symlink
-as-skill install domains code core --copy   # два домена снэпшотом — так code ставится в чужой проект
+as-skill install domains code core --project <path> --copy   # снэпшот в чужой проект — так ставится code
 as-skill status                             # что уже стоит и в каком состоянии (OK/MISSING/BROKEN)
 ```
 
@@ -158,7 +172,7 @@ as-skill status                             # что уже стоит и в к�
 
 ## Разработка самого харнесса
 
-Корневой `.claude/` этого репозитория (гитигнорится) — не ручная копия `domains/code/*` + части `domains/git/*`, а результат symlink-установки: правки под `domains/` видны в нём сразу, без переустановки. Пересоздать с нуля:
+Корневой `.claude/` этого репозитория (гитигнорится) — не ручная копия `domains/code/*`, `domains/git/*` и `domains/core/*`, а результат symlink-установки: правки под `domains/` видны в нём сразу, без переустановки. Пересоздать с нуля:
 
 ```bash
 rm -rf .claude
