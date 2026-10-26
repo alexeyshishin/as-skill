@@ -62,7 +62,7 @@ as-skill/
 │   ├── git/     {manifest, rules, skills, agents}
 │   ├── content/ {manifest, rules, skills, agents}
 │   ├── code/    {manifest, skills, agents, hooks/}
-│   ├── core/    {manifest, skills}    # caveman, memory-bank, memory-bank-defrag, swarm-report
+│   ├── core/    {manifest, skills, hooks/}  # caveman, memory-bank, memory-bank-defrag, swarm-report
 │   └── devops/  {manifest, agents}
 │
 ├── tools/

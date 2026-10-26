@@ -1,6 +1,6 @@
 # code hooks
 
-Shell-хуки Claude Code для домена `code`. Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` скиллом `/code-init`.
+Shell-хуки Claude Code для домена `code`. Хуки Memory Bank живут в `core` (`domains/core/hooks/`). Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` скиллом `/code-init`.
 
 Все хуки fail-open: любая ошибка (`trap 'exit 0' ERR`) — хук молча пропускается, сессию не ломает. Без `jq` все они no-op.
 
@@ -10,7 +10,6 @@ Shell-хуки Claude Code для домена `code`. Ставятся installe
 |-----|---------|------------|
 | `test-gate.sh` | `Stop` | Блокирует «готово», если правились кодовые файлы (`ts tsx js jsx py dart swift kt go rb java tf`), а тестовая команда за сессию не запускалась. Просит прогнать тесты и показать реальный вывод. |
 | `prettier-format.sh` | `PostToolUse` (`Edit\|Write\|MultiEdit\|Bash`) | Форматирует prettier-ом, но только когда условие test-gate выполнено. `Edit`/`Write`/`MultiEdit` — один файл; `Bash` с тестовой командой — все файлы, правленные за сессию. |
-| `memory-bank-load.sh` | `SessionStart` (`startup\|clear\|compact`) | Кладёт в контекст `.memory-bank/index.md` (до 16 KB) и список остальных файлов Memory Bank (до 100). |
 | `test-gate-lib.sh` | — | Не хук. Общая библиотека для `test-gate` и `prettier-format`: единственное определение «test-gate выполнен». |
 
 ## test-gate
@@ -25,11 +24,6 @@ Shell-хуки Claude Code для домена `code`. Ставятся installe
 - Форматирует только файлы внутри проекта: `ts tsx js jsx mjs cjs json css scss html vue`.
 - Stop срабатывает после всех `PostToolUse`, поэтому ждать `test-gate` хук не может — он перепроверяет то же условие через `test-gate-lib.sh`.
 - Если что-то переформатировано, сообщает агенту список файлов — перечитать перед следующей правкой.
-
-## memory-bank-load
-
-- No-op без `.memory-bank/index.md`.
-- Индекс усекается на 16 KB с пометкой; остальные файлы агент читает по необходимости, а не платит за все каждую сессию.
 
 ## Регистрация
 
