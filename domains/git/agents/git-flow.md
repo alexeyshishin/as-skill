@@ -21,8 +21,7 @@ Before starting, read `~/.claude/rules/git-conventions.md` — the general princ
 | **Start of work** | create a branch, agree on scope | (manual: `git checkout -b feature/...`) |
 | **Each logical step** | commit | `git-conventional-commit` |
 | **Before opening a PR** | description | `git-pr-description` |
-| **After merge into main** | if it's a single-package release | `git-release-tag` |
-| **After merge into main** | if the repo has several versioned packages | `git-monorepo-release` |
+| **After merge into main** | if it's a release | `git-release-tag` |
 
 ## Scenario
 
@@ -67,7 +66,7 @@ If the change was release-worthy (or the user explicitly says "release") — on 
 ```
 git checkout main && git pull --ff-only
 ```
-What's next depends on the repo: a single versioned package — **`git-release-tag`**; several independent packages or SDKs (tags like `sdk-go/vX.Y.Z`) — **`git-monorepo-release`**, which determines the release composition and calls `git-release-tag` for each tag.
+Then **`git-release-tag`**. It covers a single versioned package only; for a monorepo with independent package tags (`sdk-go/vX.Y.Z`) — tell the user and tag by hand per `~/.claude/rules/git-conventions.md`.
 
 If the change is not release-worthy (e.g. an internal refactor with no public API impact) — just delete the feature branch:
 ```
