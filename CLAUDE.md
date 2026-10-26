@@ -211,13 +211,13 @@ GitOps rule: production changes go through ArgoCD only.
 A dev-loop harness meant to be installed into other projects (see the install command above), not a set of personal-productivity skills. No `rules/`; context comes from `.memory-bank/index.md` and `swarm-report/`.
 
 **Skills:**
-- `code-init` (`/code-init`) — generates the target project's `CLAUDE.md` (build/test/lint commands, layout, house rules, executing-agents table), registers installed hooks in the project's `.claude/settings.json`
+- `code-init` (`/code-init`) — generates the target project's `CLAUDE.md` (build/test/lint commands, layout, house rules, executing-agents table), registers installed hooks in the project's `.claude/settings.json`, and (with consent, if the `ast-index` binary exists) runs `scripts/setup-ast-index.sh`: `ast-index` plugin project-scope, `Bash(ast-index *)` allowed, index built
 - `code-plan` (`/code-plan`) — spawns `code-planner` + `code-skeptic`, writes a plan to `swarm-report/`; use before `/code-build`
 - `code-build` (`/code-build`) — implements an approved plan, routes tasks by file scope, runs tests, writes a build report
 - `code-review` (`/code-review`) — spawns `code-reviewer`, read-only, ship/rework with severity-tagged findings
 - `code-debug` (`/code-debug`) — spawns `code-debugger`, reproduces → ladders hypotheses → minimal fix
 
-**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
+**Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`); they write code/config, not plans. All seven carry a `## Code navigation` block: `ast-index` first when `test -f "$(ast-index db-path)"` succeeds (index exists; `ast-index stats` exits 0 even without one), Grep otherwise — a soft dependency, no `requires_bin` gate; the harness ships no ast-index hooks (the plugin brings its own). (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
 
 **Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit). `prettier-format.sh` — PostToolUse hook (`Edit|Write|MultiEdit|Bash`); runs prettier only once the test-gate condition is met (test command already ran, or project has none); no-op without a prettier config. Both source `test-gate-lib.sh`, the single definition of that condition. (`memory-bank-load.sh` lives in `core`.) Hooks are copied by the installer, then registered in the project's `.claude/settings.json` by `/code-init` via `skills/code-init/scripts/register-hooks.sh` — each hook declares its own event/matcher in a `# register: <Event> [<matcher>]` header line, so a new hook needs no script change.
 
@@ -229,5 +229,5 @@ Domain-independent utility skills — not tied to any other domain, but installe
 
 **Skills:**
 - `caveman` — ultra-compressed communication mode (lite/full/ultra, plus wenyan variants)
-- `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`
+- `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`; first bootstrap seeds from `ast-index map`/`conventions` when ast-index is available
 - `memory-bank-defrag` — folds accumulated `.memory-bank/` patches into clean current-state docs
