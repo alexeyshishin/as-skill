@@ -48,7 +48,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 |--------|--------------|--------------|
 | `code` | — | Dev-loop harness — plan → build → review → debug, installable into any target project |
 | `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, Russian-text humanizing |
-| `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag |
+| `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
@@ -81,7 +81,7 @@ owned-vs-foreign and mode apart even when a project mixes the two across runs.
   `<project>` is whatever `--project` you pass `as-skill` (default: the
   current directory)
 - rules, skills, agents for every domain → `${CLAUDE_HOME}/{rules,skills,agents}/`
-- `domains/core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`) → `${CLAUDE_HOME}/skills/`, installed the same way as any other domain's skills
+- `domains/core/skills/*` (domain-independent — `caveman`, `memory-bank`, `memory-bank-defrag`, `advanced-search`) → `${CLAUDE_HOME}/skills/`, installed the same way as any other domain's skills
 
 `obsidian` is the one domain gated on `requires_env: OBSIDIAN_VAULT` — an
 opt-in check (install it only for users who actually keep a vault), not a
@@ -231,3 +231,4 @@ Domain-independent utility skills — not tied to any other domain, but installe
 - `caveman` — ultra-compressed communication mode (lite/full/ultra, plus wenyan variants)
 - `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`; first bootstrap seeds from `ast-index map`/`conventions` when ast-index is available
 - `memory-bank-defrag` — folds accumulated `.memory-bank/` patches into clean current-state docs
+- `advanced-search` (`/advanced-search`) — OSINT-style fact-checked web research: fresh authoritative sources, bold one-line verdict, tables, links to primary sources

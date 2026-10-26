@@ -2,7 +2,7 @@
 # Requires no env. Global in ~/.claude/.
 
 name: core
-description: Core skills — domain-independent utilities always available: ultra-compressed output mode, project memory bank, memory bank defrag.
+description: Core skills — domain-independent utilities always available: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search.
 
 requires_env: []
 
