@@ -23,10 +23,13 @@ Allowed `type` values:
 
 `scope` — a short name for the module/SDK/folder (`sdk-go`, `cli`, `auth`). If there's no scope — omit it along with the parentheses.
 
-Commit message body (optional, after a blank line):
-- what and why — in Russian or English, depending on the project's context
-- breaking change — `BREAKING CHANGE:` in the footer, or `!` after type/scope (`feat!:`, `feat(api)!:`)
-- issue references — `Refs: #123` or `Closes: #123` in the footer
+## Subject only — no body
+
+A commit message is **one line**: the subject. No body, no description, no bullet list, no footer, no trailers. The diff already says what changed; the PR description says why. If a subject can't carry the change, the commit is too big — split it, don't explain it.
+
+- breaking change — `!` after type/scope (`feat!:`, `feat(api)!:`), nothing else; the migration note goes into the PR description
+- issue references — in the PR (`Closes #N`), never in a commit
+- applies to every commit Claude writes, including multi-commit plans: even when a commit "deserves" an explanation, the answer is a sharper subject
 
 Examples:
 ```
