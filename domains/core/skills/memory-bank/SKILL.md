@@ -143,8 +143,11 @@ user should always know whether you considered the Memory Bank.
 ## Bootstrapping a new Memory Bank
 
 If `.memory-bank/` does not exist yet and the conversation reveals facts at
-importance ≥ 2, suggest creating the directory with at least `index.md`. A
-minimal bootstrap looks like:
+importance ≥ 2, suggest creating the directory with at least `index.md`. If an index
+exists (`test -f "$(ast-index db-path)"`), seed the architecture, structure and conventions
+content (`tech-details/`, `steerings/`) from `ast-index map` and
+`ast-index conventions` instead of walking the tree by hand; otherwise fall
+back to reading the tree. A minimal bootstrap looks like:
 
 ```
 MEMORY_SUGGESTION
