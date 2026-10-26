@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-# Registers the project's installed hooks in <project>/.claude/settings.json.
-# Usage: register-hooks.sh [--project DIR] [--dry-run]     (DIR defaults to the current directory)
-# A hook opts in with one header line in .claude/hooks/<name>.sh:   # register: <Event> [<matcher>]
-# Idempotent: adds only what neither settings.json nor settings.local.json already lists for that
-# hook; every other key and entry stays as it was. Never writes the global ~/.claude/settings.json.
-# stdout, one line per opted-in hook: <added|would-add|present> <TAB> <hook> <TAB> <event>
-# Exit 1, message on stderr, nothing written: no jq, settings.json not a JSON object, project is $HOME.
 set -Eeuo pipefail
 
 die() { echo "register-hooks: $*" >&2; exit 1; }

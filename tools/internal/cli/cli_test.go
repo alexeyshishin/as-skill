@@ -96,13 +96,6 @@ func TestRunUninstallCopyModeRemovesRealFiles(t *testing.T) {
 	}
 }
 
-// TestCoreLockfileMigrationInstallThenUninstall regression-tests the
-// lockfile migration for anyone who installed core skills the old way
-// (before core got its own domains/core/manifest.yaml). The pre-migration
-// lockfile records core skills as {domain:"core", kind:"skill"} (singular);
-// post-migration the generic domain-install path records {kind:"skills"}
-// (plural). Without the migration, reinstalling would append a duplicate
-// row and uninstalling would leave an orphaned one behind.
 func TestCoreLockfileMigrationInstallThenUninstall(t *testing.T) {
 	harnessRoot := t.TempDir()
 	skillDir := filepath.Join(harnessRoot, "domains", "core", "skills", "caveman")
@@ -125,8 +118,6 @@ func TestCoreLockfileMigrationInstallThenUninstall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Seed a pre-migration lockfile row, as the old InstallCoreSkills
-	// link-mode path would have left it.
 	seed := &lockfile.Lockfile{}
 	seed.Record(lockfile.Entry{
 		Domain: "core", Kind: "skill", Name: "caveman",

@@ -1,15 +1,4 @@
 #!/usr/bin/env bash
-# Sets up ast-index (structural code search) for one project, project-scope only.
-# Usage: setup-ast-index.sh [--project DIR] [--dry-run]     (DIR defaults to the current directory)
-# Steps, each idempotent: marketplace + plugin via `claude plugin ... --scope project`,
-# "Bash(ast-index *)" in permissions.allow of <project>/.claude/settings.json, then the index
-# (`ast-index rebuild` when none exists, else incremental `ast-index update`).
-# Installs project-scope even if the plugin is enabled globally. Adds no hooks — the plugin
-# brings its own. Never writes the global ~/.claude/settings.json.
-# stdout, one line per step: <added|would-add|present|built|would-build|updated> <TAB> <step>,
-# then the raw `ast-index stats` output. `claude` / `ast-index` progress goes to stderr.
-# Exit 1, message on stderr: no ast-index / claude / jq, settings.json not a JSON object,
-# project is $HOME, or a step failed (earlier steps stay applied; re-run is safe).
 set -Eeuo pipefail
 
 die() { echo "setup-ast-index: $*" >&2; exit 1; }

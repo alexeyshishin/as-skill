@@ -47,9 +47,6 @@ type lintResult struct {
 	findings []string
 }
 
-// lintHarness runs deterministic checks over <harnessRoot>/domains/*/ and
-// returns one finding per problem, sorted. checked counts linted files,
-// failed counts files with at least one finding.
 func lintHarness(harnessRoot string) lintResult {
 	domainsDir := filepath.Join(harnessRoot, "domains")
 	var findings []string

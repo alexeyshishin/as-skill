@@ -12,7 +12,7 @@ func TestLintHarness(t *testing.T) {
 	tests := []struct {
 		name  string
 		files map[string]string
-		want  []string // substrings, one per expected finding
+		want  []string
 	}{
 		{"clean", map[string]string{
 			"d/skills/s1/SKILL.md":      good + "run scripts/go.sh and .claude/agents/ag.md",

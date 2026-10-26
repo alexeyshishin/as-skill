@@ -29,9 +29,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Convention. Source of truth is rules/git-conventions.md (Semver and tags).
-# ─────────────────────────────────────────────────────────────────────────────
 
 TAG_RE = re.compile(r'^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
 
@@ -42,13 +39,10 @@ HEADER_RE = re.compile(r'^(?P<type>[a-zA-Z]+)'
 
 BREAKING_FOOTER_RE = re.compile(r'^BREAKING[ -]CHANGE:', re.M)
 
-# GitHub squash-merge appends the PR number to the subject.
 PR_RE = re.compile(r'\s*\(#(\d+)\)$')
 
 LEVELS = ('none', 'patch', 'minor', 'major')
 
-# PATCH — fix, perf, docs, refactor with no public API change (convention).
-# build/ci/chore/test change nothing a user of the release can see.
 TYPE_LEVEL = {
     'feat': 'minor',
     'fix': 'patch', 'perf': 'patch', 'docs': 'patch',
@@ -57,7 +51,6 @@ TYPE_LEVEL = {
     'test': 'none', 'style': 'none',
 }
 
-# Notes sections, in output order. Types not listed here stay out of the notes.
 SECTIONS = (
     ('breaking', 'Breaking changes'),
     ('feat', 'Features'),
@@ -87,9 +80,6 @@ def git(repo, *args):
         die(e.stderr.strip() or f'git {args[0]} failed')
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Tags
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_tag(name):
     m = TAG_RE.match(name)
@@ -97,7 +87,6 @@ def parse_tag(name):
 
 
 def scan_tags(repo):
-    """Returns (latest reachable tag or None, ignored names, unreachable newer)."""
     names = git(repo, 'tag', '--list').split()
     merged = set(git(repo, 'tag', '--list', '--merged', 'HEAD').split())
 
@@ -112,16 +101,11 @@ def scan_tags(repo):
 
     reachable = [(v, n) for v, n in valid if n in merged]
     latest = reachable[-1] if reachable else None
-    # A higher tag that HEAD doesn't contain means tagging from the wrong
-    # branch, or main was rewritten after a release.
     newer = [n for v, n in valid
              if n not in merged and (latest is None or v > latest[0])]
     return latest, ignored, newer
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Commits
-# ─────────────────────────────────────────────────────────────────────────────
 
 def read_commits(repo, since):
     rng = f'{since}..HEAD' if since else 'HEAD'
@@ -166,9 +150,6 @@ def section_of(c):
     return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Version
-# ─────────────────────────────────────────────────────────────────────────────
 
 def bump(base, level):
     major, minor, patch = base
@@ -190,7 +171,6 @@ def plan(repo, forced):
     drivers = [c for c in commits if c['level'] == level and level != 'none']
     notes = []
 
-    # Before v1.0.0 a breaking change goes into MINOR, not MAJOR.
     if level == 'major' and base[0] == 0:
         level = 'minor'
         notes.append('pre-1.0: breaking change bumps MINOR, not MAJOR')
@@ -230,9 +210,6 @@ def compare_url(repo, prev, nxt):
     return f'https://github.com/{m.group(1)}/compare/{prev}...{nxt}' if m else None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# next / notes
-# ─────────────────────────────────────────────────────────────────────────────
 
 def bullet(c):
     text = f"{c['scope']}: {c['subject']}" if c['scope'] else c['subject']
@@ -287,13 +264,7 @@ def print_next(p):
         print('WARN ignored non-semver tags: ' + ', '.join(p['ignored_tags']))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# lint
-# ─────────────────────────────────────────────────────────────────────────────
 
-# Phrases that carry no information or sell instead of describe. Errors are
-# never acceptable in release notes; warnings usually mean a vaguer word
-# stands where a concrete one should.
 SLOP_ERRORS = [
     r'excit(?:ed|ing)', r'thrilled', r'delighted',
     r'(?:happy|pleased|proud) to', r'seamless(?:ly)?', r'cutting[- ]edge',
@@ -478,9 +449,6 @@ def report_lint(findings, as_json):
     return errors, warns
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 def take(argv, flag):
     if flag not in argv:

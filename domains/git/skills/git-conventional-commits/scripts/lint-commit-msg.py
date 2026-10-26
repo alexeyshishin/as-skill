@@ -26,26 +26,19 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Convention. Single source of truth is rules/git-conventions.md — these are
-# the parts of it a regex can see.
-# ─────────────────────────────────────────────────────────────────────────────
 
 TYPES = ('feat', 'fix', 'refactor', 'perf', 'docs',
          'test', 'build', 'ci', 'chore', 'revert')
 
-SUBJECT_MAX = 72        # hard limit from the convention
+SUBJECT_MAX = 72
 
 HEADER_RE = re.compile(r'^(?P<type>[a-zA-Z]+)'
                        r'(?:\((?P<scope>[^)]*)\))?'
                        r'(?P<bang>!)?'
                        r': (?P<subject>.+)$')
 
-# Headers that aren't authored messages and shouldn't be graded.
 SKIP_RE = re.compile(r'^(Merge\s|Revert\s"|fixup!\s|squash!\s|amend!\s)')
 
-# Subjects that say nothing. Drawn from what actually sits in this history:
-# `fix: some UI`, `chore: update`, `build: dashboard`.
 VAGUE_RE = re.compile(r'^(?:'
                       r'(?:some|various|misc|minor|small|few)\b'
                       r'|(?:update|fix|fixes|changes|cleanup|refactor|'
@@ -53,34 +46,24 @@ VAGUE_RE = re.compile(r'^(?:'
                       r'|wip\b|tmp\b|temp\b|test commit\b|asdf'
                       r')', re.I)
 
-# Past tense / third person / gerund where the convention wants an imperative.
 NON_IMPERATIVE = {
     'added', 'fixed', 'filled', 'updated', 'removed', 'deleted', 'changed',
     'renamed', 'moved', 'created', 'translated', 'refactored', 'implemented',
     'bumped', 'wrote', 'made', 'documented', 'reverted',
-    # 'split', 'drop' and friends are omitted on purpose: their past tense is
-    # identical to the imperative, so flagging them only produces noise.
     'adds', 'fixes', 'updates', 'removes', 'deletes', 'changes', 'renames',
     'moves', 'creates', 'makes', 'bumps', 'implements', 'documents',
     'adding', 'fixing', 'updating', 'removing', 'changing', 'renaming',
     'moving', 'creating', 'refactoring', 'implementing', 'bumping',
 }
 
-# Docs-only signals in a subject. If the type isn't docs, that's a mismatch:
-# `chore: update README.md` and `feat: update note` are both in this history.
 DOCS_HINT_RE = re.compile(r'\b(readme(?:\.md)?|changelog|\.md\b|docs?\b|'
                           r'documentation|note|комментари)', re.I)
 DOCS_HINT_TYPES = ('feat', 'fix', 'chore')
 
-# Two changes in one commit, announced by the subject itself.
 CONJUNCTION_RE = re.compile(r'(,\s+(?:add|fix|update|remove|rename|move|drop|'
                             r'delete|refactor)\b|\s+and\s+(?:add|fix|update|'
                             r'remove|rename|move|drop|delete|refactor)\b)', re.I)
 
-# AI traces the convention bans outright. Matched as whole lines on purpose, so
-# it can name the trace precisely (ai-attribution) instead of lumping it in with
-# a generic body-present, and so prose that merely *mentions* a trailer
-# ("...add a Co-Authored-By: X <y> footer") is not mistaken for one.
 AI_TRAILER_PATTERNS = (
     re.compile(r'^co-authored-by:\s*[^<>]*'
                r'(?:claude|anthropic|gpt|copilot|codex)[^<>]*<[^>]+>$', re.I),
@@ -124,9 +107,6 @@ def warn(line, code, problem, fix):
     return Finding(line, 'WARN', code, problem, fix)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Header
-# ─────────────────────────────────────────────────────────────────────────────
 
 def lint_header(header):
     out = []
@@ -142,7 +122,6 @@ def lint_header(header):
 
     ctype, scope, subject = m.group('type'), m.group('scope'), m.group('subject')
 
-    # type
     if ctype != ctype.lower():
         out.append(err(1, 'type-case', f'type {ctype!r} is not lowercase',
                        f'use {ctype.lower()!r}'))
@@ -150,7 +129,6 @@ def lint_header(header):
         out.append(err(1, 'unknown-type', f'type {ctype!r} is not allowed',
                        'pick one of: ' + ', '.join(TYPES)))
 
-    # scope
     if scope is not None:
         if not scope:
             out.append(err(1, 'empty-scope', 'empty parentheses in the scope',
@@ -168,7 +146,6 @@ def lint_header(header):
                             f'scope {scope!r} is {len(scope)} chars',
                             'shorten it to a module name'))
 
-    # subject
     out += lint_subject(subject, ctype.lower())
 
     if len(header) > SUBJECT_MAX:
@@ -193,7 +170,6 @@ def lint_subject(subject, ctype):
                         'collapse it'))
 
     first = subject.split()[0] if subject.split() else ''
-    # Capitalisation: an acronym or a proper noun is fine, a sentence start isn't.
     if first[:1].isupper() and not (first.isupper() or
                                     any(c.isupper() for c in first[1:])):
         out.append(err(1, 'subject-case',
@@ -232,16 +208,8 @@ def lint_subject(subject, ctype):
     return out
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Body and footers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def lint_body(lines):
-    """lines — everything after the header, numbered from line 2.
-
-    The convention is subject-only: no body, no footer, nothing after the
-    header. A breaking change is the `!` in the header and nothing more.
-    """
     out = []
     prose = None
 
@@ -267,9 +235,7 @@ def lint_body(lines):
 
 
 def lint_message(text):
-    """Returns (findings, skipped). A skipped message is machine-generated."""
     lines = text.replace('\r\n', '\n').split('\n')
-    # Drop the comment block git appends to a commit-msg template.
     lines = [ln for ln in lines if not ln.startswith('#')]
     while lines and not lines[-1].strip():
         lines.pop()
@@ -286,9 +252,6 @@ def lint_message(text):
     return findings, False
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Modes
-# ─────────────────────────────────────────────────────────────────────────────
 
 def read_message(arg):
     if arg == '-':
@@ -355,7 +318,6 @@ def report_history(repo, count, as_json, strict):
         for f in findings:
             by_code.setdefault((f.severity, f.code), []).append(sha)
 
-    # Same subject twice in a row is an amend/fixup that never happened.
     dupes = {}
     subjects = [(sha, b.split('\n', 1)[0].strip()) for sha, b in commits]
     for (_, a), (sha_b, b) in zip(subjects, subjects[1:]):
