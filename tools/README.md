@@ -13,6 +13,20 @@ go build -o as-skill ./tools
 
 или запуск прямо из исходников: `go run ./tools <команда>`.
 
+### `install.sh`
+
+`source install.sh` из корня репозитория собирает `as-skill`, сразу добавляет его в `PATH` текущей оболочки (sh/bash/zsh) и сохраняет PATH для новых терминалов: путь пишется в `~/.config/as-skill/env`, а в rc-файл (`~/.zshrc` для zsh; `~/.bash_profile` и `~/.bashrc` для bash; `~/.profile` иначе) дописывается одна guard-строка без machine-specific пути — безопасно для dotfiles-репозиториев. Уже открытые терминалы подхватят PATH ещё одним `source install.sh`.
+
+Без `source` (`./install.sh`, `bash install.sh`) бинарь соберётся, но в PATH родительской оболочки не попадёт (дочерний процесс так не умеет) — скрипт это видит и подсказывает запустить через `source`. Для новых терминалов PATH сохранится в любом случае.
+
+### Платформы
+
+`as-skill` — обычный Go-бинарь без platform-specific кода: macOS, Linux, Windows.
+
+- **Windows, `install.sh`** — это `sh`-скрипт: запускайте через Git Bash или WSL, либо соберите напрямую: `go build -o as-skill.exe ./tools`.
+- **Windows, symlink-режим** — `os.Symlink` требует привилегию `SeCreateSymbolicLinkPrivilege`: нужен включённый **Developer Mode** (Windows 10 1703+ / 11) или терминал **от администратора**. Иначе установка падает с ошибкой прав — ставьте с `--copy` (live-правки из `domains/` тогда не подхватываются, после изменений нужна переустановка).
+- **fish** — `install.sh` правит только POSIX rc-файлы и `config.fish` не трогает: определяет это по `$SHELL` и печатает подсказку. Добавьте PATH вручную: `fish_add_path <путь к чекауту as-skill>`.
+
 ## Использование
 
 | Команда | Что делает |
