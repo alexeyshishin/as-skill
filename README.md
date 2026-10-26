@@ -1,4 +1,4 @@
-# as-skill
+# as-skill <img src="assets/claude-jumping.svg" width="44" height="40" alt="Animated Claude" align="right" />
 
 Репозиторий, в котором находятся шаблоны агентов, скиллов и правил. За основу взята мультидоменная архитектура:
 - **Obsidian**
