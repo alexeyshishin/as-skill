@@ -65,7 +65,7 @@ func TestLintHarness(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got := lintHarness(root)
+			got := lintHarness(root).findings
 			if len(got) != len(tc.want) {
 				t.Fatalf("got %d findings %q, want %d", len(got), got, len(tc.want))
 			}

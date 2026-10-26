@@ -30,17 +30,18 @@ func runDoctor(args []string) error {
 	}
 
 	entries := health.SortedEntries(lock)
-	problems := 0
-	if len(entries) == 0 {
-		fmt.Println("no entries tracked in skills-lock.json")
-	} else {
-		fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PATH")
-	}
+	checked, failed := 0, 0
+	headerShown := false
 	for _, e := range entries {
+		checked++
 		h := health.EntryHealth(e)
-		fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", e.Domain, e.Kind, e.Name, e.Mode, h, e.Path)
-		if h == health.HealthMissing || h == health.HealthBroken {
-			problems++
+		entryFailed := h == health.HealthMissing || h == health.HealthBroken
+		if entryFailed {
+			if !headerShown {
+				fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PATH")
+				headerShown = true
+			}
+			fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", e.Domain, e.Kind, e.Name, e.Mode, h, e.Path)
 		}
 
 		switch e.Mode {
@@ -48,22 +49,25 @@ func runDoctor(args []string) error {
 			if !fsutil.PathExists(e.Source) {
 				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — source %s no longer exists under harness root %s\n",
 					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
-				problems++
+				entryFailed = true
 			}
 		case "copy":
 			if h == health.HealthMissing {
-				continue
+				break
 			}
 			hash, herr := transfer.HashTree(e.Path)
 			if herr != nil {
 				fmt.Printf("as-skill: doctor: warning: %s/%s/%s — could not hash %s: %v\n", e.Domain, e.Kind, e.Name, e.Path, herr)
-				continue
+				break
 			}
 			if e.SHA256 != "" && hash != e.SHA256 {
 				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — recomputed hash differs from the recorded SHA256 (ambiguous: the target may have been hand-edited, or the source in domains/ may have moved on since install — not disambiguated)\n",
 					health.HealthDrifted, e.Domain, e.Kind, e.Name)
-				problems++
+				entryFailed = true
 			}
+		}
+		if entryFailed {
+			failed++
 		}
 	}
 
@@ -73,16 +77,20 @@ func runDoctor(args []string) error {
 	}
 	for _, p := range untracked {
 		fmt.Printf("as-skill: doctor: %-11s %s — present on disk under .claude/, no lockfile entry\n", health.HealthUntracked, p)
-		problems++
 	}
+	checked += len(untracked)
+	failed += len(untracked)
 
-	for _, f := range lintHarness(harnessRoot) {
+	lint := lintHarness(harnessRoot)
+	for _, f := range lint.findings {
 		fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
-		problems++
 	}
+	checked += lint.checked
+	failed += lint.failed
 
-	if problems > 0 {
-		return fmt.Errorf("doctor: %d finding(s)", problems)
+	fmt.Printf("doctor: %d checks, %d/%d ok, %d failed\n", checked, checked-failed, checked, failed)
+	if failed > 0 {
+		return fmt.Errorf("doctor: %d failed", failed)
 	}
 	return nil
 }

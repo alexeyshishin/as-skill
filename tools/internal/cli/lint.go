@@ -41,11 +41,19 @@ func plainScalarIssues(path, body string) []string {
 	return out
 }
 
+type lintResult struct {
+	checked  int
+	failed   int
+	findings []string
+}
+
 // lintHarness runs deterministic checks over <harnessRoot>/domains/*/ and
-// returns one finding per problem, sorted.
-func lintHarness(harnessRoot string) []string {
+// returns one finding per problem, sorted. checked counts linted files,
+// failed counts files with at least one finding.
+func lintHarness(harnessRoot string) lintResult {
 	domainsDir := filepath.Join(harnessRoot, "domains")
 	var findings []string
+	checked := 0
 
 	agents := map[string]bool{}
 	agentFiles, _ := filepath.Glob(filepath.Join(domainsDir, "*", "agents", "*.md"))
@@ -54,6 +62,7 @@ func lintHarness(harnessRoot string) []string {
 	}
 
 	sort.Strings(agentFiles)
+	checked += len(agentFiles)
 	for _, p := range agentFiles {
 		data, err := os.ReadFile(p)
 		if err != nil {
@@ -65,6 +74,7 @@ func lintHarness(harnessRoot string) []string {
 
 	skillMDs, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "SKILL.md"))
 	sort.Strings(skillMDs)
+	checked += len(skillMDs)
 	for _, path := range skillMDs {
 		skillDir := filepath.Dir(path)
 		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
@@ -115,6 +125,7 @@ func lintHarness(harnessRoot string) []string {
 		if strings.HasSuffix(p, "-lib.sh") {
 			continue
 		}
+		checked++
 		data, err := os.ReadFile(p)
 		if err != nil {
 			findings = append(findings, fmt.Sprintf("%s: %v", p, err))
@@ -126,5 +137,10 @@ func lintHarness(harnessRoot string) []string {
 	}
 
 	sort.Strings(findings)
-	return findings
+	failedFiles := map[string]bool{}
+	for _, f := range findings {
+		path, _, _ := strings.Cut(f, ": ")
+		failedFiles[path] = true
+	}
+	return lintResult{checked: checked, failed: len(failedFiles), findings: findings}
 }

@@ -38,7 +38,7 @@ go build -o as-skill ./tools
 | `as-skill install ... --copy` | те же формы аргументов, но копия-снэпшот вместо symlink |
 | `as-skill uninstall domain\|domains\|all\|skill ...` | удалить то, что поставил `install` (symlink для link-записей, реальные файлы/директории для copy-записей; чужого/неотслеживаемого не трогает). Для хуков домена заодно убирает их регистрации из `.claude/settings.json` проекта — только записи, указывающие на снятые файлы хуков; остальные ключи и чужие хуки остаются, `settings.local.json` не трогается, `--dry-run` показывает `would unregister` |
 | `as-skill status [--project PATH]` | список записей lockfile: домен/вид/имя, режим, путь, здоровье (OK/MISSING/BROKEN) |
-| `as-skill doctor [--project PATH] [--harness-root PATH]` | то же, что `status`, плюс проверки: источник symlink'а пропал, у copy-записи разошёлся хэш (DRIFTED), на диске есть неотслеживаемое (UNTRACKED); ненулевой exit при любой находке — годится как CI gate |
+| `as-skill doctor [--project PATH] [--harness-root PATH]` | то же, что `status`, плюс проверки: источник symlink'а пропал, у copy-записи разошёлся хэш (DRIFTED), на диске есть неотслеживаемое (UNTRACKED); печатает только проблемные записи и итог (`N checks, M/N ok, K failed`); ненулевой exit при любой находке — годится как CI gate |
 | `as-skill check` | валидирует `domains/*/manifest.yaml` и `skills/*/SKILL.md` в этой копии репозитория; без `--project` |
 | `as-skill list [domains\|skills]` | показать, что можно установить |
 
