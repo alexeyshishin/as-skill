@@ -3,12 +3,15 @@
 # If code files were edited this session and no test command was run, block the
 # agent from declaring done until it runs the project's tests and cites output.
 # Fail-open on any error. Loop-safe: caps at 2 blocks per git HEAD, then gives up.
-set -euo pipefail
+set -Eeuo pipefail
 trap 'exit 0' ERR
 
 command -v jq >/dev/null 2>&1 || exit 0
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+LIB="$(dirname "$0")/test-gate-lib.sh"
+[ -f "$LIB" ] || exit 0
+. "$LIB"
 STDIN="$(cat)"
 
 # Never re-block once already inside a Stop-hook continuation.
@@ -20,29 +23,16 @@ TRANSCRIPT="$(printf '%s' "$STDIN" | jq -r '.transcript_path // empty')"
 [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] || exit 0
 
 # Did the agent edit any code file this session?
-EDITED="$(jq -r 'select(.type=="assistant") | .message.content[]?
-  | select(.type=="tool_use")
-  | select(.name=="Edit" or .name=="Write" or .name=="MultiEdit")
-  | .input.file_path // empty' "$TRANSCRIPT" 2>/dev/null || echo)"
+EDITED="$(session_edited_files "$TRANSCRIPT")"
 CODE_EDIT="$(printf '%s\n' "$EDITED" | grep -iE '\.(ts|tsx|js|jsx|py|dart|swift|kt|go|rb|java|tf)$' | head -1 || true)"
 [ -n "$CODE_EDIT" ] || exit 0
 
 # Resolve this project's test command from what's actually present.
-TEST_CMD=""; TEST_PAT=""
-if [ -f "$ROOT/pubspec.yaml" ]; then TEST_CMD="flutter test"; TEST_PAT="flutter test"
-elif [ -f "$ROOT/pyproject.toml" ]; then TEST_CMD="pytest (or uv run pytest)"; TEST_PAT="pytest"
-elif [ -f "$ROOT/go.mod" ]; then TEST_CMD="go test ./..."; TEST_PAT="go test"
-elif [ -f "$ROOT/build.gradle.kts" ] || [ -f "$ROOT/build.gradle" ]; then TEST_CMD="./gradlew test"; TEST_PAT="gradlew test"
-elif [ -f "$ROOT/package.json" ] && jq -e '.scripts.test // empty' "$ROOT/package.json" >/dev/null 2>&1; then TEST_CMD="npm test"; TEST_PAT="npm test|vitest|jest|node --test"
-elif [ -f "$ROOT/Makefile" ] && grep -qE '^test:' "$ROOT/Makefile" 2>/dev/null; then TEST_CMD="make test"; TEST_PAT="make test"
-fi
+resolve_test_cmd "$ROOT"
 [ -n "$TEST_CMD" ] || exit 0   # no known test command -> nothing to enforce
 
 # Was a test command actually run in a Bash tool call this session?
-RAN="$(jq -r 'select(.type=="assistant") | .message.content[]?
-  | select(.type=="tool_use") | select(.name=="Bash")
-  | .input.command // empty' "$TRANSCRIPT" 2>/dev/null | grep -ciE "$TEST_PAT" || true)"
-RAN="${RAN:-0}"
+RAN="$(session_test_runs "$TRANSCRIPT" "$TEST_PAT")"
 [ "$RAN" -gt 0 ] && exit 0
 
 # Loop-safe cap: <=2 blocks at the same HEAD.
