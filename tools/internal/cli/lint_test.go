@@ -17,7 +17,7 @@ func TestLintHarness(t *testing.T) {
 		{"clean", map[string]string{
 			"d/skills/s1/SKILL.md":      good + "run scripts/go.sh and .claude/agents/ag.md",
 			"d/skills/s1/scripts/go.sh": "",
-			"d/agents/ag.md":            "",
+			"d/agents/ag.md":            good,
 			"d/hooks/h.sh":              "#!/bin/sh\n# register: Stop\n",
 			"d/hooks/test-gate-lib.sh":  "",
 		}, nil},
@@ -35,8 +35,20 @@ func TestLintHarness(t *testing.T) {
 		}, []string{"no domains/*/agents/ghost.md"}},
 		{"agent in other domain ok", map[string]string{
 			"d/skills/s1/SKILL.md": good + ".claude/agents/ag.md",
-			"e/agents/ag.md":       "",
+			"e/agents/ag.md":       good,
 		}, nil},
+		{"agent description with colon", map[string]string{
+			"d/agents/ag.md": "---\nname: ag\ndescription: Scope: a/**\n---\n",
+		}, []string{`"description" is an unquoted value containing ": "`}},
+		{"skill description with colon", map[string]string{
+			"d/skills/s1/SKILL.md": "---\nname: s1\ndescription: Use when: x\n---\n",
+		}, []string{`"description" is an unquoted value containing ": "`}},
+		{"folded and quoted values ok", map[string]string{
+			"d/agents/ag.md": "---\nname: ag\ndescription: >\n  Scope: a/**\ntools: \"x: y\"\n---\n",
+		}, nil},
+		{"agent without frontmatter", map[string]string{
+			"d/agents/ag.md": "# no fm\n",
+		}, []string{"missing frontmatter"}},
 		{"hook without register", map[string]string{
 			"d/hooks/h.sh": "#!/bin/sh\n",
 		}, []string{`missing "# register: <Event>"`}},

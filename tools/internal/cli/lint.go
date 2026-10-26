@@ -17,6 +17,30 @@ var (
 	registerHdrRe = regexp.MustCompile(`(?m)^#\s*register:\s*\S+`)
 )
 
+func plainScalarIssues(path, body string) []string {
+	if !strings.HasPrefix(body, "---\n") {
+		return []string{fmt.Sprintf("%s: missing frontmatter (file does not start with \"---\")", path)}
+	}
+	var out []string
+	for _, line := range strings.Split(body[4:], "\n") {
+		if strings.TrimSpace(line) == "---" {
+			break
+		}
+		key, val, ok := strings.Cut(line, ":")
+		if !ok || key == "" || strings.ContainsAny(key[:1], " \t-#") {
+			continue
+		}
+		val = strings.TrimSpace(val)
+		if val == "" || strings.ContainsAny(val[:1], ">|\"'[{&*!%@`") {
+			continue
+		}
+		if strings.Contains(val, ": ") || strings.HasSuffix(val, ":") {
+			out = append(out, fmt.Sprintf("%s: frontmatter %q is an unquoted value containing \": \" — invalid YAML; use a \">\" block or quotes", path, key))
+		}
+	}
+	return out
+}
+
 // lintHarness runs deterministic checks over <harnessRoot>/domains/*/ and
 // returns one finding per problem, sorted.
 func lintHarness(harnessRoot string) []string {
@@ -27,6 +51,16 @@ func lintHarness(harnessRoot string) []string {
 	agentFiles, _ := filepath.Glob(filepath.Join(domainsDir, "*", "agents", "*.md"))
 	for _, p := range agentFiles {
 		agents[strings.TrimSuffix(filepath.Base(p), ".md")] = true
+	}
+
+	sort.Strings(agentFiles)
+	for _, p := range agentFiles {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			findings = append(findings, fmt.Sprintf("%s: %v", p, err))
+			continue
+		}
+		findings = append(findings, plainScalarIssues(p, string(data))...)
 	}
 
 	skillMDs, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "SKILL.md"))
@@ -53,6 +87,7 @@ func lintHarness(harnessRoot string) []string {
 			continue
 		}
 		body := string(data)
+		findings = append(findings, plainScalarIssues(path, body)...)
 		seen := map[string]bool{}
 		for _, ref := range scriptRefRe.FindAllString(body, -1) {
 			if seen[ref] {
