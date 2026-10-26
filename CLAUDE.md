@@ -10,6 +10,10 @@ A multi-domain collection of rules, skills, and agents for Claude Code. Each dom
 
 Always run with the `caveman` core skill (`domains/core/skills/caveman/`) active — ultra-compressed output, full technical accuracy kept. Don't wait for the user to ask for brevity; it's the default in this repo.
 
+## After commit / push
+
+Report only the hash, subject and push range. Don't recap which rules were followed, and don't mention skipped attribution (`Co-Authored-By`, etc.) — mention it only if something deviated or was blocked.
+
 ## Architecture
 
 ```

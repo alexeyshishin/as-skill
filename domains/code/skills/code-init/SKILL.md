@@ -1,6 +1,6 @@
 ---
 name: code-init
-description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds three fixed house rules (always use /caveman, no code comments, answer in Russian). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the installed code hooks (`test-gate`, `prettier-format`, `memory-bank-load`) in the project's `.claude/settings.json` via `scripts/register-hooks.sh` (never the global `~/.claude/settings.json`). Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
+description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (always use /caveman, no code comments, answer in Russian, report only hash and subject after commit/push). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the installed code hooks (`test-gate`, `prettier-format`, `memory-bank-load`) in the project's `.claude/settings.json` via `scripts/register-hooks.sh` (never the global `~/.claude/settings.json`). Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
 ---
 
 # Skill: /code-init — generate a project CLAUDE.md
@@ -21,7 +21,7 @@ definition of done, one owner per action.
 
 Check for an existing `CLAUDE.md` at the project root.
 - If it exists, **read it**, show the user a one-line summary of what's there, and ask:
-  overwrite, merge the three house rules into it, or cancel. Do not overwrite silently.
+  overwrite, merge the four house rules into it, or cancel. Do not overwrite silently.
 - If `AGENTS.md` exists, plan to reference it with a leading `@AGENTS.md` import instead of
   duplicating its content — put only Claude-Code-specific guidance in `CLAUDE.md`.
 
@@ -62,7 +62,7 @@ If a category yields nothing, omit that section rather than writing a placeholde
 
 ## Step 3. Compose CLAUDE.md
 
-Fill this skeleton. Russian prose (per house rule 4); keep command names, paths, and tool
+Fill this skeleton. Russian prose (per house rule 3); keep command names, paths, and tool
 names verbatim. Order sections as below.
 
 ```markdown
@@ -77,6 +77,8 @@ names verbatim. Order sections as below.
 2. **Не пиши комментарии в коде.** Код должен быть самодокументируемым: понятные имена,
    маленькие функции. Исключение — комментарий, который требует линтер/формат файла.
 3. **Отвечай на русском.** Технические термины и имена оставляй на английском.
+4. **После коммита и пуша сообщай только хеш, subject и диапазон пуша.** Не пересказывай,
+   каким правилам следовал, и не упоминай атрибуцию (`Co-Authored-By` и т. п.).
 
 ## Команды
 
@@ -188,7 +190,7 @@ names verbatim. Order sections as below.
 
 ### Rules for filling it
 
-- The three house rules in **Обязательные правила** are mandatory and go in **verbatim** —
+- The four house rules in **Обязательные правила** are mandatory and go in **verbatim** —
   this is the whole point of the skill. Keep them first.
 - **Рабочий цикл**, **Исполнители для /code-build**, **Memory Bank** and **Модели**
   describe the installed `code` dev-loop harness — include them when
@@ -252,4 +254,4 @@ user can fill it in). Don't re-print the whole file.
 - Don't list an executor whose `.claude/agents/<name>.md` isn't installed, and don't
   assign a layer with no agent (mobile, data, ML) to the nearest one.
 - Don't pad with generic advice ("write clean code") — every line should be project-true.
-- Don't drop or reword the three house rules.
+- Don't drop or reword the four house rules.
