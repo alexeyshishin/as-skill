@@ -49,7 +49,7 @@
 
 Какие хуки и с каким matcher регистрировать, каждый хук объявляет сам строкой в шапке:
 `# register: <Event> [<matcher>]` (сейчас `test-gate` — Stop, `prettier-format` —
-PostToolUse, `memory-bank-load` — SessionStart). Новый хук в `domains/code/hooks/` достаточно
+PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — SessionEnd). Новый хук в `domains/code/hooks/` достаточно
 снабдить этой строкой. Скрипт можно запускать и отдельно: `bash
 .claude/skills/code-init/scripts/register-hooks.sh [--project DIR] [--dry-run]`.
 

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# SessionEnd hook — fold the finished session into the project Memory Bank.
+# register: SessionEnd
+# Spawns a detached headless `claude -p` that reads the session transcript and updates .memory-bank/
+# per the memory-bank skill. Returns immediately so SessionEnd is never held up.
+# No-ops without jq, claude, .memory-bank/index.md, a transcript, or a session with >= MIN_PROMPTS user prompts.
+# Recursion-safe: the child runs with MEMORY_BANK_LOGGER=1, which makes this hook exit at once.
+# Fail-open on any error.
+set -Eeuo pipefail
+trap 'exit 0' ERR
+
+[ -z "${MEMORY_BANK_LOGGER:-}" ] || exit 0
+command -v jq >/dev/null 2>&1 || exit 0
+command -v claude >/dev/null 2>&1 || exit 0
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+MB="$ROOT/.memory-bank"
+[ -f "$MB/index.md" ] || exit 0
+
+STDIN="$(cat)"
+SESSION_ID="$(printf '%s' "$STDIN" | jq -r '.session_id // empty')"
+TRANSCRIPT="$(printf '%s' "$STDIN" | jq -r '.transcript_path // empty')"
+REASON="$(printf '%s' "$STDIN" | jq -r '.reason // empty')"
+[ -n "$SESSION_ID" ] || exit 0
+[ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] || exit 0
+
+MIN_PROMPTS=3
+PROMPTS="$(jq -r 'select(.type=="user" and (.message.content|type)=="string") | 1' "$TRANSCRIPT" 2>/dev/null | grep -c . || true)"
+[ "${PROMPTS:-0}" -ge "$MIN_PROMPTS" ] || exit 0
+
+SESS_DIR="$ROOT/.claude/sessions"
+mkdir -p "$SESS_DIR"
+DONE="$SESS_DIR/$SESSION_ID.mblogged"
+[ ! -e "$DONE" ] || exit 0
+LOCK="$SESS_DIR/memory-bank-logger.lock"
+[ -z "$(find "$LOCK" -maxdepth 0 -mmin +10 2>/dev/null)" ] || rmdir "$LOCK" 2>/dev/null || true
+mkdir "$LOCK" 2>/dev/null || exit 0
+
+PROMPT="Session $SESSION_ID just ended (reason: ${REASON:-unknown}). Its transcript is a JSONL file at: $TRANSCRIPT
+Read it and apply the memory-bank skill: update files under .memory-bank/ only with stable project knowledge the session produced (architecture decisions, contracts, conventions, stack changes, tasks opened/closed). Skip local fixes, experiments and style-only changes. Keep index.md linking every file. Edit only inside .memory-bank/. If nothing qualifies, change nothing and reply 'no update needed'."
+
+(
+  cd "$ROOT"
+  MEMORY_BANK_LOGGER=1 claude -p "$PROMPT" \
+    --permission-mode acceptEdits \
+    --allowedTools "Read" "Glob" "Grep" "Edit" "Write" \
+    --add-dir "$(dirname "$TRANSCRIPT")" \
+    >>"$SESS_DIR/memory-bank-logger.log" 2>&1 </dev/null || true
+  : >"$DONE"
+  rmdir "$LOCK" 2>/dev/null || true
+) >/dev/null 2>&1 &
+disown 2>/dev/null || true
+exit 0
