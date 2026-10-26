@@ -49,6 +49,9 @@ func LinkTree(domain, kind, src, dstDir string, dryRun, force bool, lock *lockfi
 	count := 0
 	for _, e := range entries {
 		name := e.Name()
+		if SkipTop(kind, name) {
+			continue
+		}
 		srcPath := filepath.Join(src, name)
 		dstPath := filepath.Join(dstDir, name)
 		if err := LinkOne(srcPath, dstPath, dryRun, force, lock); err != nil {

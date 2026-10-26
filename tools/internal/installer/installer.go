@@ -49,7 +49,7 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 	if entry, ok := in.Lock.Owns(dst); ok && entry.Mode != "copy" {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a copy — mixed channels may cause confusion\n", dst, entry.Mode)
 	}
-	n, err := transfer.CopyTree(src, dst, in.DryRun)
+	n, err := transfer.CopyTree(kind, src, dst, in.DryRun)
 	if err != nil {
 		return n, err
 	}
@@ -178,6 +178,9 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 		var goneHooks []string
 		for _, e := range entries {
 			itemName := e.Name()
+			if transfer.SkipTop(kind, itemName) {
+				continue
+			}
 			dst := filepath.Join(destPath, itemName)
 			if gone := in.uninstallOne(name, kind, itemName, dst); gone && kind == "hooks" {
 				goneHooks = append(goneHooks, itemName)

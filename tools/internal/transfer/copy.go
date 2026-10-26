@@ -9,7 +9,13 @@ import (
 	"strings"
 )
 
-func CopyTree(src, dst string, dryRun bool) (int, error) {
+// SkipTop reports whether a top-level entry of a domain kind directory is
+// documentation that must not be installed into the project.
+func SkipTop(kind, name string) bool {
+	return kind == "hooks" && name == "README.md"
+}
+
+func CopyTree(kind, src, dst string, dryRun bool) (int, error) {
 	info, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -25,6 +31,9 @@ func CopyTree(src, dst string, dryRun bool) (int, error) {
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
+		}
+		if SkipTop(kind, rel) {
+			return nil
 		}
 		target := filepath.Join(dst, rel)
 		if d.IsDir() {
