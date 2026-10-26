@@ -22,6 +22,13 @@ technical fact, file path, and step exact. Code blocks stay normal.
   relevant to this feature. If no Memory Bank exists, plan from the request alone and
   flag every assumption.
 
+## Code navigation
+
+If `test -f "$(ast-index db-path)"` succeeds in the project root (index exists), use `ast-index` via Bash before Grep/Read; otherwise fall back to Grep.
+- `explore "<feature>"`, `map`, `conventions` to ground `affected_files`; `dependents` / `graph impact` for blast radius into `risks`.
+- `ast-index outline <file>` before Read of any file over 500 lines, then Read only the slice.
+- Grep only for regex, string literals, comments, non-code files, or when ast-index returns empty (then `ast-index update`, retry once).
+
 ## What to produce
 Return this YAML to the orchestrator. Write nothing to disk.
 

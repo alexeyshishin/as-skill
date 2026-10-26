@@ -23,6 +23,13 @@ TERSE in your return. Quote errors and command output exactly — never paraphra
   `.memory-bank/index.md`.
 - Your scope: read widely to diagnose; change narrowly to fix.
 
+## Code navigation
+
+If `test -f "$(ast-index db-path)"` succeeds in the project root (index exists), use `ast-index` via Bash before Grep/Read; otherwise fall back to Grep.
+- `callers`, `call-tree "<fn>" -d 3` to build the hypothesis ladder; `hotspots` if history was collected.
+- `ast-index outline <file>` before Read of any file over 500 lines, then Read only the slice.
+- Grep only for regex, string literals, comments, non-code files, or when ast-index returns empty (then `ast-index update`, retry once).
+
 ## The loop (do these in order — do NOT skip to a fix)
 1. **Reproduce (regression-test-first).** Run the failing test / command yourself; quote
    the real, full error. When feasible, write a NEW failing test that captures this bug

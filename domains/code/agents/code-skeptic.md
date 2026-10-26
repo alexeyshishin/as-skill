@@ -22,6 +22,13 @@ Terse. Fragments OK. All technical substance stays. No praise.
   critique the feature and its most likely plan.
 - Project context: `.memory-bank/index.md` + relevant files.
 
+## Code navigation
+
+If `test -f "$(ast-index db-path)"` succeeds in the project root (index exists), use `ast-index` via Bash before Grep/Read; otherwise fall back to Grep.
+- `usages`, `callers`, `graph impact <Symbol> --depth 3 --refresh` to find hidden consumers the plan missed.
+- `ast-index outline <file>` before Read of any file over 500 lines, then Read only the slice.
+- Grep only for regex, string literals, comments, non-code files, or when ast-index returns empty (then `ast-index update`, retry once).
+
 ## What to produce
 ```yaml
 findings:

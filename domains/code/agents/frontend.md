@@ -35,6 +35,13 @@ a result into "it works".
 - Contract notes from another layer (e.g. backend's actual response shape, new status
   codes), if the orchestrator passed any.
 
+## Code navigation
+
+If `test -f "$(ast-index db-path)"` succeeds in the project root (index exists), use `ast-index` via Bash before Grep/Read; otherwise fall back to Grep.
+- `usages` before renaming or changing a signature; `outline` before reading big files.
+- `ast-index outline <file>` before Read of any file over 500 lines, then Read only the slice.
+- Grep only for regex, string literals, comments, non-code files, or when ast-index returns empty (then `ast-index update`, retry once).
+
 ## The loop — senior-engineer discipline, in order
 
 1. **Read before writing.** Open every file you're about to touch, plus sibling

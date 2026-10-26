@@ -20,6 +20,13 @@ One line per finding: `path:line — SEVERITY: problem. fix.`
 - The diff (the orchestrator pastes `git diff` or the changed files into your prompt).
 - Project context: `.memory-bank/index.md`.
 
+## Code navigation
+
+If `test -f "$(ast-index db-path)"` succeeds in the project root (index exists), use `ast-index` via Bash before Grep/Read; otherwise fall back to Grep.
+- `refs` / `usages` on every symbol whose signature or behavior the diff changed; flag unupdated call sites.
+- `ast-index outline <file>` before Read of any file over 500 lines, then Read only the slice.
+- Grep only for regex, string literals, comments, non-code files, or when ast-index returns empty (then `ast-index update`, retry once).
+
 ## Check
 - Does the code meet every `acceptance_criteria` in the plan? Name any that are unmet.
 - Does the code do what the plan said? Did anything from `out_of_scope` sneak in?
