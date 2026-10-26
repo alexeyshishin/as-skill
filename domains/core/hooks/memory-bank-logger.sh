@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
-# SessionEnd hook — fold the finished session into the project Memory Bank.
 # register: SessionEnd
-# Spawns a detached headless `claude -p` that reads the session transcript and updates .memory-bank/
-# per the memory-bank skill. Returns immediately so SessionEnd is never held up.
-# No-ops without jq, claude, .memory-bank/index.md, a transcript, or a session with >= MIN_PROMPTS user prompts.
-# Recursion-safe: the child runs with MEMORY_BANK_LOGGER=1, which makes this hook exit at once.
-# Fail-open on any error.
 set -Eeuo pipefail
 trap 'exit 0' ERR
 

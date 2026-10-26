@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Sourced by test-gate.sh and prettier-format.sh — one definition of "test-gate is satisfied".
-# Not a hook itself. Every function must stay failure-proof: callers fail open via an ERR trap.
 
-# Sets TEST_CMD (for messages) and TEST_PAT (grep -E) from what's present in project root $1.
-# Both stay empty when no known test command exists.
 resolve_test_cmd() {
   local root="$1"
   TEST_CMD=""; TEST_PAT=""
@@ -17,7 +13,6 @@ resolve_test_cmd() {
   return 0
 }
 
-# Paths the agent wrote via Edit/Write/MultiEdit this session ($1 = transcript), one per line.
 session_edited_files() {
   jq -r 'select(.type=="assistant") | .message.content[]?
     | select(.type=="tool_use")
@@ -26,7 +21,6 @@ session_edited_files() {
   return 0
 }
 
-# How many Bash tool calls this session ($1 = transcript) matched the test pattern $2.
 session_test_runs() {
   local n
   n="$(jq -r 'select(.type=="assistant") | .message.content[]?

@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-// SkipTop reports whether a top-level entry of a domain kind directory is
-// documentation that must not be installed into the project.
 func SkipTop(kind, name string) bool {
 	return kind == "hooks" && name == "README.md"
 }

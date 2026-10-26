@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# Stop hook — "test after every feature" enforcement.
 # register: Stop
-# If code files were edited this session and no test command was run, block the
-# agent from declaring done until it runs the project's tests and cites output.
-# Fail-open on any error. Loop-safe: caps at 2 blocks per git HEAD, then gives up.
 set -Eeuo pipefail
 trap 'exit 0' ERR
 
@@ -15,7 +11,6 @@ LIB="$(dirname "$0")/test-gate-lib.sh"
 . "$LIB"
 STDIN="$(cat)"
 
-# Never re-block once already inside a Stop-hook continuation.
 [ "$(printf '%s' "$STDIN" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0
 
 SESSION_ID="$(printf '%s' "$STDIN" | jq -r '.session_id // empty')"
@@ -23,20 +18,16 @@ TRANSCRIPT="$(printf '%s' "$STDIN" | jq -r '.transcript_path // empty')"
 [ -n "$SESSION_ID" ] || exit 0
 [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] || exit 0
 
-# Did the agent edit any code file this session?
 EDITED="$(session_edited_files "$TRANSCRIPT")"
 CODE_EDIT="$(printf '%s\n' "$EDITED" | grep -iE '\.(ts|tsx|js|jsx|py|dart|swift|kt|go|rb|java|tf)$' | head -1 || true)"
 [ -n "$CODE_EDIT" ] || exit 0
 
-# Resolve this project's test command from what's actually present.
 resolve_test_cmd "$ROOT"
-[ -n "$TEST_CMD" ] || exit 0   # no known test command -> nothing to enforce
+[ -n "$TEST_CMD" ] || exit 0
 
-# Was a test command actually run in a Bash tool call this session?
 RAN="$(session_test_runs "$TRANSCRIPT" "$TEST_PAT")"
 [ "$RAN" -gt 0 ] && exit 0
 
-# Loop-safe cap: <=2 blocks at the same HEAD.
 SESS_DIR="$ROOT/.claude/sessions"; mkdir -p "$SESS_DIR" 2>/dev/null || exit 0
 COUNTER="$SESS_DIR/${SESSION_ID}.testcount"
 HEAD="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo no-git)"
