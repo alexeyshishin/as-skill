@@ -23,7 +23,7 @@
 | **[`git`](domains/git/)** | — | Git workflow — Conventional Commits (только subject, без AI-атрибуции), описания PR, semver-релизы с тегом и GitHub release. |
 | **[`content`](domains/content/)** | — | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста. |
 | **[`code`](domains/code/)** | — | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект. |
-| **[`core`](domains/core/)** | — | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения (`caveman`), project memory bank, дефрагментация memory bank. |
+| **[`core`](domains/core/)** | — | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения (`caveman`), project memory bank, дефрагментация memory bank, фактчекинг-поиск в вебе (`advanced-search`). |
 | **[`devops`](domains/devops/)** | — | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). |
 
 `obsidian` ставится только при заданном `OBSIDIAN_VAULT` — путь до корня хранилища (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, например в `~/.zshrc`). Без неё `install all` пропускает домен с предупреждением, явный `install domain obsidian` падает с ошибкой. Остальные домены ставятся всегда.
