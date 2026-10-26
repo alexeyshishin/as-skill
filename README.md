@@ -1,4 +1,8 @@
-# as-skill <img src="assets/claude-jumping.svg" width="44" height="40" alt="Animated Claude" align="right" />
+<p align="center">
+  <img src="assets/banner.svg" width="100%" alt="as-skill — Skills, agents &amp; hooks for Claude Code" />
+</p>
+
+# as-skill
 
 Репозиторий, в котором находятся шаблоны агентов, скиллов и правил. За основу взята мультидоменная архитектура:
 - **Obsidian**

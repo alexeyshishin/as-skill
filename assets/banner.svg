@@ -1,0 +1,88 @@
+<!--
+  Animated README header banner (1280x640); static twin: assets/social-preview.svg.
+  The pixel character is adapted from claude-jumping.svg in
+  https://github.com/shanraisshan/claude-code-best-practice
+  Used under the MIT License:
+
+  MIT License
+
+  Copyright (c) 2025-2026 Shayan Rais
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <rect width="1280" height="640" rx="16" fill="#1f2a37"/>
+
+  <style>
+    .claude-body, .shadow, .left-arm, .right-arm, .left-ear, .right-ear { transform-box: fill-box; }
+    .claude-body { animation: jump 0.5s ease-in-out infinite; transform-origin: center bottom; }
+    .shadow { animation: shadow-scale 0.5s ease-in-out infinite; transform-origin: center; }
+    .left-arm { animation: wave-left 0.5s ease-in-out infinite; transform-origin: right center; }
+    .right-arm { animation: wave-right 0.5s ease-in-out infinite; transform-origin: left center; }
+    .left-ear { animation: ear-bounce 0.5s ease-in-out infinite; transform-origin: center bottom; }
+    .right-ear { animation: ear-bounce 0.5s ease-in-out infinite 0.1s; transform-origin: center bottom; }
+    @keyframes jump {
+      0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); }
+      30% { transform: translateY(-16px) scaleY(1.1) scaleX(0.95); }
+      50% { transform: translateY(-18px) scaleY(1.05) scaleX(0.98); }
+      80% { transform: translateY(-5px) scaleY(0.95) scaleX(1.05); }
+    }
+    @keyframes shadow-scale {
+      0%, 100% { transform: scaleX(1); opacity: 0.3; }
+      50% { transform: scaleX(0.4); opacity: 0.1; }
+    }
+    @keyframes wave-left { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-25deg); } }
+    @keyframes wave-right { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(25deg); } }
+    @keyframes ear-bounce {
+      0%, 100% { transform: scaleY(1); }
+      40% { transform: scaleY(1.2); }
+      60% { transform: scaleY(0.85); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .claude-body, .shadow, .left-arm, .right-arm, .left-ear, .right-ear { animation: none; }
+    }
+  </style>
+
+
+  <g transform="translate(110 150) scale(3.6)">
+    <ellipse class="shadow" cx="50" cy="88" rx="16" ry="3.5" fill="#000"/>
+    <g class="claude-body">
+      <rect class="left-ear" x="22" y="10" width="8" height="14" fill="#E07C4C"/>
+      <rect class="right-ear" x="70" y="10" width="8" height="14" fill="#E07C4C"/>
+      <rect x="18" y="24" width="64" height="4" fill="#E07C4C"/>
+      <rect x="14" y="28" width="72" height="32" fill="#E07C4C"/>
+      <rect x="30" y="34" width="8" height="10" fill="#000"/>
+      <rect x="62" y="34" width="8" height="10" fill="#000"/>
+      <rect class="left-arm" x="2" y="36" width="12" height="8" fill="#E07C4C"/>
+      <rect class="right-arm" x="86" y="36" width="12" height="8" fill="#E07C4C"/>
+      <rect x="24" y="60" width="12" height="14" fill="#E07C4C"/>
+      <rect x="64" y="60" width="12" height="14" fill="#E07C4C"/>
+    </g>
+  </g>
+
+  <g font-family="'Roboto Slab', 'Zilla Slab', Rockwell, Georgia, serif" font-weight="700" fill="#ffffff">
+    <text x="530" y="250" font-size="104">as-skill</text>
+    <text x="530" y="330" font-size="44">Skills, agents &amp; hooks</text>
+    <text x="530" y="385" font-size="44">for Claude Code</text>
+  </g>
+
+  <text x="530" y="450" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="28" fill="#c9d1d9">Multi-domain harness, one installer.</text>
+
+  <text x="530" y="540" font-family="'Roboto Slab', Rockwell, Georgia, serif" font-weight="700" font-size="26" fill="#e3b341">obsidian / git / content / code / devops / core</text>
+</svg>
