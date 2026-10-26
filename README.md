@@ -54,9 +54,9 @@ echo "$OBSIDIAN_VAULT"
 
 ```
 as-skill/
-├── domains/                 ← Single Source of Truth
+├── domains/                 # Single Source of Truth
 │   ├── obsidian/
-│   │   ├── manifest.yaml    ← targets, requires_env
+│   │   ├── manifest.yaml    # targets, requires_env
 │   │   ├── rules/
 │   │   ├── skills/<имя>/{SKILL.md, README.md}
 │   │   └── agents/
