@@ -198,6 +198,13 @@ names verbatim. Order sections as below.
 файлов длиннее 500 строк. Grep — только для regex, строковых литералов, комментариев и
 не-кода, либо когда ast-index вернул пусто. После pull/rebase — `ast-index update`.
 
+## Поиск информации
+
+<только если установлен навык advanced-search>
+Любой поиск информации вне репозитория (документация, версии, API, ошибки, сравнение
+библиотек) — через навык `/advanced-search`, и в основном диалоге, и в субагентах. Голый
+`WebSearch` без этого навыка не используй.
+
 ## Git
 
 <ветки, формат коммитов, язык сообщений — но коммит делает пользователь (см. правило 1)>
@@ -225,6 +232,8 @@ names verbatim. Order sections as below.
   the table as written.
 - **Поиск по коду** goes in verbatim, only when the Step 2 dry-run printed all `present` or
   the user agreed to the Step 4 setup; otherwise drop it.
+- **Поиск информации** goes in verbatim, only when `.claude/skills/advanced-search/` exists
+  in the target project (the `core` domain provides it); otherwise drop it.
 - If `.memory-bank/` or the `memory-bank` skill is missing, still write the Memory Bank
   section (the agents' first write bootstraps the directory) and say in the Step 5 report
   that the `core` domain is what provides the skill.
