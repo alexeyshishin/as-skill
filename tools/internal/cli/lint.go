@@ -1,0 +1,95 @@
+package cli
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"claude-harness/tools/internal/registry"
+)
+
+var (
+	scriptRefRe   = regexp.MustCompile(`scripts/[A-Za-z0-9_.-]+\.(?:sh|py)`)
+	agentRefRe    = regexp.MustCompile(`\.claude/agents/([A-Za-z0-9_.-]+)\.md`)
+	registerHdrRe = regexp.MustCompile(`(?m)^#\s*register:\s*\S+`)
+)
+
+// lintHarness runs deterministic checks over <harnessRoot>/domains/*/ and
+// returns one finding per problem, sorted.
+func lintHarness(harnessRoot string) []string {
+	domainsDir := filepath.Join(harnessRoot, "domains")
+	var findings []string
+
+	agents := map[string]bool{}
+	agentFiles, _ := filepath.Glob(filepath.Join(domainsDir, "*", "agents", "*.md"))
+	for _, p := range agentFiles {
+		agents[strings.TrimSuffix(filepath.Base(p), ".md")] = true
+	}
+
+	skillMDs, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "SKILL.md"))
+	sort.Strings(skillMDs)
+	for _, path := range skillMDs {
+		skillDir := filepath.Dir(path)
+		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
+		if err != nil {
+			findings = append(findings, fmt.Sprintf("%s: %v", path, err))
+			continue
+		}
+		if !hasName {
+			findings = append(findings, fmt.Sprintf("%s: frontmatter missing \"name:\"", path))
+		} else if name != filepath.Base(skillDir) {
+			findings = append(findings, fmt.Sprintf("%s: frontmatter name %q does not match directory name %q", path, name, filepath.Base(skillDir)))
+		}
+		if !hasDescription {
+			findings = append(findings, fmt.Sprintf("%s: frontmatter missing \"description:\"", path))
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			findings = append(findings, fmt.Sprintf("%s: %v", path, err))
+			continue
+		}
+		body := string(data)
+		seen := map[string]bool{}
+		for _, ref := range scriptRefRe.FindAllString(body, -1) {
+			if seen[ref] {
+				continue
+			}
+			seen[ref] = true
+			if _, err := os.Stat(filepath.Join(skillDir, ref)); err != nil {
+				findings = append(findings, fmt.Sprintf("%s: references %s, not found under %s", path, ref, skillDir))
+			}
+		}
+		for _, m := range agentRefRe.FindAllStringSubmatch(body, -1) {
+			if seen[m[0]] {
+				continue
+			}
+			seen[m[0]] = true
+			if !agents[m[1]] {
+				findings = append(findings, fmt.Sprintf("%s: references %s, no domains/*/agents/%s.md", path, m[0], m[1]))
+			}
+		}
+	}
+
+	hooks, _ := filepath.Glob(filepath.Join(domainsDir, "*", "hooks", "*.sh"))
+	sort.Strings(hooks)
+	for _, p := range hooks {
+		if strings.HasSuffix(p, "-lib.sh") {
+			continue
+		}
+		data, err := os.ReadFile(p)
+		if err != nil {
+			findings = append(findings, fmt.Sprintf("%s: %v", p, err))
+			continue
+		}
+		if !registerHdrRe.Match(data) {
+			findings = append(findings, fmt.Sprintf("%s: missing \"# register: <Event>\" header", p))
+		}
+	}
+
+	sort.Strings(findings)
+	return findings
+}

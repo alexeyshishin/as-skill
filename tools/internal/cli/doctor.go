@@ -76,6 +76,11 @@ func runDoctor(args []string) error {
 		problems++
 	}
 
+	for _, f := range lintHarness(harnessRoot) {
+		fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
+		problems++
+	}
+
 	if problems > 0 {
 		return fmt.Errorf("doctor: %d finding(s)", problems)
 	}
