@@ -60,9 +60,25 @@ PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — Sessi
 Отказ, нет хуков или нет `jq` (хуки без него молча ничего не делают) — фраза про `test-gate`
 в разделе «Рабочий цикл» не пишется, итог попадает в отчёт.
 
+## ast-index
+
+Если в системе есть бинарь `ast-index` (структурный поиск по коду), `/code-init` с согласия
+пользователя настраивает его для проекта скриптом `scripts/setup-ast-index.sh [--project DIR]
+[--dry-run]` (идемпотентен, `$HOME` как проект отклоняет):
+
+- ставит плагин в project-scope: `claude plugin marketplace add defendend/Claude-ast-index-search --scope project`, затем `claude plugin install ast-index@ast-index-marketplace --scope project`;
+- добавляет `Bash(ast-index *)` в `permissions.allow` проектного `.claude/settings.json` (merge, без затирания, идемпотентно);
+- индекса нет — `ast-index rebuild` (может занять минуты), есть — `ast-index update`; затем `ast-index stats`;
+- в `CLAUDE.md` пишет раздел «Поиск по коду».
+
+Плагин приносит собственные хуки — харнесс своих хуков для ast-index не добавляет. Плагин ставится
+в проект, даже если он уже включён глобально (глобальный — лишний, упоминается в отчёте). Бинаря нет — всё пропускается, в отчёте подсказка
+`brew tap defendend/ast-index && brew install ast-index`. Глобальный `~/.claude/settings.json` не
+трогается.
+
 ## Границы
 
-Пишет `CLAUDE.md` и, с согласия, записи хуков в `.claude/settings.json` проекта — не делает
+Пишет `CLAUDE.md` и, с согласия, записи хуков и `permissions.allow` для ast-index в `.claude/settings.json` проекта — не делает
 `git add`/`git commit`. Существующий `CLAUDE.md` не
 перезаписывает без подтверждения (предлагает перезапись / слияние / отмену). Если рядом
 есть `AGENTS.md` — ссылается на него через `@AGENTS.md`, а не дублирует. Команды не
