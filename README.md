@@ -75,7 +75,7 @@ as-skill/
 ├── CLAUDE.md               # Точка входа для AI-агента
 ├── CONTRIBUTING.md         # Как править репозиторий: добавление доменов/скиллов
 ├── SECURITY.md             # Модель угроз, что делает инсталлятор с данными
-├── LICENCE
+├── LICENSE
 └── README.md
 ```
 
@@ -186,4 +186,4 @@ rm -rf .claude
 
 ## Лицензия
 
-MIT — см. [`LICENCE`](LICENCE).
+MIT — см. [`LICENSE`](LICENSE).
