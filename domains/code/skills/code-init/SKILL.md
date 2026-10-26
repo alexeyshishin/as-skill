@@ -1,6 +1,6 @@
 ---
 name: code-init
-description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (no git commit, always use /caveman, no code comments, answer in Russian). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the `test-gate` Stop hook in the project's `.claude/settings.json` (never the global `~/.claude/settings.json`). Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
+description: Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (no git commit, always use /caveman, no code comments, answer in Russian). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the installed code hooks (`test-gate`, `prettier-format`, `memory-bank-load`) in the project's `.claude/settings.json` via `scripts/register-hooks.sh` (never the global `~/.claude/settings.json`). Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
 ---
 
 # Skill: /code-init — generate a project CLAUDE.md
@@ -48,14 +48,15 @@ Gather only what you can observe — never invent commands:
   Layers with no installed agent (e.g. `ios/`, `android/`, `pubspec.yaml` — there is no
   `mobile` agent) are recorded as "no executor", not assigned to the nearest agent.
 - **Memory Bank**: whether `.memory-bank/index.md` and `.claude/skills/memory-bank` exist.
-- **test-gate hook** (only when the code harness is present): whether
-  `.claude/hooks/test-gate.sh` exists and is executable; whether a `hooks.Stop` entry with
-  `test-gate.sh` in its `command` is already in the project's `.claude/settings.json` or
-  `.claude/settings.local.json` (project root only — ignore `~/.claude/`); whether `jq` is
-  on PATH (the hook silently no-ops without it). Claude Code runs a hook only when a
-  `settings.json` lists it — the installer just places the file. File present and no entry
-  → ask the user once, before composing: register `test-gate` as a Stop hook in the
-  project's `.claude/settings.json`? The answer drives Step 3 and Step 4.
+- **Hooks** (only when the code harness is present): from the project root run
+  `bash .claude/skills/code-init/scripts/register-hooks.sh --dry-run`. It writes nothing and
+  prints one line per installed hook, `present` or `would-add`, then hook name and event
+  (`present` also covers an entry in `.claude/settings.local.json`). No output → no hooks
+  installed, nothing to register. Any `would-add` → ask the user once, before composing:
+  register those hooks in the project's `.claude/settings.json`? Claude Code runs a hook
+  only when a `settings.json` lists it — the installer just places the files. The answer
+  drives Step 3 and Step 4. Exit 1 (no `jq`, `settings.json` unparseable) → relay the
+  stderr message, treat as declined.
 
 If a category yields nothing, omit that section rather than writing a placeholder.
 
@@ -211,44 +212,42 @@ names verbatim. Order sections as below.
 - Note the latent tension between rules 2 and 4 in passing only if the user asks — the
   intent is caveman-style brevity expressed in Russian; don't bloat the file explaining it.
 
-## Step 4. Write CLAUDE.md and register test-gate
+## Step 4. Write CLAUDE.md and register hooks
 
 Write `CLAUDE.md` to the project root.
 
-Then register the hook — only if Step 2 found `.claude/hooks/test-gate.sh`, found no
-existing entry, and the user said yes. Otherwise skip this block.
+Then, only if Step 2 printed a `would-add` line and the user said yes, from the project
+root:
 
-The target is always the project's own `<project root>/.claude/settings.json` — the same
-directory `CLAUDE.md` goes to. Run the commands below from the project root; never touch
-`~/.claude/settings.json`.
+```bash
+bash .claude/skills/code-init/scripts/register-hooks.sh
+```
 
-1. `.claude/settings.json` missing → start from `{}`. Exists → check it parses
-   (`jq empty`); if it doesn't, stop, leave the file alone, tell the user.
-2. Append one entry to `hooks.Stop`, creating `hooks` / `Stop` if absent. Every other key
-   and every existing Stop entry stays untouched:
+The script does the whole job — no hand edits to `settings.json`, no re-reading it
+afterwards. It writes only the project's own `.claude/settings.json` (it refuses when the
+project is `$HOME`, so the global file is never touched), appends the missing entries under
+`hooks.<Event>` with the matcher each hook declares in its `# register: <Event> [<matcher>]`
+header line, skips hooks already listed in `settings.json` or `settings.local.json`, and
+leaves every other key and entry alone. Re-running is safe. A new hook dropped into
+`domains/code/hooks/` needs only that header line — nothing changes here.
 
-   ```bash
-   jq '.hooks.Stop = ((.hooks.Stop // []) + [{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/test-gate.sh"}]}])' \
-     .claude/settings.json > .claude/settings.json.tmp && mv .claude/settings.json.tmp .claude/settings.json
-   ```
-
-   No `jq` → make the same edit by hand with Edit/Write.
-3. Re-read the file: it parses, and exactly one `test-gate.sh` entry sits in `hooks.Stop`.
-   Re-running `/code-init` must not add a second one — Step 2 detection covers that.
+Its stdout (`added` / `present` per hook) is the registration result for Step 5. Exit 1 →
+nothing was written; relay the stderr message.
 
 ## Step 5. Report
 
 3–5 lines: path written, which sections were populated from detection, which executors
-`/code-build` will call and for which paths, whether `test-gate` is registered (done /
-already was / declined / hook file missing / no `jq` so it won't fire), and anything you
-couldn't detect (so the user can fill it in). Don't re-print the whole file.
+`/code-build` will call and for which paths, which hooks the script reported (`added` /
+`present`) or why none (declined / not installed / script error) — `test-gate` by name,
+since it decides the **Рабочий цикл** sentence — and anything you couldn't detect (so the
+user can fill it in). Don't re-print the whole file.
 
 ## What not to do
 
 - Don't run `git commit` or `git add` — this skill writes `CLAUDE.md` and, with consent,
-  one `hooks.Stop` entry in the project's `.claude/settings.json`; nothing else.
-- Don't register the hook without the user's yes, don't duplicate an existing entry, and
-  don't touch other keys in `settings.json`. Never write to the global
+  hook entries in the project's `.claude/settings.json` through the script; nothing else.
+- Don't register hooks without the user's yes, don't edit `settings.json` by hand (the
+  script is idempotent and validates it), and never write to the global
   `~/.claude/settings.json`.
 - Don't overwrite an existing `CLAUDE.md` without confirmation (Step 1).
 - Don't fabricate build/test commands you didn't find in the repo.

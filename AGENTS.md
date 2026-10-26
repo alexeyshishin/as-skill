@@ -92,7 +92,7 @@ instead skips it with a warning and installs the rest. Right now only
 `code` is a separate case: it's a portable dev-loop harness meant to be installed
 into *other* projects, not just this repo's own `.claude/`. From a clone of this
 repo, run `as-skill install domains code core --project <target> --copy` to
-place it (agents, skills, the `test-gate` hook, plus core skills) into a target
+place it (agents, skills, hooks, plus core skills) into a target
 project directory. `--copy` here is deliberate, not the default: the target is an
 unrelated project elsewhere on the user's machine, and coupling it to this
 checkout's lifetime via a symlink (the installer's default) would be wrong.
@@ -210,7 +210,7 @@ A dev-loop harness meant to be installed into other projects (see the install co
 
 **Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`, or its own `AGENTS.md` Executing table); they write code/config, not plans. (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
 
-**Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit).
+**Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit). `prettier-format.sh` — PostToolUse hook (`Edit|Write|MultiEdit|Bash`); runs prettier only once the test-gate condition is met (test command already ran, or project has none); no-op without a prettier config. Both source `test-gate-lib.sh`, the single definition of that condition. `memory-bank-load.sh` — SessionStart hook; injects `.memory-bank/index.md` (capped at 16 KB) plus the list of the other Memory Bank files into context, no-op without `jq` or an index. Hooks are copied by the installer, then registered in the project's `.claude/settings.json` by `/code-init` via `skills/code-init/scripts/register-hooks.sh` — each hook declares its own event/matcher in a `# register: <Event> [<matcher>]` header line, so a new hook needs no script change.
 
 ### domain: core
 

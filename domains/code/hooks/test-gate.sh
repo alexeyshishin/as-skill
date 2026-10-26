@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Stop hook — "test after every feature" enforcement.
+# register: Stop
 # If code files were edited this session and no test command was run, block the
 # agent from declaring done until it runs the project's tests and cites output.
 # Fail-open on any error. Loop-safe: caps at 2 blocks per git HEAD, then gives up.
