@@ -1,6 +1,6 @@
 # git-conventions
 
-Base conventions for all git operations in this repository. Skills in the `git` domain reference this file as `~/.claude/rules/git-conventions.md`.
+Base conventions for all git operations in this repository. Skills in the `git` domain reference this file as `git-conventions`.
 
 ## Conventional Commits
 

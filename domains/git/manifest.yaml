@@ -1,6 +1,6 @@
 # Git workflow domain — skills and rules for commits, PRs, and releases.
 # Requires nothing from the environment except a working git repo at skill-execution time.
-# rules, skills, agents go to ~/.claude/ — global, not project-bound.
+# rules, skills, agents go to the target project's platform dirs (see `as-skill install --platform`).
 
 name: git
 description: Git workflow — Conventional Commits, PR descriptions, semver releases.

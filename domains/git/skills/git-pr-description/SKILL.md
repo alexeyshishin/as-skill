@@ -12,7 +12,7 @@ description: >
 
 Goal: give the user a ready-made PR description in one step — analysis of the branch's commits and diff against the base branch.
 
-Before starting, read `~/.claude/rules/git-conventions.md` — the section on PR structure.
+Before starting, read `references/rules/git-conventions.md` — the section on PR structure.
 
 ## Step 1. Determine the base branch and the current one
 
