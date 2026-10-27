@@ -64,6 +64,8 @@ func runCheck(args []string) error {
 		}
 	}
 
+	failures = append(failures, lintHarness(harnessRoot).findings...)
+
 	if len(failures) > 0 {
 		for _, f := range failures {
 			fmt.Fprintln(os.Stderr, "as-skill: check:", f)

@@ -6,17 +6,29 @@ D .claude/skills
 D .claude/skills/advanced-search
 D .claude/skills/caveman
 D .claude/skills/code-build
+D .claude/skills/code-build/references
+D .claude/skills/code-build/references/agents
 D .claude/skills/code-debug
+D .claude/skills/code-debug/references
+D .claude/skills/code-debug/references/agents
 D .claude/skills/code-init
 D .claude/skills/code-init/scripts
 D .claude/skills/code-plan
+D .claude/skills/code-plan/references
+D .claude/skills/code-plan/references/agents
 D .claude/skills/code-review
+D .claude/skills/code-review/references
+D .claude/skills/code-review/references/agents
 D .claude/skills/git-conventional-commits
 D .claude/skills/git-conventional-commits/references
+D .claude/skills/git-conventional-commits/references/rules
 D .claude/skills/git-conventional-commits/scripts
 D .claude/skills/git-pr-description
+D .claude/skills/git-pr-description/references
+D .claude/skills/git-pr-description/references/rules
 D .claude/skills/git-release-tag
 D .claude/skills/git-release-tag/references
+D .claude/skills/git-release-tag/references/rules
 D .claude/skills/git-release-tag/scripts
 D .claude/skills/memory-bank
 D .claude/skills/memory-bank-defrag
@@ -40,25 +52,39 @@ F .claude/skills/caveman/README.md -rw-r--r--
 F .claude/skills/caveman/SKILL.md -rw-r--r--
 F .claude/skills/code-build/README.md -rw-r--r--
 F .claude/skills/code-build/SKILL.md -rw-r--r--
+F .claude/skills/code-build/references/agents/backend.md -rw-r--r--
+F .claude/skills/code-build/references/agents/devops.md -rw-r--r--
+F .claude/skills/code-build/references/agents/frontend.md -rw-r--r--
+F .claude/skills/code-build/references/delegation.md -rw-r--r--
 F .claude/skills/code-debug/README.md -rw-r--r--
 F .claude/skills/code-debug/SKILL.md -rw-r--r--
+F .claude/skills/code-debug/references/agents/code-debugger.md -rw-r--r--
+F .claude/skills/code-debug/references/delegation.md -rw-r--r--
 F .claude/skills/code-init/README.md -rw-r--r--
 F .claude/skills/code-init/SKILL.md -rw-r--r--
 F .claude/skills/code-init/scripts/register-hooks.sh -rwxr-xr-x
 F .claude/skills/code-init/scripts/setup-ast-index.sh -rwxr-xr-x
 F .claude/skills/code-plan/README.md -rw-r--r--
 F .claude/skills/code-plan/SKILL.md -rw-r--r--
+F .claude/skills/code-plan/references/agents/code-planner.md -rw-r--r--
+F .claude/skills/code-plan/references/agents/code-skeptic.md -rw-r--r--
+F .claude/skills/code-plan/references/delegation.md -rw-r--r--
 F .claude/skills/code-review/README.md -rw-r--r--
 F .claude/skills/code-review/SKILL.md -rw-r--r--
+F .claude/skills/code-review/references/agents/code-reviewer.md -rw-r--r--
+F .claude/skills/code-review/references/delegation.md -rw-r--r--
 F .claude/skills/git-conventional-commits/README.md -rw-r--r--
 F .claude/skills/git-conventional-commits/SKILL.md -rw-r--r--
 F .claude/skills/git-conventional-commits/references/commit-examples.md -rw-r--r--
+F .claude/skills/git-conventional-commits/references/rules/git-conventions.md -rw-r--r--
 F .claude/skills/git-conventional-commits/scripts/lint-commit-msg.py -rwxr-xr-x
 F .claude/skills/git-pr-description/README.md -rw-r--r--
 F .claude/skills/git-pr-description/SKILL.md -rw-r--r--
+F .claude/skills/git-pr-description/references/rules/git-conventions.md -rw-r--r--
 F .claude/skills/git-release-tag/README.md -rw-r--r--
 F .claude/skills/git-release-tag/SKILL.md -rw-r--r--
 F .claude/skills/git-release-tag/references/release-notes.md -rw-r--r--
+F .claude/skills/git-release-tag/references/rules/git-conventions.md -rw-r--r--
 F .claude/skills/git-release-tag/scripts/release.py -rwxr-xr-x
 F .claude/skills/memory-bank-defrag/README.md -rw-r--r--
 F .claude/skills/memory-bank-defrag/SKILL.md -rw-r--r--

@@ -9,15 +9,16 @@ import (
 
 func TestLintHarness(t *testing.T) {
 	good := "---\nname: s1\ndescription: d\n---\n"
+	agd := "---\nname: ag\ndescription: d\n---\n"
 	tests := []struct {
 		name  string
 		files map[string]string
 		want  []string
 	}{
 		{"clean", map[string]string{
-			"d/skills/s1/SKILL.md":      good + "run scripts/go.sh and .claude/agents/ag.md",
+			"d/skills/s1/SKILL.md":      good + "run scripts/go.sh and .claude/agents/ag.md <!-- claude-path-ok -->",
 			"d/skills/s1/scripts/go.sh": "",
-			"d/agents/ag.md":            good,
+			"d/agents/ag.md":            agd,
 			"d/hooks/h.sh":              "#!/bin/sh\n# register: Stop\n",
 			"d/hooks/test-gate-lib.sh":  "",
 		}, nil},
@@ -31,11 +32,11 @@ func TestLintHarness(t *testing.T) {
 			"d/skills/s1/SKILL.md": good + "scripts/nope.py scripts/nope.py",
 		}, []string{"references scripts/nope.py"}},
 		{"missing agent", map[string]string{
-			"d/skills/s1/SKILL.md": good + ".claude/agents/ghost.md",
+			"d/skills/s1/SKILL.md": good + ".claude/agents/ghost.md <!-- claude-path-ok -->",
 		}, []string{"no domains/*/agents/ghost.md"}},
 		{"agent in other domain ok", map[string]string{
-			"d/skills/s1/SKILL.md": good + ".claude/agents/ag.md",
-			"e/agents/ag.md":       good,
+			"d/skills/s1/SKILL.md": good + ".claude/agents/ag.md <!-- claude-path-ok -->",
+			"e/agents/ag.md":       agd,
 		}, nil},
 		{"agent description with colon", map[string]string{
 			"d/agents/ag.md": "---\nname: ag\ndescription: Scope: a/**\n---\n",
@@ -49,6 +50,27 @@ func TestLintHarness(t *testing.T) {
 		{"agent without frontmatter", map[string]string{
 			"d/agents/ag.md": "# no fm\n",
 		}, []string{"missing frontmatter"}},
+		{"agent name differs from filename", map[string]string{
+			"d/agents/ag.md": "---\nname: other\ndescription: d\n---\n",
+		}, []string{`does not match filename "ag"`}},
+		{"claude-only path in skill", map[string]string{
+			"d/skills/s1/SKILL.md": good + "use subagent_type here\n",
+		}, []string{`Claude-only reference "subagent_type"`}},
+		{"claude-only path in agent", map[string]string{
+			"d/agents/ag.md": agd + "read ~/.claude/rules/x.md\n",
+		}, []string{"Claude-only reference"}},
+		{"claude-path marker ok", map[string]string{
+			"d/skills/s1/SKILL.md":  good + "dirs .claude/agents <!-- claude-path-ok -->\nsee .claude/settings.json and .claude/skills-lock.json\n",
+			"d/skills/s1/README.md": ".claude/rules\n",
+			"d/agents/ag.md":        agd,
+		}, nil},
+		{"bare agent suffix in agent", map[string]string{
+			"d/agents/d-ag.md": "---\nname: d-ag\ndescription: d\n---\nuse `ag`\n",
+		}, []string{"bare agent name `ag`"}},
+		{"bare suffix equal to other stem ok", map[string]string{
+			"d/agents/d-ag.md": "---\nname: d-ag\ndescription: d\n---\nuse `ag`\n",
+			"d/agents/ag.md":   agd,
+		}, nil},
 		{"hook without register", map[string]string{
 			"d/hooks/h.sh": "#!/bin/sh\n",
 		}, []string{`missing "# register: <Event>"`}},
@@ -79,5 +101,30 @@ func TestLintHarness(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestLintReferenceSymlinks(t *testing.T) {
+	good := "---\nname: s1\ndescription: d\n---\n"
+	root := t.TempDir()
+	dom := filepath.Join(root, "domains", "d")
+	if err := os.MkdirAll(filepath.Join(dom, "skills", "s1", "references"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	os.MkdirAll(filepath.Join(dom, "shared"), 0o755)
+	os.WriteFile(filepath.Join(dom, "skills", "s1", "SKILL.md"), []byte(good), 0o644)
+	os.WriteFile(filepath.Join(dom, "shared", "ok.md"), []byte("x"), 0o644)
+	os.WriteFile(filepath.Join(root, "outside.md"), []byte("x"), 0o644)
+	refs := filepath.Join(dom, "skills", "s1", "references")
+	os.Symlink("../../../shared/ok.md", filepath.Join(refs, "ok.md"))
+	os.Symlink("../../../shared/nope.md", filepath.Join(refs, "dangling.md"))
+	os.Symlink("../../../../../outside.md", filepath.Join(refs, "escape.md"))
+	got := lintHarness(root).findings
+	if len(got) != 2 {
+		t.Fatalf("got %q", got)
+	}
+	joined := strings.Join(got, "\n")
+	if !strings.Contains(joined, "dangling.md: dangling") || !strings.Contains(joined, "escape.md: symlink escapes") {
+		t.Fatalf("got %q", got)
 	}
 }

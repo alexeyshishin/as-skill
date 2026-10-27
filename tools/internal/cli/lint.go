@@ -17,7 +17,84 @@ var (
 	scriptRefRe   = regexp.MustCompile(`scripts/[A-Za-z0-9_.-]+\.(?:sh|py)`)
 	agentRefRe    = regexp.MustCompile(`\.claude/agents/([A-Za-z0-9_.-]+)\.md`)
 	registerHdrRe = regexp.MustCompile(`(?m)^#\s*register:\s*\S+`)
+	claudePathRe  = regexp.MustCompile(`subagent_type|AskUserQuestion|~/\.claude/rules|\.claude/rules|\.claude/agents`)
 )
+
+const claudePathOK = "<!-- claude-path-ok -->"
+
+func claudePathIssues(path, body string) []string {
+	var out []string
+	for i, line := range strings.Split(body, "\n") {
+		if strings.HasSuffix(strings.TrimRight(line, " \t\r"), claudePathOK) {
+			continue
+		}
+		if m := claudePathRe.FindString(line); m != "" {
+			out = append(out, fmt.Sprintf("%s: line %d: Claude-only reference %q without %s", path, i+1, m, claudePathOK))
+		}
+	}
+	return out
+}
+
+var commitTypes = map[string]bool{"feat": true, "fix": true, "refactor": true, "perf": true, "docs": true, "test": true, "build": true, "ci": true, "chore": true, "revert": true}
+
+func bareAgentRefIssues(path, body string, stems map[string]bool) []string {
+	var out []string
+	seen := map[string]bool{}
+	for stem := range stems {
+		_, suffix, ok := strings.Cut(stem, "-")
+		if !ok || suffix == "" || stems[suffix] || commitTypes[suffix] || seen[suffix] {
+			continue
+		}
+		seen[suffix] = true
+		if strings.Contains(body, "`"+suffix+"`") {
+			out = append(out, fmt.Sprintf("%s: bare agent name `%s`; use `%s`", path, suffix, stem))
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+func within(root, p string) bool {
+	r, err := filepath.Rel(root, p)
+	return err == nil && r != ".." && !strings.HasPrefix(r, ".."+string(filepath.Separator))
+}
+
+func referenceLinkIssues(domainsDir string) []string {
+	var out []string
+	links, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "references"))
+	for _, refDir := range links {
+		domainDir := filepath.Dir(filepath.Dir(filepath.Dir(refDir)))
+		allowed := []string{domainDir}
+		for i, a := range allowed {
+			if r, err := filepath.EvalSymlinks(a); err == nil {
+				allowed[i] = r
+			}
+		}
+		_ = filepath.WalkDir(refDir, func(p string, d os.DirEntry, err error) error {
+			if err != nil || d.Type()&os.ModeSymlink == 0 {
+				return nil
+			}
+			real, err := filepath.EvalSymlinks(p)
+			if err != nil {
+				out = append(out, fmt.Sprintf("%s: dangling symlink", p))
+				return nil
+			}
+			if st, err := os.Stat(real); err != nil || !st.Mode().IsRegular() {
+				out = append(out, fmt.Sprintf("%s: symlink does not resolve to a regular file", p))
+				return nil
+			}
+			ok := false
+			for _, a := range allowed {
+				ok = ok || within(a, real)
+			}
+			if !ok {
+				out = append(out, fmt.Sprintf("%s: symlink escapes its domain (resolves to %s)", p, real))
+			}
+			return nil
+		})
+	}
+	return out
+}
 
 func plainScalarIssues(path, body string) []string {
 	if !strings.HasPrefix(body, "---\n") {
@@ -70,6 +147,13 @@ func lintHarness(harnessRoot string) lintResult {
 			continue
 		}
 		findings = append(findings, plainScalarIssues(p, string(data))...)
+		findings = append(findings, claudePathIssues(p, string(data))...)
+		findings = append(findings, bareAgentRefIssues(p, string(data), agents)...)
+		if doc, err := frontmatter.Parse(data); err == nil {
+			if v, ok := doc.String("name"); ok && v != strings.TrimSuffix(filepath.Base(p), ".md") {
+				findings = append(findings, fmt.Sprintf("%s: agent name %q does not match filename %q", p, v, strings.TrimSuffix(filepath.Base(p), ".md")))
+			}
+		}
 		name := strings.TrimSuffix(filepath.Base(p), ".md")
 		if doc, err := frontmatter.Parse(data); err == nil {
 			if v, ok := doc.String("name"); ok && v != "" {
@@ -122,6 +206,8 @@ func lintHarness(harnessRoot string) lintResult {
 		}
 		body := string(data)
 		findings = append(findings, plainScalarIssues(path, body)...)
+		findings = append(findings, claudePathIssues(path, body)...)
+		findings = append(findings, bareAgentRefIssues(path, body, agents)...)
 		seen := map[string]bool{}
 		for _, ref := range scriptRefRe.FindAllString(body, -1) {
 			if seen[ref] {
@@ -142,6 +228,8 @@ func lintHarness(harnessRoot string) lintResult {
 			}
 		}
 	}
+
+	findings = append(findings, referenceLinkIssues(domainsDir)...)
 
 	hooks, _ := filepath.Glob(filepath.Join(domainsDir, "*", "hooks", "*.sh"))
 	sort.Strings(hooks)
