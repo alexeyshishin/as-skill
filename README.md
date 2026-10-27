@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/banner.svg" width="100%" alt="as-skill — Skills, agents &amp; hooks for Claude Code" />
+  <img src="assets/banner.svg" width="100%" alt="as-skill — Skills, agents &amp; hooks for AI coding agents" />
 </p>
 
 # as-skill
 
-Репозиторий шаблонов агентов, скиллов, правил и хуков для Claude Code, разложенных по доменам.
+Репозиторий шаблонов агентов, скиллов, правил и хуков для AI-агентов для кода — Claude Code, Codex, Cursor, OpenCode, — разложенных по доменам. Платформа выбирается флагом `--platform` (по умолчанию `claude`), см. [Платформы](#платформы).
 
 ## Оглавление
 
@@ -12,6 +12,7 @@
 - [Структура репозитория](#структура-репозитория)
 - [Хуки](#хуки)
 - [Установка (CLI `as-skill`)](#установка-cli-as-skill)
+- [Платформы](#платформы)
 - [Контрибьютинг и безопасность](#контрибьютинг-и-безопасность)
 - [Лицензия](#лицензия)
 
@@ -80,7 +81,7 @@ source install.sh   # соберёт as-skill и добавит в PATH (тек�
 
 Без скрипта: `go build -o as-skill ./tools`.
 
-Два режима установки в `.claude/` целевого проекта:
+Два режима установки в каталоги выбранной платформы целевого проекта (по умолчанию `.claude/`, остальные — в разделе [Платформы](#платформы)):
 
 - **symlink** (по умолчанию) — правки в `domains/` видны в проекте сразу, без переустановки. Так живёт корневой `.claude/` этого репозитория — см. [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **`--copy`** — статический снэпшот, не зависит от этой копии репозитория. Так ставится `code` в чужой проект.
@@ -88,6 +89,7 @@ source install.sh   # соберёт as-skill и добавит в PATH (тек�
 ```bash
 as-skill install all                                          # все домены, symlink
 as-skill install domains code core --project <path> --copy   # code в чужой проект
+as-skill install domains git core --project <path> --platform codex,cursor   # другие платформы
 as-skill status                                               # что стоит и в каком состоянии (OK/MISSING/BROKEN)
 ```
 

@@ -37,7 +37,7 @@ func Run(args []string) error {
 }
 
 func printUsage(w io.Writer) {
-	fmt.Fprint(w, `as-skill — install claude-harness domains and skills into a project's .claude/
+	fmt.Fprint(w, `as-skill — install claude-harness domains and skills into a project's platform dirs (default .claude/)
 
 Usage:
   as-skill install domain  <name>              symlink one domain (default mode)

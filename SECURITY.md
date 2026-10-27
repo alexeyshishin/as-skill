@@ -4,7 +4,7 @@
 
 `as-skill` — это markdown-файлы (промпты для AI-агента), Go-инсталлятор (`tools/`, собирается в бинарь `as-skill`) и немного исполняемого кода рядом со скиллами:
 
-- **Хуки** — запускаются Claude Code сами, по событию сессии. Ставятся только вместе со своим доменом и работают, только если зарегистрированы в `.claude/settings.json` проекта. Все fail-open: любая внутренняя ошибка — тихий выход 0.
+- **Хуки** — запускаются агентом (Claude Code, Codex, Cursor) сами, по событию сессии. Ставятся только вместе со своим доменом и работают, только если зарегистрированы в `.claude/settings.json`, `.codex/hooks.json` или `.cursor/hooks.json` проекта. Codex дополнительно требует подтвердить хуки через `/hooks`. Адаптеры для Codex и Cursor написаны по документации и не проверены на реальных CLI. Все fail-open: любая внутренняя ошибка — тихий выход 0.
     - `code`: `test-gate.sh` (Stop — может намеренно заблокировать завершение задачи, не больше 2 раз на коммит), `prettier-format.sh` (PostToolUse — правит форматирование файлов проекта).
     - `core`: `memory-bank-load.sh` (SessionStart — читает `.memory-bank/`), `memory-bank-logger.sh` (SessionEnd — см. «Сеть» ниже).
 - **Скрипты скиллов** — запускает модель по инструкции из `SKILL.md`, в рамках обычных разрешений сессии: `git-conventional-commits/scripts/lint-commit-msg.py`, `git-release-tag/scripts/release.py`, `content-humanizer/scripts/`, `code-init/scripts/register-hooks.sh`.
@@ -21,7 +21,7 @@
 
 Каждая поставленная единица (домен + вид + имя) записывается в `<project>/.claude/skills-lock.json` — по этой записи `as-skill status`/`doctor` отличают своё от чужого и режим установки, а `uninstall` сносит только то, что сам же поставил. Если путь назначения уже существует и не отслеживается — `install` откажется писать без `--force`.
 
-`install` хуки только кладёт на диск, но не включает. Регистрирует их в `<project>/.claude/settings.json` скилл `/code-init` через `register-hooks.sh` — и только с согласия пользователя. `uninstall` хуков снимает из `settings.json` только записи, указывающие на удалённые им файлы; остальные ключи и чужие хуки не трогает. `settings.local.json` и глобальный `~/.claude/settings.json` не трогаются никогда.
+`install` хуки только кладёт на диск, но не включает. Регистрирует их в `<project>/.claude/settings.json` скилл `/code-init` через `register-hooks.sh` — и только с согласия пользователя; для Codex и Cursor — команда `as-skill hooks enable --platform codex|cursor`, которая пишет в `<project>/.codex/hooks.json` или `<project>/.cursor/hooks.json`. `uninstall` и `hooks disable` снимают оттуда только записи, указывающие на удалённые файлы; остальные ключи и чужие хуки не трогают, невалидный JSON не перезаписывается. `settings.local.json` и глобальный `~/.claude/settings.json` не трогаются никогда; глобальные каталоги других платформ (`~/.codex`, `~/.cursor`) тоже.
 
 Ни инсталлятор, ни сами скиллы не требуют root и не устанавливают пакеты.
 
