@@ -55,7 +55,7 @@ Usage:
   as-skill list [domains|skills|platforms]      show what's installable; `+"`platforms`"+`
                                                 prints the platform x kind matrix
                                                 (location, mode, verified date)
-  as-skill hooks enable|disable <name|all>      register/unregister placed hook files
+  as-skill hooks enable|disable <name|all>      register/unregister placed hook files (codex/cursor: UNVERIFIED)
                 --platform P [--project PATH]   in the platform's hook config
                 [--dry-run]                     (claude, codex, cursor; opencode: unsupported)
   as-skill status [--project PATH]              list lockfile entries: mode,

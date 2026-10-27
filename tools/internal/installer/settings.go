@@ -453,10 +453,14 @@ func addRegistrations(data []byte, p platform.ID, regs []hookReg, also []byte) (
 			cmd := quote(hookCommand(p, r.Name))
 			var entry string
 			if spec.Hooks.Schema == platform.HooksCursor {
-				entry = `{"command":` + string(cmd) + `}`
+				extra := ""
+				if ev == "stop" {
+					extra = `,"loop_limit":2`
+				}
+				entry = `{"command":` + string(cmd) + extra + `}`
 			} else {
 				m := ""
-				if r.Matcher != "" {
+				if r.Matcher != "" && p == platform.Claude {
 					m = `"matcher":` + string(quote(r.Matcher)) + `,`
 				}
 				entry = `{` + m + `"hooks":[{"type":"command","command":` + string(cmd) + `}]}`
@@ -540,11 +544,17 @@ func (in *Installer) EnableHooks(p platform.ID, names []string) error {
 	case platform.HooksNone:
 		fmt.Printf("hooks unsupported on %s\n", p)
 		return nil
-	case platform.HooksCodex, platform.HooksCursor:
-		fmt.Printf("hook adapters for %s land in Phase 3\n", p)
-		return nil
 	}
-	return in.enableHooks(p, names)
+	if err := in.enableHooks(p, names); err != nil {
+		return err
+	}
+	switch p {
+	case platform.Codex:
+		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
+	case platform.Cursor:
+		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).")
+	}
+	return nil
 }
 
 func (in *Installer) enableHooks(p platform.ID, names []string) error {

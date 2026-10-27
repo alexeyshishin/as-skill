@@ -366,10 +366,13 @@ func TestEnableDisableHooksCodexAndCursor(t *testing.T) {
 		t.Fatal(err)
 	}
 	cx := readStr(t, filepath.Join(project, ".codex", "hooks.json"))
-	for _, w := range []string{`"Stop"`, `"PostToolUse"`, `"matcher": "Edit|Bash"`, `./.codex/hooks/gate.sh`} {
+	for _, w := range []string{`"Stop"`, `"PostToolUse"`, `./.codex/hooks/gate.sh`} {
 		if !strings.Contains(cx, w) {
 			t.Errorf("codex hooks.json missing %s:\n%s", w, cx)
 		}
+	}
+	if strings.Contains(cx, "matcher") {
+		t.Errorf("codex must have no matcher:\n%s", cx)
 	}
 	if err := in.enableHooks(platform.Cursor, []string{"gate"}); err != nil {
 		t.Fatal(err)
@@ -378,7 +381,7 @@ func TestEnableDisableHooksCodexAndCursor(t *testing.T) {
 		t.Fatal(err)
 	}
 	cu := readStr(t, filepath.Join(project, ".cursor", "hooks.json"))
-	for _, w := range []string{`"version": 1`, `"stop"`, `"afterFileEdit"`, `"afterShellExecution"`, `./.cursor/hooks/fmt.sh`} {
+	for _, w := range []string{`"version": 1`, `"stop"`, `"loop_limit": 2`, `"afterFileEdit"`, `"afterShellExecution"`, `./.cursor/hooks/fmt.sh`} {
 		if !strings.Contains(cu, w) {
 			t.Errorf("cursor hooks.json missing %s:\n%s", w, cu)
 		}
@@ -645,7 +648,7 @@ func TestCapabilityGapLines(t *testing.T) {
 	}
 }
 
-func TestEnableHooksPhase3RefusalAndPlatformsHeader(t *testing.T) {
+func TestEnableHooksCodexCursorPublicAndPlatformsHeader(t *testing.T) {
 	reg, root := platHarness(t)
 	write(t, filepath.Join(root, "domains", "alpha", "hooks", "only-claude.sh"), "#!/bin/sh\n# register: SessionEnd\n# platforms: claude\n", 0o755)
 	project := t.TempDir()
@@ -653,16 +656,29 @@ func TestEnableHooksPhase3RefusalAndPlatformsHeader(t *testing.T) {
 	if err := in.InstallDomain(reg, "alpha", true); err != nil {
 		t.Fatal(err)
 	}
-	for _, p := range []platform.ID{platform.Codex, platform.Cursor} {
-		out, err := captureStdout(t, func() error { return in.EnableHooks(p, []string{"all"}) })
-		if err != nil || !strings.Contains(out, "hook adapters for "+string(p)+" land in Phase 3") {
-			t.Fatalf("%s: %v %q", p, err, out)
-		}
+	out, err := captureStdout(t, func() error { return in.EnableHooks(platform.Codex, []string{"all"}) })
+	if err != nil || !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "/hooks") {
+		t.Fatalf("codex: %v %q", err, out)
 	}
-	if exists(filepath.Join(project, ".codex", "hooks.json")) || exists(filepath.Join(project, ".cursor", "hooks.json")) {
-		t.Fatal("config written")
+	cx := readStr(t, filepath.Join(project, ".codex", "hooks.json"))
+	if strings.Contains(cx, "only-claude") || strings.Contains(cx, "matcher") || strings.Contains(cx, "SessionEnd") {
+		t.Fatalf("codex config:\n%s", cx)
 	}
-	out, err := captureStdout(t, func() error { return in.EnableHooks(platform.OpenCode, []string{"all"}) })
+	out, err = captureStdout(t, func() error { return in.EnableHooks(platform.Cursor, []string{"all"}) })
+	if err != nil || !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "cap 2") {
+		t.Fatalf("cursor: %v %q", err, out)
+	}
+	cu := readStr(t, filepath.Join(project, ".cursor", "hooks.json"))
+	if strings.Count(cu, `"loop_limit": 2`) != 1 || strings.Contains(cu, "only-claude") {
+		t.Fatalf("cursor config:\n%s", cu)
+	}
+	if err := in.DisableHooks(platform.Cursor, []string{"gate"}); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(readStr(t, filepath.Join(project, ".cursor", "hooks.json")), "loop_limit") {
+		t.Fatal("loop_limit entry survived disable")
+	}
+	out, err = captureStdout(t, func() error { return in.EnableHooks(platform.OpenCode, []string{"all"}) })
 	if err != nil || !strings.Contains(out, "unsupported") {
 		t.Fatalf("opencode: %v %q", err, out)
 	}

@@ -2,11 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
@@ -107,6 +110,10 @@ func runDoctor(args []string) error {
 		fmt.Printf("as-skill: doctor: warning: %-15s %s\n", health.Unverified, u)
 	}
 
+	if codexHooksNeedTrust(projectRoot, lock) {
+		fmt.Printf("as-skill: doctor: warning: %-15s codex hooks need trust: review in /hooks\n", "HOOKS-TRUST")
+	}
+
 	lint := lintHarness(harnessRoot)
 	for _, f := range lint.findings {
 		fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
@@ -119,4 +126,18 @@ func runDoctor(args []string) error {
 		return fmt.Errorf("doctor: %d failed", failed)
 	}
 	return nil
+}
+
+func codexHooksNeedTrust(projectRoot string, lock *lockfile.Lockfile) bool {
+	has := false
+	for _, p := range health.LockPlatforms(lock) {
+		if p == platform.Codex {
+			has = true
+		}
+	}
+	if !has {
+		return false
+	}
+	data, err := os.ReadFile(filepath.Join(projectRoot, ".codex", "hooks.json"))
+	return err == nil && strings.Contains(string(data), "./.codex/hooks/")
 }

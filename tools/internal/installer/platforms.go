@@ -759,7 +759,7 @@ func (in *Installer) placeHooks(domain, srcDir string, p platform.Platform) erro
 			transfer.WarnHooksNotExecutable(srcDir)
 		}
 	}
-	fmt.Fprintf(os.Stderr, "as-skill: warning: hooks on %s: files placed; adapters land in Phase 3 — not registered\n", p.ID)
+	fmt.Fprintf(os.Stderr, "as-skill: warning: hooks on %s: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)\n", p.ID)
 	return nil
 }
 

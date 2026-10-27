@@ -76,7 +76,7 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 	out, err := capture(t, func() error {
 		return Run([]string{"hooks", "enable", "gate", "--platform", "codex", "--project", project, "--dry-run"})
 	})
-	if err != nil || !strings.Contains(out, "land in Phase 3") {
+	if err != nil || !strings.Contains(out, "would register") {
 		t.Fatalf("dry-run: %v\n%s", err, out)
 	}
 	if _, err := os.Stat(filepath.Join(project, ".codex", "hooks.json")); err == nil {
@@ -85,11 +85,11 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 	out, err = capture(t, func() error {
 		return Run([]string{"hooks", "enable", "all", "--platform", "codex", "--project", project})
 	})
-	if err != nil || !strings.Contains(out, "hook adapters for codex land in Phase 3") {
+	if err != nil || !strings.Contains(out, "UNVERIFIED") {
 		t.Fatalf("enable: %v\n%s", err, out)
 	}
-	if _, err := os.Stat(filepath.Join(project, ".codex", "hooks.json")); err == nil {
-		t.Fatal("codex enable wrote hooks.json")
+	if _, err := os.Stat(filepath.Join(project, ".codex", "hooks.json")); err != nil {
+		t.Fatal("codex enable did not write hooks.json")
 	}
 	out, err = capture(t, func() error {
 		return Run([]string{"hooks", "enable", "all", "--platform", "opencode", "--project", project})
@@ -216,5 +216,26 @@ func TestDoctorUnverifiedFiresForNonClaude(t *testing.T) {
 	out, _ = doctor(t, harness, claude)
 	if strings.Contains(out, "UNVERIFIED") {
 		t.Fatalf("claude must be verified:\n%s", out)
+	}
+}
+
+func TestDoctorCodexHooksTrustWarning(t *testing.T) {
+	harness, _ := agentHarness(t)
+	project := t.TempDir()
+	installPlatforms(t, harness, project, "--platform", "codex", "--copy")
+	out, _ := doctor(t, harness, project)
+	if strings.Contains(out, "need trust") {
+		t.Fatalf("unexpected trust warning:\n%s", out)
+	}
+	cfg := filepath.Join(project, ".codex", "hooks.json")
+	if err := os.WriteFile(cfg, []byte(`{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"./.codex/hooks/gate.sh"}]}]}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := doctor(t, harness, project)
+	if err != nil {
+		t.Fatalf("warning must not fail doctor: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "codex hooks need trust: review in /hooks") {
+		t.Fatalf("no trust warning:\n%s", out)
 	}
 }
