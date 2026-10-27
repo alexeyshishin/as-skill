@@ -100,9 +100,11 @@ project directory. `--copy` here is deliberate, not the default: the target is a
 unrelated project elsewhere on the user's machine, and coupling it to this
 checkout's lifetime via a symlink (the installer's default) would be wrong.
 
+`--platform claude|codex|cursor|opencode[,…]|all` picks target hosts (default `claude`, byte-identical to before). Skills are placed once per location by set cover; agents are symlinked on claude and rendered natively for the others; rules go via `.agents/rules` plus an `AGENTS.md` block, or a Cursor `.mdc` stub. Hook adapters for codex/cursor are Phase 3; opencode hooks are unsupported. claude+codex together warns about duplicate skills.
+
 ## What to do before your first action
 
-1. **Identify which domain the task belongs to.** Skill/rule names carry the domain prefix (`obsidian-ingest`, `git-conventional-commits`, `content-tg-post`, `code-plan`); `devops` agent files do too (`devops-sre.md`), though a few agents' internal `name:` is shorter (`sre`, `architect`, `ci-agent`) — go by the file path when unsure.
+1. **Identify which domain the task belongs to.** Skill/rule names carry the domain prefix (`obsidian-ingest`, `git-conventional-commits`, `content-tg-post`, `code-plan`); `devops` agent files do too (`devops-sre.md`), each agent's `name:` equals its filename stem.
 2. **Read your domain's rules.** Skills and agents name which rules they need at the top of the file. `code` and `devops` currently have none — for `code`, read `.memory-bank/index.md` and the relevant `swarm-report/` file instead.
 3. **If the task spans multiple domains** (e.g. write up an incident and publish it as a Telegram post), chain skills from each domain in sequence, respecting each one's rules.
 4. **If the task fits neither a skill nor an agent**, act manually on the general principles below. Afterward, ask the user whether it's worth turning into a skill.
@@ -130,9 +132,9 @@ Not a single blanket rule — it's domain-dependent:
 ### When a domain overlaps with another
 
 Examples:
-- **Incident root-cause (devops's `sre`/`diagnostics` agents)** → write it up and ingest it into the **knowledge base (obsidian)** via `obsidian-ingest`.
+- **Incident root-cause (devops's `devops-sre`/`devops-diagnostic` agents)** → write it up and ingest it into the **knowledge base (obsidian)** via `obsidian-ingest`.
 - **A PR or release (`git-flow`)** → can become a **Telegram post (`content-tg-post`)** announcing it.
-- **A tutorial (`content-documentation`)** → may embed runbook logic reviewed by devops's `sre` Consilium agent.
+- **A tutorial (`content-documentation`)** → may embed runbook logic reviewed by devops's `devops-sre` Consilium agent.
 - **An article (`content-article-draft`)** → can expand into a full package via **`content-factory`**.
 
 In these cases follow both domains' rules — they complement, not contradict, each other.
@@ -188,19 +190,19 @@ In these cases follow both domains' rules — they complement, not contradict, e
 ### domain: devops
 
 No `rules/` or `skills/` yet — agents only. Two roles:
-- **Consilium** (`architect`, `security`, `sre`, `diagnostics`) — advisory, read-only, never touches code or configs
-- **Executing** (`ci-agent`, `helm-agent`, `k8s-agent`) — writes pipelines, charts, and manifests within its own file scope
+- **Consilium** (`devops-architecture`, `devops-security`, `devops-sre`, `devops-diagnostic`) — advisory, read-only, never touches code or configs
+- **Executing** (`devops-ci`, `devops-helm`, `devops-k8s`) — writes pipelines, charts, and manifests within its own file scope
 
 GitOps rule: production changes go through ArgoCD only.
 
 **Agents:**
-- `devops-architecture` (`architect`) — platform/service topology, K8s workload design, IaC structure
-- `devops-security` (`security`) — RBAC, network policies, secrets, container/supply-chain security
-- `devops-sre` (`sre`) — SLOs/error budgets, observability, alerting, runbooks, postmortems
-- `devops-diagnostic` (`diagnostics`) — root-cause analysis: crashes, OOMKills, network, ArgoCD sync, pipeline failures
-- `devops-ci` (`ci-agent`) — GitLab CI/CD pipelines and shared templates
-- `devops-helm` (`helm-agent`) — Helm charts (`Chart.yaml`, `templates/`, `values.yaml`)
-- `devops-k8s` (`k8s-agent`) — Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets
+- `devops-architecture` — platform/service topology, K8s workload design, IaC structure
+- `devops-security` — RBAC, network policies, secrets, container/supply-chain security
+- `devops-sre` — SLOs/error budgets, observability, alerting, runbooks, postmortems
+- `devops-diagnostic` — root-cause analysis: crashes, OOMKills, network, ArgoCD sync, pipeline failures
+- `devops-ci` — GitLab CI/CD pipelines and shared templates
+- `devops-helm` — Helm charts (`Chart.yaml`, `templates/`, `values.yaml`)
+- `devops-k8s` — Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets
 
 ### domain: code
 
