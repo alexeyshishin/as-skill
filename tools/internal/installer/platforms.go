@@ -337,8 +337,89 @@ func (in *Installer) Preflight(reg *registry.Registry, domains []string) error {
 		if err := in.preflightRoots(kinds); err != nil {
 			return err
 		}
+		if err := in.preflightForeign(name, kinds); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+func (in *Installer) preflightForeign(name string, kinds map[string]bool) error {
+	var paths []string
+	itemPaths := func(kind, srcDir, dstDir string, plats []platform.ID) {
+		entries, err := os.ReadDir(srcDir)
+		if err != nil {
+			return
+		}
+		for _, e := range entries {
+			if transfer.SkipTop(kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
+				continue
+			}
+			paths = append(paths, filepath.Join(dstDir, e.Name()))
+		}
+	}
+	for kind := range kinds {
+		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
+		if kind == "skills" {
+			locs, _ := platform.SkillLocations(in.plats())
+			for loc, plats := range locs {
+				if loc != claudeSkillsLoc && in.Mode != "link" {
+					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, loc), plats)
+				}
+			}
+			continue
+		}
+		for _, id := range in.plats() {
+			if id == platform.Claude {
+				continue
+			}
+			p, _ := platform.Get(id)
+			switch kind {
+			case "hooks":
+				if p.Hooks.Schema != platform.HooksNone && in.Mode != "link" {
+					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, p.Hooks.Dir), []platform.ID{id})
+				}
+			case "agents", "rules":
+				entries, err := in.mdItems(srcDir)
+				if err != nil {
+					return err
+				}
+				for _, e := range entries {
+					stem := strings.TrimSuffix(e.Name(), ".md")
+					switch {
+					case kind == "agents":
+						data, err := os.ReadFile(filepath.Join(srcDir, e.Name()))
+						if err != nil {
+							return err
+						}
+						paths = append(paths, filepath.Join(in.ProjectRoot, p.Agents.Dir, agentNameOf(data, stem)+p.Agents.Ext))
+					case p.Rules.Mode == platform.RulesDirMDC:
+						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc"))
+					case in.Mode != "link":
+						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()))
+					}
+				}
+			}
+		}
+	}
+	for _, dst := range paths {
+		if err := in.refuseForeign(dst); err != nil {
+			return fmt.Errorf("domain %q: %w", name, err)
+		}
+	}
+	return nil
+}
+
+func hookWanted(kind, path string, plats []platform.ID) bool {
+	if kind != "hooks" {
+		return true
+	}
+	for _, id := range plats {
+		if hookTargets(path, id) {
+			return true
+		}
+	}
+	return false
 }
 
 func (in *Installer) checkReserved(srcDir string) error {
@@ -415,7 +496,7 @@ func (in *Installer) placeItems(domain, kind, srcDir, dstDir string, plats []pla
 	}
 	n := 0
 	for _, e := range entries {
-		if transfer.SkipTop(kind, e.Name()) {
+		if transfer.SkipTop(kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
 			continue
 		}
 		if err := in.placeOne(domain, kind, e.Name(), filepath.Join(srcDir, e.Name()), filepath.Join(dstDir, e.Name()), plats); err != nil {

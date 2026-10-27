@@ -121,11 +121,11 @@ func (in *Installer) claudeKind(m *registry.Manifest, name, kind, srcDir string,
 		return fmt.Errorf("domain %q: %w", name, err)
 	}
 	prior := in.snapshotPlatforms(name, kind, destPath)
+	defer in.applyPlatforms(name, kind, destPath, plats, prior)
 	n, err := in.place(name, kind, "", srcDir, destPath)
 	if err != nil {
 		return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
 	}
-	in.applyPlatforms(name, kind, destPath, plats, prior)
 	in.report(name, kind, destPath, n)
 	if kind == "hooks" && !in.DryRun {
 		if in.Mode == "copy" {

@@ -746,3 +746,68 @@ func TestUninstallWarnsOnAgentsMDSyncError(t *testing.T) {
 		t.Fatalf("sync error swallowed:\n%s", out)
 	}
 }
+
+func TestPreflightForeignTargetBeforeAnyWrite(t *testing.T) {
+	reg, root := platHarness(t)
+	project := t.TempDir()
+	cx, _ := platform.Get(platform.Codex)
+	foreign := filepath.Join(project, cx.Agents.Dir, "bee"+cx.Agents.Ext)
+	write(t, foreign, "mine", 0o644)
+	err := newInst(root, project, "copy", &lockfile.Lockfile{}, platform.Claude, platform.Codex).InstallDomain(reg, "alpha", true)
+	if err == nil || !strings.Contains(err.Error(), "not tracked by as-skill") {
+		t.Fatalf("want foreign error, got %v", err)
+	}
+	if got := treeDump(t, project); strings.Contains(got, ".claude") {
+		t.Fatalf("claude files written before failure:\n%s", got)
+	}
+	if readStr(t, foreign) != "mine" {
+		t.Fatal("foreign file modified")
+	}
+}
+
+func TestHooksPlatformsHeaderFiltersPlacement(t *testing.T) {
+	reg, root := platHarness(t)
+	write(t, filepath.Join(root, "domains", "alpha", "hooks", "only-claude.sh"), "#!/bin/sh\n# platforms: claude\n# register: Stop\n", 0o755)
+	reg, err := registry.LoadRegistry(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	project := t.TempDir()
+	if err := newInst(root, project, "copy", &lockfile.Lockfile{}, platform.Claude, platform.Codex).InstallDomain(reg, "alpha", true); err != nil {
+		t.Fatal(err)
+	}
+	cx, _ := platform.Get(platform.Codex)
+	if !exists(filepath.Join(project, ".claude", "hooks", "only-claude.sh")) {
+		t.Fatal("claude hook missing")
+	}
+	if exists(filepath.Join(project, cx.Hooks.Dir, "only-claude.sh")) {
+		t.Fatal("claude-only hook placed on codex")
+	}
+	if !exists(filepath.Join(project, cx.Hooks.Dir, "gate.sh")) {
+		t.Fatal("unfiltered hook missing on codex")
+	}
+}
+
+func TestClaudeKindStampsPlatformsOnPartialFailure(t *testing.T) {
+	reg, root := platHarness(t)
+	write(t, filepath.Join(root, "domains", "alpha", "hooks", "zz-late.sh"), "#!/bin/sh\n", 0o755)
+	project := t.TempDir()
+	write(t, filepath.Join(project, ".claude", "hooks", "zz-late.sh"), "mine", 0o644)
+	lock := &lockfile.Lockfile{}
+	err := newInst(root, project, "link", lock, platform.Claude).InstallDomain(reg, "alpha", true)
+	if err == nil {
+		t.Fatal("want link failure")
+	}
+	n := 0
+	for _, e := range lock.Entries {
+		if e.Kind == "hooks" {
+			n++
+			if len(e.Platforms) == 0 {
+				t.Fatalf("entry %s lost Platforms stamp", e.Name)
+			}
+		}
+	}
+	if n == 0 {
+		t.Fatal("no partial hook entries recorded")
+	}
+}
