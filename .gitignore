@@ -2,3 +2,7 @@
 /tools/as-skill
 .claude
 swarm-report/
+/.agents
+/.codex
+/.cursor
+/.opencode

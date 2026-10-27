@@ -59,7 +59,7 @@ as-skill/
 
 ## Хуки
 
-Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта; регистрирует их в `.claude/settings.json` скилл `/code-init` (каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `uninstall` регистрации снимаются автоматически.
+Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта (для `--platform codex|cursor` — в `.codex/hooks/` и `.cursor/hooks/`, регистрация через `as-skill hooks enable`; для opencode хуков нет); в `.claude/settings.json` их регистрирует скилл `/code-init` (каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `uninstall` регистрации снимаются автоматически.
 
 | Хук | Домен | Событие | Что делает |
 |-----|-------|---------|-----------|
@@ -92,6 +92,24 @@ as-skill status                                               # что стои�
 ```
 
 Все команды и флаги, детали `install.sh` и ограничения Windows/fish (symlink требует Developer Mode или админа, иначе `--copy`) — в [`tools/README.md`](tools/README.md).
+
+## Платформы
+
+`--platform claude|codex|cursor|opencode[,…]|all` (по умолчанию `claude`). Матрица — вывод `as-skill list platforms`:
+
+| Платформа | skills | agents | rules | hooks | Статус |
+|-----------|--------|--------|-------|-------|--------|
+| claude | `.claude/skills` (link) | `.claude/agents` (link) | `.claude/rules` (link) | `.claude/hooks` -> `.claude/settings.json` | проверено 2026-10-27 |
+| codex | `.agents/skills` (link) | `.codex/agents` (render) | `.agents/rules` + блок в `AGENTS.md` | `.codex/hooks` -> `.codex/hooks.json` | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
+| cursor | `.agents/skills` (link) | `.cursor/agents` (render) | `.cursor/rules` (render, `.mdc`) | `.cursor/hooks` -> `.cursor/hooks.json` | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
+| opencode | `.agents/skills` (link) | `.opencode/agents` (render) | `.agents/rules` + блок в `AGENTS.md` | не поддерживается | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
+
+- **link vs render.** Скиллы и правила claude — symlink (или копия при `--copy`). Агенты на не-claude платформах генерируются в нативном формате: правки тела подхватываются сразу, правки frontmatter требуют переустановки (`as-skill doctor` покажет STALE).
+- **Дубли скиллов.** claude+codex вместе: скиллы видны из двух каталогов. Cursor и opencode читают и `.claude/skills`, и `.agents/skills` — видят скиллы дважды; `doctor` предупреждает DUPLICATE-SKILL.
+- **Вызов:** `/code-plan` — Claude и Cursor, `$code-plan` — Codex. В OpenCode скилл подхватывается агентом по описанию; `/`-вызов в его документации не описан.
+- **Хуки.** Codex: после `hooks enable` подтвердить хуки через `/hooks` (trust). Cursor: `stop` не умеет блокировать — используется `followup_message`, максимум 2 раза. opencode: хуки не поддерживаются. Каталоги сессий (`.claude/sessions` и аналоги) стоит добавить в `.gitignore`.
+- **Гард для link-установки.** Symlink-записи указывают на эту копию репозитория: добавьте в `.gitignore` целевого проекта `/.agents /.codex /.cursor /.opencode` (по строке) или ставьте с `--copy`.
+- **Известная проблема:** `doctor` показывает DRIFTED после `--copy` двух и более доменов.
 
 ## Контрибьютинг и безопасность
 
