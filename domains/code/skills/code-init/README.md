@@ -1,15 +1,15 @@
 # code-init
 
-Создаёт `CLAUDE.md` в корне проекта — справочник команд и правил для Claude Code.
+Создаёт `AGENTS.md` в корне проекта — справочник команд и правил (канонический файл). `CLAUDE.md` — ровно одна строка `@AGENTS.md`, и только если есть claude-установка (платформы из `.claude/skills-lock.json`, нет записи — claude). Все инструкции живут только в `AGENTS.md`; то, что относится только к Claude, идёт в отдельный раздел «Только для Claude Code» или отбрасывается. Если `CLAUDE.md` уже содержит только `@AGENTS.md` — не трогает. Если `CLAUDE.md` с содержимым (один или вместе с `AGENTS.md`): читает, показывает, что переедет в `AGENTS.md`, спрашивает согласие, сливает содержимое без импорта и заменяет `CLAUDE.md` на `@AGENTS.md`; молча не заменяет.
 
 ## Когда срабатывает
 
-«Создай CLAUDE.md», «инициализируй правила проекта», «настрой CLAUDE.md», `/code-init`.
+«Создай AGENTS.md», «инициализируй правила проекта», «настрой CLAUDE.md», code-init.
 
 ## Что делает
 
 Определяет по проекту реальные команды (build/run/test/lint), карту каталогов и стиль
-коммитов, затем пишет компактный `CLAUDE.md` (~90–120 строк) по лучшим практикам: сначала
+коммитов, затем пишет компактный `AGENTS.md` (~90–120 строк) по лучшим практикам: сначала
 команды и проверки, потом архитектура, git и подводные камни — не свалка запретов, а
 справочник процессов.
 
@@ -26,7 +26,7 @@
 - **Исполнители для /code-build** — таблица «агент → зона → реальные пути проекта»
   (`backend` / `frontend` / `devops`), правила параллельного запуска и передачи контракта
   между слоями. Строки берутся из того, что реально найдено в репозитории и установлено в
-  `.claude/agents/`; слой без агента (например, мобильный) помечается «нет исполнителя».
+  файлы агентов в `.claude/agents`, `.codex/agents`, `.cursor/agents`, `.opencode/agents` (агент без файла в таблицу не попадает); слой без агента (например, мобильный) помечается «нет исполнителя».
 - **Memory Bank** — когда агенты пополняют `.memory-bank/`: только после того, как задача
   *полностью* выполнена (план закрыт, проверки зелёные, `/code-review` дал `ship`, блокеров
   нет). Пишет один агент за раз через навык `memory-bank`; нечего записывать — явный
@@ -56,7 +56,7 @@
 `# register: <Event> [<matcher>]` (сейчас `test-gate` — Stop, `prettier-format` —
 PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — SessionEnd). Новый хук в `domains/code/hooks/` достаточно
 снабдить этой строкой. Скрипт можно запускать и отдельно: `bash
-.claude/skills/code-init/scripts/register-hooks.sh [--project DIR] [--dry-run]`.
+<skill-dir>/scripts/register-hooks.sh [--project DIR] [--dry-run]`.
 
 Обратная операция — `as-skill uninstall domain code`: вместе с файлами хуков он снимает и
 их записи из `settings.json`.
@@ -73,7 +73,7 @@ PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — Sessi
 - ставит плагин в project-scope: `claude plugin marketplace add defendend/Claude-ast-index-search --scope project`, затем `claude plugin install ast-index@ast-index-marketplace --scope project`;
 - добавляет `Bash(ast-index *)` в `permissions.allow` проектного `.claude/settings.json` (merge, без затирания, идемпотентно);
 - индекса нет — `ast-index rebuild` (может занять минуты), есть — `ast-index update`; затем `ast-index stats`;
-- в `CLAUDE.md` пишет раздел «Поиск по коду».
+- в `AGENTS.md` пишет раздел «Поиск по коду». Шаг только для Claude.
 
 Плагин приносит собственные хуки — харнесс своих хуков для ast-index не добавляет. Плагин ставится
 в проект, даже если он уже включён глобально (глобальный — лишний, упоминается в отчёте). Бинаря нет — всё пропускается, в отчёте подсказка
@@ -82,8 +82,8 @@ PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — Sessi
 
 ## Границы
 
-Пишет `CLAUDE.md` и, с согласия, записи хуков и `permissions.allow` для ast-index в `.claude/settings.json` проекта — не делает
-`git add`/`git commit`. Существующий `CLAUDE.md` не
+Пишет `AGENTS.md`, `CLAUDE.md` и, с согласия, записи хуков и `permissions.allow` для ast-index в `.claude/settings.json` проекта — не делает
+`git add`/`git commit`. Существующий `AGENTS.md`/`CLAUDE.md` не
 перезаписывает без подтверждения (предлагает перезапись / слияние / отмену). Если рядом
 есть `AGENTS.md` — ссылается на него через `@AGENTS.md`, а не дублирует. Команды не
 выдумывает: чего нет в репозитории — того нет и в файле.

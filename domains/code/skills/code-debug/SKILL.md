@@ -1,30 +1,30 @@
 ---
 name: code-debug
-description: Find the root cause of a bug or failing test. Spawns 1 debugger subagent that reproduces, ladders hypotheses, isolates with evidence, and applies the minimal fix. Use when a test fails, /code-build reports blocked, or "X stopped working". Does NOT design features (that's /code-plan).
+description: Find the root cause of a bug or failing test. Spawns 1 debugger subagent that reproduces, ladders hypotheses, isolates with evidence, and applies the minimal fix. Use when a test fails, code-build reports blocked, or "X stopped working". Does NOT design features (that's code-plan).
 ---
 
-# Skill: /code-debug
+# Skill: code-debug
 
 ORCHESTRATOR. One debugger subagent. It diagnoses before it touches anything.
 
 ## Invocation
-`/code-debug "<error text / failing test / what broke>"`  (optionally `/code-debug <slug>` to tie it
+run the code-debug skill with `"<error text / failing test / what broke>"` (optionally a `<slug>` to tie it
 to a feature build)
 
 ## Steps
 1. **Gather the symptom**: the error/stack/failing-test name from the user, plus the build
    report `swarm-report/<slug>-build.md` if a slug was given.
-2. **Spawn 1 debugger** (`Task`, `general-purpose`). Prompt:
-   > Answer TERSE. Read `.claude/agents/code-debugger.md` and follow it exactly.
+2. **Spawn 1 debugger** — follow `references/delegation.md` for the host you run on. Prompt:
+   > Answer TERSE. Read `<absolute path of references/agents/code-debugger.md>` and follow it exactly.
    > Symptom: <verbatim error / failing test>. Feature slug (if any): <slug>.
 3. **Report** the debugger's return verbatim: root cause, evidence, fix, and the
-   re-run output.
+   re-run output, plus `spawn_mode: parallel|sequential|inline`.
 4. **Route the outcome:**
-   - `fixed` → suggest `/code-review <slug>` to check the fix.
+   - `fixed` → suggest the code-review skill for `<slug>` to check the fix.
    - `root_cause_found` (found but not fixed) or `stuck` → show the hypothesis ladder;
-     the user decides the fix, or re-run `/code-build <slug>` with the root cause as input.
+     the user decides the fix, or re-run code-build for `<slug>` with the root cause as input.
    - `cannot_reproduce` → ask the user for exact repro steps; do not guess-patch.
 
 ## Where it sits in the loop
-`/code-plan → /code-build → /code-review`. If a test fails or review says `rework` → `/code-debug` →
-back to `/code-build`. The Stop test-gate hook blocks "done" until tests actually run.
+code-plan → code-build → code-review. If a test fails or review says `rework` → code-debug →
+back to code-build. The Stop test-gate hook blocks "done" until tests actually run.
