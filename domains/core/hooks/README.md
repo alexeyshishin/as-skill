@@ -27,7 +27,7 @@ Shell-хуки Claude Code для домена `core`. Ставятся installe
 
 | Хук | claude | codex | cursor | opencode |
 |-----|--------|-------|--------|----------|
-| `memory-bank-load.sh` (`# platforms: claude,codex`) | supported | unverified | unsupported | unsupported |
+| `memory-bank-load.sh` (`# platforms: claude,codex,cursor`) | supported | unverified | unverified | unsupported |
 | `memory-bank-logger.sh` (`# platforms: claude`) | supported | unsupported | unsupported | unsupported |
 
-Для Codex `SessionStart` принят Claude-совместимый `hookSpecificOutput.additionalContext` по документации (2026-10-27): UNVERIFIED, реальный payload не снимался. Codex требует trust хуков (`/hooks`). Остальные платформы — см. `domains/code/hooks/README.md`.
+Для Codex `SessionStart` принят Claude-совместимый `hookSpecificOutput.additionalContext` по документации (2026-10-27): UNVERIFIED, реальный payload не снимался. Codex требует trust хуков (`/hooks`). Для Cursor вывод `{"additional_context": ...}` по документации (UNVERIFIED). Остальные платформы — см. `domains/code/hooks/README.md`.

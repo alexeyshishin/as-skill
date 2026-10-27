@@ -63,7 +63,7 @@ as-skill uninstall domain code --project <target>
 | `test-gate.sh` | supported | unverified | unverified (ограничения ниже) | unsupported |
 | `test-gate-record.sh` | не нужен | unverified | unverified | unsupported |
 | `prettier-format.sh` | supported | unverified | unverified | unsupported |
-| `memory-bank-load.sh` (core) | supported | unverified | unsupported | unsupported |
+| `memory-bank-load.sh` (core) | supported | unverified | unverified | unsupported |
 | `memory-bank-logger.sh` (core) | supported | unsupported | unsupported | unsupported |
 
 ## State-файл (не-Claude)

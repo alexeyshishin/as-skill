@@ -207,3 +207,71 @@ func TestRecordPrintsNothing(t *testing.T) {
 		t.Fatalf("code=%d out=%q", code, out)
 	}
 }
+
+func mbProject(t *testing.T, dot string, index bool) string {
+	t.Helper()
+	need(t)
+	root := t.TempDir()
+	hd := filepath.Join(root, dot, "hooks")
+	if err := os.MkdirAll(hd, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src, err := filepath.Abs("../../../domains/core/hooks/memory-bank-load.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(src, filepath.Join(hd, "memory-bank-load.sh")); err != nil {
+		t.Fatal(err)
+	}
+	if index {
+		mb := filepath.Join(root, ".memory-bank")
+		if err := os.MkdirAll(mb, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(mb, "index.md"), []byte("# idx\nhello\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
+func TestMemoryBankLoadOutputShapes(t *testing.T) {
+	for _, dot := range []string{".claude", ".codex"} {
+		root := mbProject(t, dot, true)
+		out, code := run(t, root, dot, "memory-bank-load.sh", "{}")
+		if code != 0 {
+			t.Fatalf("%s: exit %d", dot, code)
+		}
+		var v struct {
+			H struct {
+				A string `json:"additionalContext"`
+			} `json:"hookSpecificOutput"`
+		}
+		if err := json.Unmarshal([]byte(out), &v); err != nil || !strings.Contains(v.H.A, "hello") {
+			t.Fatalf("%s: bad output %q (%v)", dot, out, err)
+		}
+	}
+	root := mbProject(t, ".cursor", true)
+	out, code := run(t, root, ".cursor", "memory-bank-load.sh", "{}")
+	if code != 0 {
+		t.Fatalf("cursor: exit %d", code)
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("cursor: bad json %q", out)
+	}
+	if _, ok := m["hookSpecificOutput"]; ok || len(m) != 1 {
+		t.Fatalf("cursor: unexpected keys in %q", out)
+	}
+	var ac string
+	if err := json.Unmarshal(m["additional_context"], &ac); err != nil || !strings.Contains(ac, "hello") {
+		t.Fatalf("cursor: bad additional_context %q", out)
+	}
+}
+
+func TestMemoryBankLoadNoIndex(t *testing.T) {
+	for _, dot := range []string{".claude", ".codex", ".cursor"} {
+		root := mbProject(t, dot, false)
+		silent(t, root, dot, "memory-bank-load.sh", "{}")
+	}
+}
