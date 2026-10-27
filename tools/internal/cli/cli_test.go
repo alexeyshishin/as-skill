@@ -3,6 +3,7 @@ package cli
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -163,6 +164,33 @@ func TestCoreLockfileMigrationInstallThenUninstall(t *testing.T) {
 	for _, e := range final.Entries {
 		if e.Domain == "core" {
 			t.Fatalf("expected no orphaned core lockfile rows after uninstall, found %+v", e)
+		}
+	}
+}
+
+func TestCheckSkillSpec(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "my-skill")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(dir, "SKILL.md")
+	cases := map[string]struct {
+		src  string
+		want string
+	}{
+		"ok":        {"---\nname: my-skill\ndescription: d\nargument-hint: \"[x]\"\nallowed-tools: Read, Write\nmetadata:\n  k: v\n---\n", ""},
+		"extra key": {"---\nname: my-skill\ndescription: d\nmodel: x\n---\n", "line 4"},
+		"list tool": {"---\nname: my-skill\ndescription: d\nallowed-tools:\n  - Read\n---\n", "allowed-tools must be a string"},
+		"bad name":  {"---\nname: My_Skill\ndescription: d\n---\n", "does not match directory"},
+		"long desc": {"---\nname: my-skill\ndescription: " + strings.Repeat("a", 1025) + "\n---\n", "max 1024"},
+	}
+	for name, c := range cases {
+		if err := os.WriteFile(p, []byte(c.src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		got := strings.Join(checkSkillSpec(p), "\n")
+		if c.want == "" && got != "" || c.want != "" && !strings.Contains(got, c.want) {
+			t.Errorf("%s: got %q, want %q", name, got, c.want)
 		}
 	}
 }

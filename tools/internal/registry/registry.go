@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"claude-harness/tools/internal/frontmatter"
 )
 
 var DomainKinds = []string{"rules", "skills", "agents", "hooks"}
@@ -111,27 +113,14 @@ func ParseSkillFrontmatter(path string) (name string, hasName bool, hasDescripti
 	if err != nil {
 		return "", false, false, err
 	}
-	lines := strings.Split(string(data), "\n")
-	if len(lines) == 0 || strings.TrimSpace(lines[0]) != "---" {
-		return "", false, false, fmt.Errorf("missing frontmatter (file does not start with \"---\")")
+	doc, err := frontmatter.Parse(data)
+	if err != nil {
+		return "", false, false, err
 	}
-	i := 1
-	for i < len(lines) && strings.TrimSpace(lines[i]) != "---" {
-		trimmed := strings.TrimSpace(lines[i])
-		switch {
-		case strings.HasPrefix(trimmed, "name:"):
-			name = strings.TrimSpace(strings.TrimPrefix(trimmed, "name:"))
-			hasName = name != ""
-		case strings.HasPrefix(trimmed, "description:"):
-			rest := strings.TrimSpace(strings.TrimPrefix(trimmed, "description:"))
-			hasDescription = rest != ""
-		}
-		i++
-	}
-	if i >= len(lines) {
-		return name, hasName, hasDescription, fmt.Errorf("frontmatter not terminated with a closing \"---\"")
-	}
-	return name, hasName, hasDescription, nil
+	name, _ = doc.String("name")
+	name = strings.TrimSpace(name)
+	desc, _ := doc.String("description")
+	return name, name != "", strings.TrimSpace(desc) != "", nil
 }
 
 type Registry struct {
