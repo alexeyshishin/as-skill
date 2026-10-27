@@ -1,6 +1,6 @@
 # content-voice
 
-Authorial voice and tone for content (Telegram, articles, tutorials). Skills in the `content` domain reference this as `~/.claude/rules/content-voice.md`.
+Authorial voice and tone for content (Telegram, articles, tutorials). Skills in the `content` domain reference this as `content-voice`.
 
 ## Basic principles
 

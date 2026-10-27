@@ -11,7 +11,7 @@ description: >-
   anti-AI filter. Trigger: /content-zavod, "content factory," "turn this
   video/article into content," "cut this script into posts, reels, and
   carousels," "make content from a transcript."
-allowed-tools: Read, Write, Edit, Grep, Glob, WebSearch, AskUserQuestion
+allowed-tools: Read, Write, Edit, Grep, Glob, WebSearch
 ---
 
 # Content-factory — from a single source to a full content package
