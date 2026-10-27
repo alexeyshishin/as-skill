@@ -44,6 +44,7 @@ F .claude/hooks/memory-bank-load.sh -rwxr-xr-x
 F .claude/hooks/memory-bank-logger.sh -rwxr-xr-x
 F .claude/hooks/prettier-format.sh -rwxr-xr-x
 F .claude/hooks/test-gate-lib.sh -rwxr-xr-x
+F .claude/hooks/test-gate-record.sh -rwxr-xr-x
 F .claude/hooks/test-gate.sh -rwxr-xr-x
 F .claude/rules/git-conventions.md -rw-r--r--
 F .claude/skills/advanced-search/README.md -rw-r--r--

@@ -15,6 +15,7 @@ L .claude/hooks/memory-bank-load.sh -> domains/core/hooks/memory-bank-load.sh
 L .claude/hooks/memory-bank-logger.sh -> domains/core/hooks/memory-bank-logger.sh
 L .claude/hooks/prettier-format.sh -> domains/code/hooks/prettier-format.sh
 L .claude/hooks/test-gate-lib.sh -> domains/code/hooks/test-gate-lib.sh
+L .claude/hooks/test-gate-record.sh -> domains/code/hooks/test-gate-record.sh
 L .claude/hooks/test-gate.sh -> domains/code/hooks/test-gate.sh
 L .claude/rules/git-conventions.md -> domains/git/rules/git-conventions.md
 L .claude/skills/advanced-search -> domains/core/skills/advanced-search
@@ -159,6 +160,17 @@ L .claude/skills/memory-bank-defrag -> domains/core/skills/memory-bank-defrag
     "Mode": "link",
     "Path": ".claude/hooks/test-gate-lib.sh",
     "Source": "domains/code/hooks/test-gate-lib.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "hooks",
+    "Name": "test-gate-record.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/test-gate-record.sh",
+    "Source": "domains/code/hooks/test-gate-record.sh",
     "HasSHA": false,
     "Platforms": null,
     "SrcSHA256": ""

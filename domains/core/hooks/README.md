@@ -22,3 +22,12 @@ Shell-хуки Claude Code для домена `core`. Ставятся installe
 - Возвращается сразу: `claude -p` стартует отвязанным процессом (`--permission-mode acceptEdits`, инструменты `Read Glob Grep Edit Write`), лог — `.claude/sessions/memory-bank-logger.log`. Правит только `.memory-bank/`; нечего добавлять — ничего не меняет.
 - Защита от рекурсии: дочерний процесс идёт с `MEMORY_BANK_LOGGER=1`, его собственный SessionEnd хук пропускает. Одна сессия логируется один раз (`.claude/sessions/<session_id>.mblogged`), параллельный запуск блокирует lock-каталог (протухает через 10 минут).
 - Платный: каждая подходящая сессия = один headless-вызов модели.
+
+## Платформы
+
+| Хук | claude | codex | cursor | opencode |
+|-----|--------|-------|--------|----------|
+| `memory-bank-load.sh` (`# platforms: claude,codex`) | supported | unverified | unsupported | unsupported |
+| `memory-bank-logger.sh` (`# platforms: claude`) | supported | unsupported | unsupported | unsupported |
+
+Для Codex `SessionStart` принят Claude-совместимый `hookSpecificOutput.additionalContext` по документации (2026-10-27): UNVERIFIED, реальный payload не снимался. Codex требует trust хуков (`/hooks`). Остальные платформы — см. `domains/code/hooks/README.md`.

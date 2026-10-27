@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # register: SessionStart startup|clear|compact
+# platforms: claude,codex
 set -Eeuo pipefail
 trap 'exit 0' ERR
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # register: Stop
+# platforms: claude,codex,cursor
 set -Eeuo pipefail
 trap 'exit 0' ERR
 
@@ -11,24 +12,39 @@ LIB="$(dirname "$0")/test-gate-lib.sh"
 . "$LIB"
 STDIN="$(cat)"
 
+PLATFORM="$(detect_platform)"
+SESS_DIR="$(sessions_dir)"
+[ -n "$SESS_DIR" ] || exit 0
+
 [ "$(printf '%s' "$STDIN" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0
 
-SESSION_ID="$(printf '%s' "$STDIN" | jq -r '.session_id // empty')"
-TRANSCRIPT="$(printf '%s' "$STDIN" | jq -r '.transcript_path // empty')"
-[ -n "$SESSION_ID" ] || exit 0
-[ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] || exit 0
+if [ "$PLATFORM" = claude ]; then
+  SESSION_ID="$(printf '%s' "$STDIN" | jq -r '.session_id // empty')"
+  TRANSCRIPT="$(printf '%s' "$STDIN" | jq -r '.transcript_path // empty')"
+  [ -n "$SESSION_ID" ] || exit 0
+  [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ] || exit 0
+  EDITED="$(session_edited_files "$TRANSCRIPT")"
+else
+  normalize_payload "$STDIN"
+  SESSION_ID="$N_SID"
+  [ -n "$SESSION_ID" ] || exit 0
+  if [ "$PLATFORM" = cursor ]; then [ "$N_STATUS" = completed ] || exit 0; fi
+  STATE="$(state_file "$SESS_DIR" "$SESSION_ID")"
+  [ -f "$STATE" ] || exit 0
+  EDITED="$(state_edited_files "$STATE")"
+fi
 
-EDITED="$(session_edited_files "$TRANSCRIPT")"
-CODE_EDIT="$(printf '%s\n' "$EDITED" | grep -iE '\.(ts|tsx|js|jsx|py|dart|swift|kt|go|rb|java|tf)$' | head -1 || true)"
+CODE_EDIT="$(printf '%s\n' "$EDITED" | grep -iE "$CODE_EXT_RE" | head -1 || true)"
 [ -n "$CODE_EDIT" ] || exit 0
 
 resolve_test_cmd "$ROOT"
 [ -n "$TEST_CMD" ] || exit 0
 
-RAN="$(session_test_runs "$TRANSCRIPT" "$TEST_PAT")"
+if [ "$PLATFORM" = claude ]; then RAN="$(session_test_runs "$TRANSCRIPT" "$TEST_PAT")"
+else RAN="$(state_test_runs "$STATE")"; fi
 [ "$RAN" -gt 0 ] && exit 0
 
-SESS_DIR="$ROOT/.claude/sessions"; mkdir -p "$SESS_DIR" 2>/dev/null || exit 0
+mkdir -p "$SESS_DIR" 2>/dev/null || exit 0
 COUNTER="$SESS_DIR/${SESSION_ID}.testcount"
 HEAD="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo no-git)"
 PREV_HEAD=""; PREV_COUNT=0
@@ -44,6 +60,5 @@ else NEW_COUNT=1; fi
 printf '%s %s\n' "$HEAD" "$NEW_COUNT" > "$COUNTER" 2>/dev/null || true
 
 MSG="You edited code (\`$(basename "$CODE_EDIT")\`) but ran no tests this session. Run \`$TEST_CMD\` and cite the real output before declaring done. Build-green is not tested. If a test genuinely can't run here, say why."
-jq -nc --arg r "$MSG" --arg c "$MSG  (test-gate ${NEW_COUNT}/2 at this commit)" \
-  '{decision:"block", reason:$r, hookSpecificOutput:{hookEventName:"Stop", additionalContext:$c}}'
+emit_block "$PLATFORM" "$MSG" "$NEW_COUNT"
 exit 0
