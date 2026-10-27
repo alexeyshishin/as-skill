@@ -7,11 +7,13 @@ import (
 
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
 )
 
 type statusOpts struct {
 	project     string
 	harnessRoot string
+	platforms   []string
 }
 
 func parseStatusArgs(args []string) (statusOpts, error) {
@@ -47,6 +49,12 @@ func parseStatusArgs(args []string) (statusOpts, error) {
 				return opts, err
 			}
 			opts.harnessRoot = v
+		case "--platform":
+			v, err := takeValue()
+			if err != nil {
+				return opts, err
+			}
+			opts.platforms = append(opts.platforms, v)
 		default:
 			return opts, fmt.Errorf("unknown flag %q", a)
 		}
@@ -67,6 +75,25 @@ func runStatus(args []string) error {
 	if err != nil {
 		return err
 	}
-	health.PrintEntryTable(health.SortedEntries(lock), health.EntryHealth)
+	filter, err := platformFilter(opts.platforms)
+	if err != nil {
+		return err
+	}
+	health.PrintEntryTable(health.FilterEntries(health.SortedEntries(lock), filter), health.EntryHealth)
 	return nil
+}
+
+func platformFilter(vals []string) ([]string, error) {
+	if len(vals) == 0 {
+		return nil, nil
+	}
+	ids, err := platform.ParsePlatforms(vals)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, len(ids))
+	for i, id := range ids {
+		out[i] = string(id)
+	}
+	return out, nil
 }

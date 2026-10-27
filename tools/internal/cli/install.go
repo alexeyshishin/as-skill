@@ -8,6 +8,7 @@ import (
 
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
 )
 
@@ -17,6 +18,7 @@ type installOpts struct {
 	dryRun      bool
 	force       bool
 	copy        bool
+	platforms   []string
 }
 
 func parseInstallArgs(args []string) ([]string, installOpts, error) {
@@ -54,6 +56,12 @@ func parseInstallArgs(args []string) ([]string, installOpts, error) {
 				return nil, opts, err
 			}
 			opts.harnessRoot = v
+		case "--platform":
+			v, err := takeValue()
+			if err != nil {
+				return nil, opts, err
+			}
+			opts.platforms = append(opts.platforms, v)
 		case "--dry-run":
 			opts.dryRun = true
 		case "--force":
@@ -76,6 +84,10 @@ func runInstall(args []string) error {
 	}
 	verb := args[0]
 	positionals, opts, err := parseInstallArgs(args[1:])
+	if err != nil {
+		return err
+	}
+	plats, err := platform.ParsePlatforms(opts.platforms)
 	if err != nil {
 		return err
 	}
@@ -102,50 +114,63 @@ func runInstall(args []string) error {
 	}
 	in := &installer.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
-		DryRun: opts.dryRun, Force: opts.force, Mode: mode, Lock: lock,
+		DryRun: opts.dryRun, Force: opts.force, Mode: mode, Lock: lock, Platforms: plats,
 	}
 
+	var runErr error
 	switch verb {
 	case "domain":
 		if len(positionals) != 1 {
 			return errors.New("install domain needs exactly one domain name")
 		}
-		if err := in.InstallDomain(reg, positionals[0], true); err != nil {
+		if err := in.Preflight(reg, positionals); err != nil {
 			return err
 		}
+		runErr = installDomains(in, reg, positionals, true)
 	case "domains":
 		if len(positionals) == 0 {
 			return errors.New("install domains needs at least one domain name")
 		}
-		for _, name := range positionals {
-			if err := in.InstallDomain(reg, name, true); err != nil {
-				return err
-			}
+		if err := in.Preflight(reg, positionals); err != nil {
+			return err
 		}
+		runErr = installDomains(in, reg, positionals, true)
 	case "all":
 		if len(positionals) != 0 {
 			return fmt.Errorf("install all takes no domain names (got %s)", strings.Join(positionals, ", "))
 		}
-		for _, name := range reg.DomainNames() {
-			if err := in.InstallDomain(reg, name, false); err != nil {
-				return err
-			}
+		if err := in.Preflight(reg, reg.DomainNames()); err != nil {
+			return err
 		}
+		runErr = installDomains(in, reg, reg.DomainNames(), false)
 	case "skill":
 		if len(positionals) != 1 {
 			return errors.New("install skill needs exactly one skill name")
 		}
-		if err := in.InstallSkill(reg, positionals[0]); err != nil {
-			return err
-		}
+		runErr = in.InstallSkill(reg, positionals[0])
 	default:
 		return fmt.Errorf("unknown install verb %q (want domain|domains|all|skill)", verb)
 	}
 
-	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, ".claude"))
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
+			if runErr != nil {
+				return runErr
+			}
 			return fmt.Errorf("saving lockfile: %w", err)
+		}
+	}
+	if runErr != nil {
+		return runErr
+	}
+	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, ".claude"))
+	return nil
+}
+
+func installDomains(in *installer.Installer, reg *registry.Registry, names []string, strict bool) error {
+	for _, name := range names {
+		if err := in.InstallDomain(reg, name, strict); err != nil {
+			return err
 		}
 	}
 	return nil

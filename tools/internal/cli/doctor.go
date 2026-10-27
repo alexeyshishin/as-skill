@@ -29,7 +29,11 @@ func runDoctor(args []string) error {
 		return err
 	}
 
-	entries := health.SortedEntries(lock)
+	filter, err := platformFilter(opts.platforms)
+	if err != nil {
+		return err
+	}
+	entries := health.FilterEntries(health.SortedEntries(lock), filter)
 	checked, failed := 0, 0
 	headerShown := false
 	for _, e := range entries {
@@ -51,11 +55,26 @@ func runDoctor(args []string) error {
 					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
 				entryFailed = true
 			}
+		case "render":
+			if h == health.HealthMissing {
+				break
+			}
+			stale, drifted := health.RenderState(e)
+			if stale {
+				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — source %s changed since render; reinstall to refresh %s\n",
+					health.HealthStale, e.Domain, e.Kind, e.Name, e.Source, e.Path)
+				entryFailed = true
+			}
+			if drifted {
+				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — %s was edited after render (generated file, not meant for hand edits)\n",
+					health.HealthDrifted, e.Domain, e.Kind, e.Name, e.Path)
+				entryFailed = true
+			}
 		case "copy":
 			if h == health.HealthMissing {
 				break
 			}
-			hash, herr := transfer.HashTree(e.Path)
+			hash, herr := transfer.HashPath(e.Path)
 			if herr != nil {
 				fmt.Printf("as-skill: doctor: warning: %s/%s/%s — could not hash %s: %v\n", e.Domain, e.Kind, e.Name, e.Path, herr)
 				break
@@ -76,10 +95,17 @@ func runDoctor(args []string) error {
 		return err
 	}
 	for _, p := range untracked {
-		fmt.Printf("as-skill: doctor: %-11s %s — present on disk under .claude/, no lockfile entry\n", health.HealthUntracked, p)
+		fmt.Printf("as-skill: doctor: %-11s %s — present on disk, no lockfile entry\n", health.HealthUntracked, p)
 	}
 	checked += len(untracked)
 	failed += len(untracked)
+
+	for _, d := range health.Duplicates(projectRoot, lock) {
+		fmt.Printf("as-skill: doctor: warning: %-15s %s\n", health.DuplicateSkill, d)
+	}
+	for _, u := range health.UnverifiedCaps(lock) {
+		fmt.Printf("as-skill: doctor: warning: %-15s %s\n", health.Unverified, u)
+	}
 
 	lint := lintHarness(harnessRoot)
 	for _, f := range lint.findings {

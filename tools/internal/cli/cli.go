@@ -23,6 +23,8 @@ func Run(args []string) error {
 		return runStatus(args[1:])
 	case "doctor":
 		return runDoctor(args[1:])
+	case "hooks":
+		return runHooks(args[1:])
 	case "check":
 		return runCheck(args[1:])
 	case "help", "-h", "--help":
@@ -50,13 +52,20 @@ Usage:
                                                 (symlinks for link-mode entries, the
                                                 real copied files/dirs for copy-mode
                                                 entries; never touches foreign paths)
-  as-skill list [domains|skills]                show what's installable
+  as-skill list [domains|skills|platforms]      show what's installable; `+"`platforms`"+`
+                                                prints the platform x kind matrix
+                                                (location, mode, verified date)
+  as-skill hooks enable|disable <name|all>      register/unregister placed hook files
+                --platform P [--project PATH]   in the platform's hook config
+                [--dry-run]                     (claude, codex, cursor; opencode: unsupported)
   as-skill status [--project PATH]              list lockfile entries: mode,
-                                                path, health (OK/MISSING/BROKEN)
+          [--platform P]                        platforms, path, health
+                                                (OK/MISSING/BROKEN)
   as-skill doctor [--project PATH]
                   [--harness-root PATH]         status, plus source-gone/hash-
-                                                drift/untracked checks; exits
-                                                non-zero on any finding (CI gate)
+                                                drift/untracked/stale checks; exits
+                                                non-zero on any finding (CI gate);
+                                                duplicate-skill/unverified are warnings
   as-skill check                                validate domains/*/manifest.yaml
                                                 and skills/*/SKILL.md in this
                                                 harness checkout; no --project
@@ -66,6 +75,8 @@ Flags (install/uninstall):
   --harness-root PATH   this repo's checkout (default: auto-detected upward from ".")
   --copy                 install: copy a static snapshot instead of symlinking
                           (default: symlink)
+  --platform P           claude|codex|cursor|opencode|all, repeatable or comma-separated
+                          (default: claude); also on status/doctor/hooks
   --dry-run              print what would happen, write nothing
   --force                install: overwrite existing content at the destination
                           even if as-skill isn't tracking it (default: refuse)

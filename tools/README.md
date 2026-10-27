@@ -37,8 +37,11 @@ go build -o as-skill ./tools
 | `as-skill install skill <имя>` | symlink один скилл |
 | `as-skill install ... --copy` | те же формы аргументов, но копия-снэпшот вместо symlink |
 | `as-skill uninstall domain\|domains\|all\|skill ...` | удалить то, что поставил `install` (symlink для link-записей, реальные файлы/директории для copy-записей; чужого/неотслеживаемого не трогает). Для хуков домена заодно убирает их регистрации из `.claude/settings.json` проекта — только записи, указывающие на снятые файлы хуков; остальные ключи и чужие хуки остаются, `settings.local.json` не трогается, `--dry-run` показывает `would unregister` |
-| `as-skill status [--project PATH]` | список записей lockfile: домен/вид/имя, режим, путь, здоровье (OK/MISSING/BROKEN) |
-| `as-skill doctor [--project PATH] [--harness-root PATH]` | то же, что `status`, плюс проверки: источник symlink'а пропал, у copy-записи разошёлся хэш (DRIFTED), на диске есть неотслеживаемое (UNTRACKED); печатает только проблемные записи и итог (`N checks, M/N ok, K failed`); ненулевой exit при любой находке — годится как CI gate |
+| `as-skill install ... --platform P` | платформа(ы): `claude` (по умолчанию), `codex`, `cursor`, `opencode`, `all`; флаг повторяется или принимает список через запятую. Скиллы ставятся один раз на каталог (`.claude/skills` / `.agents/skills`), агенты рендерятся в нативный формат платформы (в link-режиме — заглушка со ссылкой на `.agents/prompts/<имя>.md`), правила — `.cursor/rules/*.mdc` или блок в `AGENTS.md` (между маркерами `<!-- as-skill:rules:begin/end -->`). Хуки на codex/cursor кладутся файлами без регистрации (`hooks enable`), на opencode не поддерживаются. Для `uninstall` убирает только записи указанных платформ; общие пути (`.agents/skills/<имя>` и т.п.) удаляются, когда их не использует ни одна оставшаяся платформа |
+| `as-skill hooks enable\|disable <имя\|all> --platform P [--project PATH] [--dry-run]` | зарегистрировать/снять хуки, уже лежащие в каталоге хуков платформы: `.claude/settings.json`, `.codex/hooks.json` (после `enable` для codex нужно подтвердить хуки в Codex: `/hooks`), `.cursor/hooks.json`; событие и matcher берутся из строки `# register: <Event> [<matcher>]` в хуке; идемпотентно, чужие записи не трогает, невалидный JSON отклоняется. opencode — `unsupported`, exit 0 |
+| `as-skill list platforms` | матрица платформа × {skills, agents, rules, hooks}: расположение, режим (`link\|render\|block\|unsupported`), дата проверки или `unverified` |
+| `as-skill status [--project PATH] [--platform P]` | список записей lockfile: домен/вид/имя, режим, платформы, путь, здоровье (OK/MISSING/BROKEN); `--platform` фильтрует записи |
+| `as-skill doctor [--project PATH] [--harness-root PATH]` | то же, что `status`, плюс проверки: источник symlink'а пропал, у copy-записи разошёлся хэш (DRIFTED), на диске есть неотслеживаемое (UNTRACKED), у отрендеренного файла источник изменился (STALE) или сам файл правили руками (DRIFTED); предупреждения без влияния на exit code: DUPLICATE-SKILL (скилл виден платформе из двух каталогов) и UNVERIFIED (возможность платформы без даты проверки); печатает только проблемные записи и итог (`N checks, M/N ok, K failed`); ненулевой exit при любой находке — годится как CI gate |
 | `as-skill check` | валидирует `domains/*/manifest.yaml` и `skills/*/SKILL.md` в этой копии репозитория; без `--project` |
 | `as-skill list [domains\|skills]` | показать, что можно установить |
 
@@ -56,8 +59,11 @@ go build -o as-skill ./tools
 | `--project PATH` | корень целевого проекта | `.` |
 | `--harness-root PATH` | эта копия репозитория | автоопределяется вверх от `.` |
 | `--copy` | только `install`: копия-снэпшот вместо symlink | выключено (по умолчанию — symlink) |
+| `--platform P` | платформа(ы) `claude\|codex\|cursor\|opencode\|all`, повторяется или через запятую; также для `status`/`doctor`/`hooks` | `claude` |
 | `--dry-run` | ничего не пишет, только печатает план | выключено |
-| `--force` | только `install`: перезаписать существующее в целевом пути, даже если as-skill его не отслеживает | выключено (по умолчанию — отказ) |
+| `--force` | только `install`: перезаписать существующее в целевом пути, даже если as-skill его не отслеживает; также снимает отказ gitignore-проверки | выключено (по умолчанию — отказ) |
+
+Gitignore-проверка: в link-режиме для каждого не-Claude каталога назначения (`.agents`, `.codex`, `.cursor`, `.opencode`) внутри git-репозитория выполняется `git check-ignore`; если каталог не в `.gitignore`, установка отклоняется с подсказкой «add <dir> to .gitignore or use --copy». Вне git-репозитория проверка пропускается; путь `claude` не проверяется.
 
 Если `manifest.yaml` домена в `requires_env` называет неустановленную
 переменную (сегодня это только `obsidian` → `$OBSIDIAN_VAULT`) — жёсткая

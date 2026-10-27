@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/frontmatter"
+	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
 )
 
@@ -59,6 +61,7 @@ func lintHarness(harnessRoot string) lintResult {
 	}
 
 	sort.Strings(agentFiles)
+	agentNames := map[string]string{}
 	checked += len(agentFiles)
 	for _, p := range agentFiles {
 		data, err := os.ReadFile(p)
@@ -67,6 +70,25 @@ func lintHarness(harnessRoot string) lintResult {
 			continue
 		}
 		findings = append(findings, plainScalarIssues(p, string(data))...)
+		name := strings.TrimSuffix(filepath.Base(p), ".md")
+		if doc, err := frontmatter.Parse(data); err == nil {
+			if v, ok := doc.String("name"); ok && v != "" {
+				name = v
+			}
+		}
+		if prev, dup := agentNames[name]; dup {
+			findings = append(findings, fmt.Sprintf("%s: agent name %q duplicates %s", p, name, prev))
+		} else {
+			agentNames[name] = p
+		}
+		for _, id := range platform.IDs() {
+			pl, _ := platform.Get(id)
+			for _, r := range pl.ReservedAgentNames {
+				if r == name {
+					findings = append(findings, fmt.Sprintf("%s: agent name %q is reserved on %s", p, name, id))
+				}
+			}
+		}
 	}
 
 	skillMDs, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "SKILL.md"))
@@ -76,7 +98,12 @@ func lintHarness(harnessRoot string) lintResult {
 		skillDir := filepath.Dir(path)
 		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
 		if err != nil {
-			findings = append(findings, fmt.Sprintf("%s: %v", path, err))
+			raw, _ := os.ReadFile(path)
+			if issues := plainScalarIssues(path, string(raw)); len(issues) > 0 {
+				findings = append(findings, issues...)
+			} else {
+				findings = append(findings, fmt.Sprintf("%s: %v", path, err))
+			}
 			continue
 		}
 		if !hasName {
