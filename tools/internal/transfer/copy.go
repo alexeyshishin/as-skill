@@ -13,7 +13,26 @@ func SkipTop(kind, name string) bool {
 	return kind == "hooks" && name == "README.md"
 }
 
+func findHarnessRoot(src string) string {
+	abs, err := filepath.Abs(src)
+	if err != nil {
+		return src
+	}
+	for dir := abs; ; dir = filepath.Dir(dir) {
+		if info, err := os.Stat(filepath.Join(dir, "domains")); err == nil && info.IsDir() {
+			return dir
+		}
+		if filepath.Dir(dir) == dir {
+			return abs
+		}
+	}
+}
+
 func CopyTree(kind, src, dst string, dryRun bool) (int, error) {
+	return CopyTreeRoot(kind, src, dst, findHarnessRoot(src), dryRun)
+}
+
+func CopyTreeRoot(kind, src, dst, root string, dryRun bool) (int, error) {
 	info, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -21,39 +40,83 @@ func CopyTree(kind, src, dst string, dryRun bool) (int, error) {
 	if !info.IsDir() {
 		return 0, fmt.Errorf("%s is not a directory", src)
 	}
+	realRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return 0, err
+	}
+	realSrc, err := filepath.EvalSymlinks(src)
+	if err != nil {
+		return 0, err
+	}
+	return copyDir(kind, src, dst, "", realRoot, map[string]bool{realSrc: true}, dryRun)
+}
+
+func inside(root, p string) bool {
+	rel, err := filepath.Rel(root, p)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+func copyDir(kind, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
+	if !dryRun {
+		if err := os.MkdirAll(dstDir, 0o755); err != nil {
+			return 0, err
+		}
+	}
+	entries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return 0, err
+	}
 	count := 0
-	err = filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
+	for _, e := range entries {
+		rel := filepath.Join(relBase, e.Name())
 		if SkipTop(kind, rel) {
-			return nil
+			continue
 		}
-		target := filepath.Join(dst, rel)
-		if d.IsDir() {
-			if dryRun {
-				return nil
+		path := filepath.Join(srcDir, e.Name())
+		target := filepath.Join(dstDir, e.Name())
+		isDir := e.IsDir()
+		realPath := path
+		if e.Type()&fs.ModeSymlink != 0 {
+			resolved, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return count, fmt.Errorf("resolving symlink %s: %w", path, err)
 			}
-			return os.MkdirAll(target, 0o755)
+			if !inside(realRoot, resolved) {
+				return count, fmt.Errorf("symlink %s resolves to %s, outside the harness root %s", path, resolved, realRoot)
+			}
+			st, err := os.Stat(resolved)
+			if err != nil {
+				return count, err
+			}
+			realPath = resolved
+			isDir = st.IsDir()
 		}
-		if d.Type()&fs.ModeSymlink != 0 {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping symlink %s\n", path)
-			return nil
+		if isDir {
+			real, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return count, err
+			}
+			if stack[real] {
+				return count, fmt.Errorf("symlink cycle at %s -> %s", path, real)
+			}
+			stack[real] = true
+			n, err := copyDir(kind, realPath, target, rel, realRoot, stack, dryRun)
+			delete(stack, real)
+			count += n
+			if err != nil {
+				return count, err
+			}
+			continue
 		}
 		count++
 		if dryRun {
-			return nil
+			continue
 		}
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			return err
+		if err := copyFile(realPath, target); err != nil {
+			return count, err
 		}
-		return copyFile(path, target)
-	})
-	return count, err
+	}
+	return count, nil
 }
 
 func copyFile(src, dst string) error {

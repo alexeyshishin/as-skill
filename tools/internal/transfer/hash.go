@@ -46,3 +46,23 @@ func HashTree(dir string) (string, error) {
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
+
+func HashPath(p string) (string, error) {
+	fi, err := os.Stat(p)
+	if err != nil {
+		return "", err
+	}
+	if fi.IsDir() {
+		return HashTree(p)
+	}
+	data, err := os.ReadFile(p)
+	if err != nil {
+		return "", err
+	}
+	return HashBytes(data), nil
+}
+
+func HashBytes(data []byte) string {
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
+}
