@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+const (
+	ModeLink   = "link"
+	ModeCopy   = "copy"
+	ModeRender = "render"
+
+	DefaultPlatform = "claude"
+)
+
 type Entry struct {
 	Domain      string    `json:"domain"`
 	Kind        string    `json:"kind"`
@@ -16,6 +24,8 @@ type Entry struct {
 	Path        string    `json:"path"`
 	Source      string    `json:"source"`
 	SHA256      string    `json:"sha256,omitempty"`
+	Platforms   []string  `json:"platforms,omitempty"`
+	SrcSHA256   string    `json:"src_sha256,omitempty"`
 	InstalledAt time.Time `json:"installed_at"`
 }
 
@@ -41,7 +51,20 @@ func Load(projectRoot string) (*Lockfile, error) {
 		return nil, fmt.Errorf("parsing %s: %w", p, err)
 	}
 	migrateCoreSkillKind(lf)
+	migrateDefaultPlatform(lf)
 	return lf, nil
+}
+
+func migrateDefaultPlatform(lf *Lockfile) {
+	for i, e := range lf.Entries {
+		if len(e.Platforms) == 0 {
+			lf.Entries[i].Platforms = []string{DefaultPlatform}
+		}
+	}
+}
+
+func claudeOnly(p []string) bool {
+	return len(p) == 1 && p[0] == DefaultPlatform
 }
 
 func migrateCoreSkillKind(lf *Lockfile) {
@@ -71,9 +94,23 @@ func (lf *Lockfile) Find(domain, kind, name string) (Entry, bool) {
 	return Entry{}, false
 }
 
+func (lf *Lockfile) FindAt(domain, kind, name, path string) (Entry, bool) {
+	clean := filepath.Clean(path)
+	for _, e := range lf.Entries {
+		if e.Domain == domain && e.Kind == kind && e.Name == name && filepath.Clean(e.Path) == clean {
+			return e, true
+		}
+	}
+	return Entry{}, false
+}
+
 func (lf *Lockfile) Record(entry Entry) {
+	if len(entry.Platforms) == 0 {
+		entry.Platforms = []string{DefaultPlatform}
+	}
+	clean := filepath.Clean(entry.Path)
 	for i, e := range lf.Entries {
-		if e.Domain == entry.Domain && e.Kind == entry.Kind && e.Name == entry.Name {
+		if e.Domain == entry.Domain && e.Kind == entry.Kind && e.Name == entry.Name && filepath.Clean(e.Path) == clean {
 			lf.Entries[i] = entry
 			return
 		}
@@ -92,12 +129,31 @@ func (lf *Lockfile) Remove(domain, kind, name string) {
 	lf.Entries = out
 }
 
+func (lf *Lockfile) RemoveAt(domain, kind, name, path string) {
+	clean := filepath.Clean(path)
+	out := lf.Entries[:0:0]
+	for _, e := range lf.Entries {
+		if e.Domain == domain && e.Kind == kind && e.Name == name && filepath.Clean(e.Path) == clean {
+			continue
+		}
+		out = append(out, e)
+	}
+	lf.Entries = out
+}
+
 func (lf *Lockfile) Save(projectRoot string) error {
 	dir := filepath.Join(projectRoot, ".claude")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(lf, "", "  ")
+	out := &Lockfile{Entries: make([]Entry, len(lf.Entries))}
+	copy(out.Entries, lf.Entries)
+	for i, e := range out.Entries {
+		if claudeOnly(e.Platforms) {
+			out.Entries[i].Platforms = nil
+		}
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return err
 	}
