@@ -10,6 +10,7 @@ import (
 
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
@@ -21,6 +22,11 @@ type Installer struct {
 	Force       bool
 	Mode        string
 	Lock        *lockfile.Lockfile
+	Platforms   []platform.ID
+
+	gitChecked map[string]bool
+	dupWarned  bool
+	gapsDone   bool
 }
 
 func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
@@ -94,28 +100,40 @@ func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict b
 		fmt.Fprintf(os.Stderr, "as-skill: skipping — %s\n", msg)
 		return nil
 	}
+	if err := in.Preflight(reg, []string{name}); err != nil {
+		return err
+	}
 	for _, kind := range registry.DomainKinds {
 		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
 		if !fsutil.DirExists(srcDir) {
 			continue
 		}
-		destPath, err := in.resolveTarget(m, kind)
-		if err != nil {
-			return fmt.Errorf("domain %q: %w", name, err)
+		if err := in.installKind(m, name, kind, srcDir); err != nil {
+			return err
 		}
-		n, err := in.place(name, kind, "", srcDir, destPath)
-		if err != nil {
-			return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
-		}
-		in.report(name, kind, destPath, n)
-		if kind == "hooks" && !in.DryRun {
-			if in.Mode == "copy" {
-				if err := transfer.MakeShellScriptsExecutable(destPath); err != nil {
-					return fmt.Errorf("domain %q: chmod hooks: %w", name, err)
-				}
-			} else {
-				transfer.WarnHooksNotExecutable(srcDir)
+	}
+	return nil
+}
+
+func (in *Installer) claudeKind(m *registry.Manifest, name, kind, srcDir string, plats []platform.ID) error {
+	destPath, err := in.resolveTarget(m, kind)
+	if err != nil {
+		return fmt.Errorf("domain %q: %w", name, err)
+	}
+	prior := in.snapshotPlatforms(name, kind, destPath)
+	n, err := in.place(name, kind, "", srcDir, destPath)
+	if err != nil {
+		return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
+	}
+	in.applyPlatforms(name, kind, destPath, plats, prior)
+	in.report(name, kind, destPath, n)
+	if kind == "hooks" && !in.DryRun {
+		if in.Mode == "copy" {
+			if err := transfer.MakeShellScriptsExecutable(destPath); err != nil {
+				return fmt.Errorf("domain %q: chmod hooks: %w", name, err)
 			}
+		} else {
+			transfer.WarnHooksNotExecutable(srcDir)
 		}
 	}
 	return nil
@@ -143,17 +161,35 @@ func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
 			return fmt.Errorf("skill %q belongs to domain %q, which requires the %q binary (not found on $PATH)", name, owner, bin)
 		}
 	}
-	destBase, err := in.resolveTarget(m, "skills")
-	if err != nil {
-		return fmt.Errorf("skill %q: %w", name, err)
-	}
-	dest := filepath.Join(destBase, name)
 	src := filepath.Join(in.HarnessRoot, "domains", owner, "skills", name)
-	n, err := in.place(owner, "skill", name, src, dest)
-	if err != nil {
-		return fmt.Errorf("skill %q: %w", name, err)
+	if err := in.preflightRoots(map[string]bool{"skills": true}); err != nil {
+		return err
 	}
-	in.report(owner, "skill", dest, n)
+	locs, _ := platform.SkillLocations(in.plats())
+	in.warnDup(locs)
+	for _, loc := range sortedLocs(locs) {
+		var dest string
+		if loc == claudeSkillsLoc {
+			destBase, err := in.resolveTarget(m, "skills")
+			if err != nil {
+				return fmt.Errorf("skill %q: %w", name, err)
+			}
+			dest = filepath.Join(destBase, name)
+			prior := in.snapshotPlatforms(owner, "skill", dest)
+			n, err := in.place(owner, "skill", name, src, dest)
+			if err != nil {
+				return fmt.Errorf("skill %q: %w", name, err)
+			}
+			in.applyPlatforms(owner, "skill", dest, locs[loc], prior)
+			in.report(owner, "skill", dest, n)
+			continue
+		}
+		dest = filepath.Join(in.ProjectRoot, loc, name)
+		if err := in.placeOne(owner, "skill", name, src, dest, locs[loc]); err != nil {
+			return fmt.Errorf("skill %q: %w", name, err)
+		}
+		in.report(owner, "skill", dest, 1)
+	}
 	return nil
 }
 
@@ -162,6 +198,16 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 	if !ok {
 		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
 	}
+	if in.hasClaude() {
+		if err := in.uninstallClaudeDomain(m, name); err != nil {
+			return err
+		}
+	}
+	in.uninstallNonClaude(name, "")
+	return nil
+}
+
+func (in *Installer) uninstallClaudeDomain(m *registry.Manifest, name string) error {
 	for _, kind := range registry.DomainKinds {
 		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
 		if !fsutil.DirExists(srcDir) {
@@ -190,7 +236,7 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 			in.unregisterHooks(goneHooks)
 		}
 
-		if _, tracked := in.Lock.Find(name, kind, ""); tracked {
+		if parent, tracked := in.Lock.Find(name, kind, ""); tracked && len(minusPlats(parent.Platforms, in.plats())) == 0 {
 			in.Lock.Remove(name, kind, "")
 		}
 	}
@@ -209,12 +255,14 @@ func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
 		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
 	}
 	m := reg.Domains[owner]
-	destBase, err := in.resolveTarget(m, "skills")
-	if err != nil {
-		return fmt.Errorf("skill %q: %w", name, err)
+	if in.hasClaude() {
+		destBase, err := in.resolveTarget(m, "skills")
+		if err != nil {
+			return fmt.Errorf("skill %q: %w", name, err)
+		}
+		in.uninstallOne(owner, "skill", name, filepath.Join(destBase, name))
 	}
-	dest := filepath.Join(destBase, name)
-	in.uninstallOne(owner, "skill", name, dest)
+	in.uninstallNonClaude(owner, name)
 	return nil
 }
 
@@ -234,6 +282,17 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked but nothing on disk\n", dst)
 		return os.IsNotExist(err)
 	}
+	if remaining := minusPlats(entry.Platforms, in.plats()); len(entry.Platforms) > 0 && len(remaining) == len(entry.Platforms) {
+		return false
+	} else if len(remaining) > 0 {
+		if in.DryRun {
+			fmt.Printf("would keep     %s — still used by %s\n", dst, strings.Join(remaining, ","))
+			return false
+		}
+		in.setEntryPlatforms(entry, remaining)
+		fmt.Printf("kept           %s — still used by %s\n", dst, strings.Join(remaining, ","))
+		return false
+	}
 	isSymlink := fi.Mode()&os.ModeSymlink != 0
 	switch entry.Mode {
 	case "link":
@@ -251,7 +310,7 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		return false
 	}
 	if in.DryRun {
-		fmt.Printf("would uninstall %s\n", dst)
+		fmt.Printf("would remove   %s\n", dst)
 		return true
 	}
 	var removeErr error
@@ -264,7 +323,7 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
 		return false
 	}
-	in.Lock.Remove(domain, kind, name)
+	in.Lock.RemoveAt(domain, kind, name, dst)
 	fmt.Printf("uninstalled    %s\n", dst)
 	return true
 }

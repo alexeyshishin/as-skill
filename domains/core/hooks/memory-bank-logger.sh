@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # register: SessionEnd
+# platforms: claude
 set -Eeuo pipefail
 trap 'exit 0' ERR
 
