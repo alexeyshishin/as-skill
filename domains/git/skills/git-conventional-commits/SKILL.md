@@ -110,7 +110,16 @@ git commit -m "<subject>"
 
 Never a second `-m`, never `-F` with a multi-line file. For several commits, stage each group on its own and commit it separately.
 
-Show the result of `git log -1 --stat`, and check that `git log -1 --pretty=%b` prints nothing.
+Check that `git log -1 --pretty=%b` prints nothing.
+
+## Step 8. Report
+
+After a commit — report only the short hash and the subject. After a push — add the pushed range (`<old>..<new>`, branch). Nothing else: no `--stat`, no recap of which rules were followed, no mention of skipped attribution (`Co-Authored-By`, etc.). Mention a rule only if something deviated or was blocked.
+
+```
+7077c50 docs(readme): list advanced-search in core
+pushed b4b7ea8..7077c50 main
+```
 
 ## What not to do
 
