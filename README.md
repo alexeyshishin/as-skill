@@ -73,7 +73,7 @@ as-skill/
 
 ## Установка (CLI `as-skill`)
 
-Из корня репозитория (нужен `go`, на macOS — `brew install go`):
+Из корня репозитория (нужен Go ≥ 1.25, на macOS — `brew install go`; первая сборка один раз качает зависимости из Go module proxy, нужна сеть):
 
 ```bash
 source install.sh   # соберёт as-skill и добавит в PATH (текущий и новые терминалы)
@@ -94,6 +94,27 @@ as-skill list                                             # что можно п
 as-skill doctor -p <path>                                 # что стоит и в каком состоянии
 as-skill remove code -p <path> -y                         # снять
 ```
+
+В терминале `as-skill add` без аргументов открывает диалог: проект → домены → платформы → режим → сводка и подтверждение (`remove` без аргументов — выбор из установленного):
+
+Подсказки диалога — на английском. Иллюстрация (не дословный вывод):
+
+```text
+$ as-skill add
+Project directory          (по умолчанию — абсолютный cwd)
+Domains to add             (ничего не предвыбрано, нужен хотя бы один)
+  [x] code — … [installed]
+  [ ] obsidian — … (needs $OBSIDIAN_VAULT)
+Platforms                  (claude, codex, cursor, opencode)
+  [x] claude (detected)  [ ] codex  [ ] cursor  [ ] opencode
+Install mode               (symlink — … | copy — …)
+harness: …  project: …  domains: …  platforms: … (detected from …)  mode: symlink
+Install? (Yes)
+```
+
+`(detected)` стоит только у найденных платформ; если ничего не найдено, `claude` предвыбран как значение по умолчанию, без пометки. Установленные домены помечены `[installed]`. Сводка: `harness:`, `warning:` (если checkout в cwd ≠ checkout бинаря), `project:`, `domains:`/`skills:`, `platforms: … (detected from X | default | -a)`, предупреждения о пробелах возможностей платформ и дублях скиллов, `mode:`. Подтверждение по умолчанию — Yes; отказ или Ctrl-C ничего не пишет, печатает `as-skill: error: aborted` и завершает с кодом 1.
+
+Имена и флаги пропускают свои вопросы (имена — домены, `-a` — платформы, `-p` — проект, `--copy` — режим), `-y` берёт всё по умолчанию без вопросов. Диалог открывается, если stdin и stderr — терминал (`CI` не задан, `TERM` не `dumb`): `as-skill add git | cat` (в pipe только stdout) его всё равно откроет, а `</dev/null`, `2>файл`, CI, `TERM=dumb` — нет, тогда нужны имена и `-y` (или `--dry-run`).
 
 Старые `install|uninstall|status` и `--platform` продолжают работать (скрыты из help).
 
