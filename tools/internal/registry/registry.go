@@ -272,3 +272,25 @@ func ResolveHarnessRootAuto(flag string) (string, error) {
 	}
 	return "", fmt.Errorf("no claude-harness checkout found from the current directory or the as-skill binary — pass --harness-root")
 }
+
+// CwdHarnessRoot is the checkout found walking up from the current directory.
+func CwdHarnessRoot() (string, bool) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", false
+	}
+	return walkUpHarness(cwd)
+}
+
+// ExecutableHarnessRoot is the checkout found walking up from the real path of the binary.
+func ExecutableHarnessRoot() (string, bool) {
+	exe, err := executable()
+	if err != nil {
+		return "", false
+	}
+	real, err := filepath.EvalSymlinks(exe)
+	if err != nil {
+		return "", false
+	}
+	return walkUpHarness(filepath.Dir(real))
+}
