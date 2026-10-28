@@ -75,3 +75,11 @@ func TestHuhMultiSelectEnterTakesHovered(t *testing.T) {
 		}
 	}
 }
+
+func TestHuhShiftTabYieldsErrBack(t *testing.T) {
+	var out bytes.Buffer
+	p := &huhPrompter{in: strings.NewReader("\x1b[Z"), out: &out}
+	if _, err := p.Confirm("go", "Proceed?", "", true); err != ErrBack {
+		t.Fatalf("got %v want ErrBack\n%s", err, out.String())
+	}
+}

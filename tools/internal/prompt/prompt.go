@@ -25,6 +25,9 @@ type Prompter interface {
 // ErrAborted is returned when the user cancels (Ctrl-C).
 var ErrAborted = errors.New("aborted")
 
+// ErrBack is returned when the user presses shift+tab (go to the previous step).
+var ErrBack = errors.New("back")
+
 // seams for tests.
 var (
 	isTerminal = func(fd uintptr) bool {
