@@ -178,3 +178,97 @@ func ResolveHarnessRoot(start string) (string, error) {
 		dir = parent
 	}
 }
+
+var executable = os.Executable
+
+type SkillInfo struct {
+	Name        string
+	Description string
+}
+
+func Skills(harnessRoot, domain string) ([]SkillInfo, error) {
+	dir := filepath.Join(harnessRoot, "domains", domain, "skills")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var out []SkillInfo
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(dir, e.Name(), "SKILL.md"))
+		if err != nil {
+			continue
+		}
+		info := SkillInfo{Name: e.Name()}
+		if doc, err := frontmatter.Parse(data); err == nil {
+			desc, _ := doc.String("description")
+			info.Description = strings.TrimSpace(desc)
+		}
+		out = append(out, info)
+	}
+	return out, nil
+}
+
+func validHarnessRoot(dir string) bool {
+	data, err := os.ReadFile(filepath.Join(dir, "go.mod"))
+	if err != nil {
+		return false
+	}
+	isHarness := false
+	for _, line := range strings.Split(string(data), "\n") {
+		f := strings.Fields(line)
+		if len(f) == 2 && f[0] == "module" && f[1] == "claude-harness" {
+			isHarness = true
+			break
+		}
+	}
+	if !isHarness || !fileExists(filepath.Join(dir, "tools", "main.go")) {
+		return false
+	}
+	manifests, _ := filepath.Glob(filepath.Join(dir, "domains", "*", "manifest.yaml"))
+	return len(manifests) > 0
+}
+
+func walkUpHarness(start string) (string, bool) {
+	for dir := start; ; {
+		if validHarnessRoot(dir) {
+			return dir, true
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", false
+		}
+		dir = parent
+	}
+}
+
+func ResolveHarnessRootAuto(flag string) (string, error) {
+	if flag != "" {
+		root, err := ResolveHarnessRoot(flag)
+		if err != nil {
+			return "", err
+		}
+		if !validHarnessRoot(root) {
+			return "", fmt.Errorf("%s is not a claude-harness checkout (need go.mod module claude-harness, tools/main.go, domains/*/manifest.yaml) — pass --harness-root", root)
+		}
+		return root, nil
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		if root, ok := walkUpHarness(cwd); ok {
+			return root, nil
+		}
+	}
+	if exe, err := executable(); err == nil {
+		if real, err := filepath.EvalSymlinks(exe); err == nil {
+			if root, ok := walkUpHarness(filepath.Dir(real)); ok {
+				return root, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no claude-harness checkout found from the current directory or the as-skill binary — pass --harness-root")
+}
