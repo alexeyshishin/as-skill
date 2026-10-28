@@ -58,14 +58,14 @@ CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.
 
-One verb, two modes: `as-skill install ...` defaults to **symlink** — edits under
+One verb, two modes: `as-skill add ...` defaults to **symlink** — edits under
 `domains/` show up in the target immediately, no reinstall; this is
 how this repo's own root `.claude/` stays live (`rm -rf .claude && ./as-skill
-install domains code git core --project .`). `as-skill install ... --copy` instead
+add code git core -p . -y`). `as-skill add ... --copy` instead
 writes a static snapshot, independent of this checkout's lifetime — for sharing,
 or for projects that shouldn't depend on a harness checkout sticking around.
-`as-skill uninstall ...` mirrors `install`'s positional shapes and removes only
-what a prior `install`/`install --copy` placed (symlink or files, matching the
+`as-skill remove ...` is lockfile-driven and removes only
+what a prior `add`/`add --copy` placed (symlink or files, matching the
 mode it was recorded under), never foreign content. Uninstalling a domain's `hooks`
 also drops their registrations from the project's `.claude/settings.json` (only
 entries pointing at the hook files it just removed; `settings.local.json` is
@@ -86,21 +86,23 @@ the vault root (`.claude/rules/<file>.md`), so install it with `--project`
 pointed at the vault root — otherwise the project's `.claude/` and the vault
 are different directories and that reference won't resolve.
 
-If a domain's `requires_env` isn't satisfied, an explicit `as-skill install
-domain`/`domains`/`skill` request fails outright; `as-skill install all`
+If a domain's `requires_env` isn't satisfied, an explicit `as-skill add
+<name>` request fails outright; `as-skill add all`
 instead skips it with a warning and installs the rest. Right now only
 `obsidian` declares `requires_env`; no domain currently declares a
 `requires_bin` gate.
 
+Other verbs: `as-skill list [domains|skills|platforms]` (marks installed), `as-skill doctor` (status table + checks). Legacy `install|uninstall|status` and `--platform`/`--force`/`--harness-root` still work, hidden from help. Harness checkout is auto-resolved (`--harness-root` → cwd walk-up → binary's real path), so a binary built here works from any project.
+
 `code` is a separate case: it's a portable dev-loop harness meant to be installed
 into *other* projects, not just this repo's own `.claude/`. From a clone of this
-repo, run `as-skill install domains code core --project <target> --copy` to
+repo, run `as-skill add code core -p <target> --copy -y` to
 place it (agents, skills, hooks, plus core skills) into a target
 project directory. `--copy` here is deliberate, not the default: the target is an
 unrelated project elsewhere on the user's machine, and coupling it to this
 checkout's lifetime via a symlink (the installer's default) would be wrong.
 
-`--platform claude|codex|cursor|opencode[,…]|all` picks target hosts (default `claude`, byte-identical to before). Skills are placed once per location by set cover; agents are symlinked on claude and rendered natively for the others; rules go via `.agents/rules` plus an `AGENTS.md` block, or a Cursor `.mdc` stub. Hook adapters for codex/cursor are Phase 3; opencode hooks are unsupported. claude+codex together warns about duplicate skills. Hook platform support: `test-gate`, `prettier-format`, `memory-bank-load` — claude/codex/cursor; `memory-bank-logger` — claude only; opencode none. Non-claude adapters (hooks, rendered agents, rules) are doc-derived, unverified against real CLIs; only claude is verified.
+`-a/--agent claude|codex|cursor|opencode[,…]|all` picks target hosts (default: autodetected from existing `.codex/ .cursor/ .opencode/ .claude/` dirs and the lockfile, else `claude`; `add -y` fails before writing if a detected link root isn't git-ignored — use `-a claude` or `--copy`). Skills are placed once per location by set cover; agents are symlinked on claude and rendered natively for the others; rules go via `.agents/rules` plus an `AGENTS.md` block, or a Cursor `.mdc` stub. Hook adapters for codex/cursor are Phase 3; opencode hooks are unsupported. claude+codex together warns about duplicate skills. Hook platform support: `test-gate`, `prettier-format`, `memory-bank-load` — claude/codex/cursor; `memory-bank-logger` — claude only; opencode none. Non-claude adapters (hooks, rendered agents, rules) are doc-derived, unverified against real CLIs; only claude is verified.
 
 ## What to do before your first action
 

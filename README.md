@@ -4,7 +4,7 @@
 
 # as-skill
 
-Репозиторий шаблонов агентов, скиллов, правил и хуков для AI-агентов для кода — Claude Code, Codex, Cursor, OpenCode, — разложенных по доменам. Платформа выбирается флагом `--platform` (по умолчанию `claude`), см. [Платформы](#платформы).
+Репозиторий шаблонов агентов, скиллов, правил и хуков для AI-агентов для кода — Claude Code, Codex, Cursor, OpenCode, — разложенных по доменам. Платформа выбирается флагом `-a` (по умолчанию автоопределение, иначе `claude`), см. [Платформы](#платформы).
 
 ## Оглавление
 
@@ -60,7 +60,7 @@ as-skill/
 
 ## Хуки
 
-Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта (для `--platform codex|cursor` — в `.codex/hooks/` и `.cursor/hooks/`, регистрация через `as-skill hooks enable`; для opencode хуков нет); в `.claude/settings.json` их регистрирует скилл `/code-init` (каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `uninstall` регистрации снимаются автоматически.
+Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта (для `-a codex|cursor` — в `.codex/hooks/` и `.cursor/hooks/`, регистрация через `as-skill hooks enable`; для opencode хуков нет); в `.claude/settings.json` их регистрирует скилл `/code-init` (каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `as-skill remove` регистрации снимаются автоматически.
 
 | Хук | Домен | Событие | Что делает |
 |-----|-------|---------|-----------|
@@ -87,17 +87,21 @@ source install.sh   # соберёт as-skill и добавит в PATH (тек�
 - **`--copy`** — статический снэпшот, не зависит от этой копии репозитория. Так ставится `code` в чужой проект.
 
 ```bash
-as-skill install all                                          # все домены, symlink
-as-skill install domains code core --project <path> --copy   # code в чужой проект
-as-skill install domains git core --project <path> --platform codex,cursor   # другие платформы
-as-skill status                                               # что стоит и в каком состоянии (OK/MISSING/BROKEN)
+as-skill add all -y                                       # все домены, symlink
+as-skill add code core -p <path> --copy -y                # code в чужой проект
+as-skill add git core -p <path> -a codex,cursor -y        # другие платформы
+as-skill list                                             # что можно поставить; установленное помечено
+as-skill doctor -p <path>                                 # что стоит и в каком состоянии
+as-skill remove code -p <path> -y                         # снять
 ```
+
+Старые `install|uninstall|status` и `--platform` продолжают работать (скрыты из help).
 
 Все команды и флаги, детали `install.sh` и ограничения Windows/fish (symlink требует Developer Mode или админа, иначе `--copy`) — в [`tools/README.md`](tools/README.md).
 
 ## Платформы
 
-`--platform claude|codex|cursor|opencode[,…]|all` (по умолчанию `claude`). Матрица — вывод `as-skill list platforms`:
+`-a claude|codex|cursor|opencode[,…]|all` (по умолчанию автоопределение по существующим каталогам платформ, иначе `claude`). Матрица — вывод `as-skill list platforms`:
 
 | Платформа | skills | agents | rules | hooks | Статус |
 |-----------|--------|--------|-------|-------|--------|
