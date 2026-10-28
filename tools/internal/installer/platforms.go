@@ -243,6 +243,9 @@ var capGaps = map[platform.ID]string{
 	platform.OpenCode: "agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported",
 }
 
+// CapGap returns the known capability gap note for a platform, or "".
+func CapGap(id platform.ID) string { return capGaps[id] }
+
 func (in *Installer) noteGaps() {
 	if in.gapsDone {
 		return
