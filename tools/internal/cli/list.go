@@ -9,14 +9,40 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
 )
 
 func runList(args []string) error {
 	what := "all"
-	if len(args) > 0 {
-		what = args[0]
+	project, harnessFlag := ".", ""
+	var pos []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "-p" || a == "--project":
+			i++
+			if i >= len(args) {
+				return fmt.Errorf("%s needs a value", a)
+			}
+			project = args[i]
+		case a == "--harness-root":
+			i++
+			if i >= len(args) {
+				return fmt.Errorf("%s needs a value", a)
+			}
+			harnessFlag = args[i]
+		case strings.HasPrefix(a, "--project="):
+			project = strings.TrimPrefix(a, "--project=")
+		case strings.HasPrefix(a, "-"):
+			return fmt.Errorf("unknown flag %q", a)
+		default:
+			pos = append(pos, a)
+		}
+	}
+	if len(pos) > 0 {
+		what = pos[0]
 	}
 	if what == "platforms" {
 		printPlatforms(os.Stdout)
@@ -26,13 +52,27 @@ func runList(args []string) error {
 		return fmt.Errorf("unknown list target %q (want domains|skills|platforms)", what)
 	}
 
-	harnessRoot, err := registry.ResolveHarnessRoot(".")
+	harnessRoot, err := registry.ResolveHarnessRootAuto(harnessFlag)
 	if err != nil {
 		return err
 	}
 	reg, err := registry.LoadRegistry(harnessRoot)
 	if err != nil {
 		return err
+	}
+
+	var lock *lockfile.Lockfile
+	projectRoot := ""
+	if p, perr := resolveProject(project); perr != nil {
+		return perr
+	} else if lk, lerr := lockfile.Load(p); lerr == nil {
+		lock, projectRoot = lk, p
+	}
+	mark := func(ok bool) string {
+		if ok {
+			return " installed"
+		}
+		return ""
 	}
 
 	if what == "all" || what == "domains" {
@@ -54,7 +94,7 @@ func runList(args []string) error {
 					}
 				}
 			}
-			fmt.Printf("  %-10s %-24s %s\n", name, "["+status+"]", m.Description)
+			fmt.Printf("  %-10s %-24s %s%s\n", name, "["+status+"]", m.Description, mark(domainInstalled(lock, harnessRoot, name)))
 		}
 	}
 	if what == "all" || what == "skills" {
@@ -67,7 +107,8 @@ func runList(args []string) error {
 			}
 			for _, e := range entries {
 				if e.IsDir() {
-					fmt.Printf("  %-30s (%s)\n", e.Name(), name)
+					installed := skillInstalled(lock, projectRoot, e.Name())
+					fmt.Printf("  %-30s (%s)%s\n", e.Name(), name, mark(installed))
 				}
 			}
 		}

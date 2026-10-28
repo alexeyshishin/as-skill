@@ -1,0 +1,338 @@
+installed     code     skills  -> <P>/.claude/skills (5 files)
+installed     code     agents  -> <P>/.claude/agents (7 files)
+installed     code     hooks   -> <P>/.claude/hooks (4 files)
+installed     git      rules   -> <P>/.claude/rules (1 file)
+installed     git      skills  -> <P>/.claude/skills (3 files)
+installed     git      agents  -> <P>/.claude/agents (1 file)
+installed     core     skills  -> <P>/.claude/skills (4 files)
+installed     core     hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+--- lockfile ---
+{
+  "entries": [
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "code-build",
+      "mode": "link",
+      "path": "<P>/.claude/skills/code-build",
+      "source": "<H>/domains/code/skills/code-build",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "code-debug",
+      "mode": "link",
+      "path": "<P>/.claude/skills/code-debug",
+      "source": "<H>/domains/code/skills/code-debug",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "code-init",
+      "mode": "link",
+      "path": "<P>/.claude/skills/code-init",
+      "source": "<H>/domains/code/skills/code-init",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "code-plan",
+      "mode": "link",
+      "path": "<P>/.claude/skills/code-plan",
+      "source": "<H>/domains/code/skills/code-plan",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "code-review",
+      "mode": "link",
+      "path": "<P>/.claude/skills/code-review",
+      "source": "<H>/domains/code/skills/code-review",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "backend.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/backend.md",
+      "source": "<H>/domains/code/agents/backend.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "code-debugger.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/code-debugger.md",
+      "source": "<H>/domains/code/agents/code-debugger.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "code-planner.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/code-planner.md",
+      "source": "<H>/domains/code/agents/code-planner.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "code-reviewer.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/code-reviewer.md",
+      "source": "<H>/domains/code/agents/code-reviewer.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "code-skeptic.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/code-skeptic.md",
+      "source": "<H>/domains/code/agents/code-skeptic.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "devops.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/devops.md",
+      "source": "<H>/domains/code/agents/devops.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "frontend.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/frontend.md",
+      "source": "<H>/domains/code/agents/frontend.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "hooks",
+      "name": "prettier-format.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/prettier-format.sh",
+      "source": "<H>/domains/code/hooks/prettier-format.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "hooks",
+      "name": "test-gate-lib.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/test-gate-lib.sh",
+      "source": "<H>/domains/code/hooks/test-gate-lib.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "hooks",
+      "name": "test-gate-record.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/test-gate-record.sh",
+      "source": "<H>/domains/code/hooks/test-gate-record.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "code",
+      "kind": "hooks",
+      "name": "test-gate.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/test-gate.sh",
+      "source": "<H>/domains/code/hooks/test-gate.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "git",
+      "kind": "rules",
+      "name": "git-conventions.md",
+      "mode": "link",
+      "path": "<P>/.claude/rules/git-conventions.md",
+      "source": "<H>/domains/git/rules/git-conventions.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "git",
+      "kind": "skills",
+      "name": "git-conventional-commits",
+      "mode": "link",
+      "path": "<P>/.claude/skills/git-conventional-commits",
+      "source": "<H>/domains/git/skills/git-conventional-commits",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "git",
+      "kind": "skills",
+      "name": "git-pr-description",
+      "mode": "link",
+      "path": "<P>/.claude/skills/git-pr-description",
+      "source": "<H>/domains/git/skills/git-pr-description",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "git",
+      "kind": "skills",
+      "name": "git-release-tag",
+      "mode": "link",
+      "path": "<P>/.claude/skills/git-release-tag",
+      "source": "<H>/domains/git/skills/git-release-tag",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "git",
+      "kind": "agents",
+      "name": "git-flow.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/git-flow.md",
+      "source": "<H>/domains/git/agents/git-flow.md",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "skills",
+      "name": "advanced-search",
+      "mode": "link",
+      "path": "<P>/.claude/skills/advanced-search",
+      "source": "<H>/domains/core/skills/advanced-search",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "skills",
+      "name": "caveman",
+      "mode": "link",
+      "path": "<P>/.claude/skills/caveman",
+      "source": "<H>/domains/core/skills/caveman",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "skills",
+      "name": "memory-bank",
+      "mode": "link",
+      "path": "<P>/.claude/skills/memory-bank",
+      "source": "<H>/domains/core/skills/memory-bank",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "skills",
+      "name": "memory-bank-defrag",
+      "mode": "link",
+      "path": "<P>/.claude/skills/memory-bank-defrag",
+      "source": "<H>/domains/core/skills/memory-bank-defrag",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "hooks",
+      "name": "memory-bank-load.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/memory-bank-load.sh",
+      "source": "<H>/domains/core/hooks/memory-bank-load.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    },
+    {
+      "domain": "core",
+      "kind": "hooks",
+      "name": "memory-bank-logger.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/memory-bank-logger.sh",
+      "source": "<H>/domains/core/hooks/memory-bank-logger.sh",
+      "platforms": [
+        "claude"
+      ],
+      "installed_at": "0001-01-01T00:00:00Z"
+    }
+  ]
+}

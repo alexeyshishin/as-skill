@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,19 +12,20 @@ import (
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
-	"claude-harness/tools/internal/transfer"
 )
+
+var resolveHarness = registry.ResolveHarnessRootAuto
 
 func runDoctor(args []string) error {
 	opts, err := parseStatusArgs(args)
 	if err != nil {
 		return err
 	}
-	harnessRoot, err := registry.ResolveHarnessRoot(opts.harnessRoot)
-	if err != nil {
-		return err
+	harnessRoot, herr := resolveHarness(opts.harnessRoot)
+	if herr != nil && opts.harnessRoot != "" {
+		return fmt.Errorf("doctor: --harness-root rejected: %w", herr)
 	}
-	projectRoot, err := filepath.Abs(opts.project)
+	projectRoot, err := resolveProject(opts.project)
 	if err != nil {
 		return err
 	}
@@ -37,23 +39,26 @@ func runDoctor(args []string) error {
 		return err
 	}
 	entries := health.FilterEntries(health.SortedEntries(lock), filter)
+	health.PrintEntryTable(entries, health.EntryHealth)
+	if herr != nil {
+		if opts.harnessRoot != "" {
+			fmt.Printf("as-skill: doctor: note: harness checkout not found (--harness-root rejected: %v); skipping SOURCE-GONE and lint checks\n", herr)
+		} else {
+			fmt.Println("as-skill: doctor: note: harness checkout not found; skipping SOURCE-GONE and lint checks")
+		}
+	}
 	checked, failed := 0, 0
-	headerShown := false
 	for _, e := range entries {
 		checked++
 		h := health.EntryHealth(e)
 		entryFailed := h == health.HealthMissing || h == health.HealthBroken
 		if entryFailed {
-			if !headerShown {
-				fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PATH")
-				headerShown = true
-			}
-			fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", e.Domain, e.Kind, e.Name, e.Mode, h, e.Path)
+			fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — %s\n", h, e.Domain, e.Kind, e.Name, e.Path)
 		}
 
 		switch e.Mode {
 		case "link":
-			if !fsutil.PathExists(e.Source) {
+			if herr == nil && !fsutil.PathExists(e.Source) {
 				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — source %s no longer exists under harness root %s\n",
 					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
 				entryFailed = true
@@ -77,12 +82,20 @@ func runDoctor(args []string) error {
 			if h == health.HealthMissing {
 				break
 			}
-			hash, herr := transfer.HashPath(e.Path)
-			if herr != nil {
-				fmt.Printf("as-skill: doctor: warning: %s/%s/%s — could not hash %s: %v\n", e.Domain, e.Kind, e.Name, e.Path, herr)
+			if e.SHA256 == "" {
 				break
 			}
-			if e.SHA256 != "" && hash != e.SHA256 {
+			match, merr := health.CopyMatchesIn(lock, e)
+			if errors.Is(merr, health.ErrCannotVerify) {
+				fmt.Printf("as-skill: doctor: warning: %-13s %s/%s/%s — no recorded item list and the source checkout is gone; reinstall once with the current binary to fix\n",
+					"CANNOT-VERIFY", e.Domain, e.Kind, e.Name)
+				break
+			}
+			if merr != nil {
+				fmt.Printf("as-skill: doctor: warning: %s/%s/%s — could not hash %s: %v\n", e.Domain, e.Kind, e.Name, e.Path, merr)
+				break
+			}
+			if !match {
 				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — recomputed hash differs from the recorded SHA256 (ambiguous: the target may have been hand-edited, or the source in domains/ may have moved on since install — not disambiguated)\n",
 					health.HealthDrifted, e.Domain, e.Kind, e.Name)
 				entryFailed = true
@@ -114,12 +127,14 @@ func runDoctor(args []string) error {
 		fmt.Printf("as-skill: doctor: warning: %-15s codex hooks need trust: review in /hooks\n", "HOOKS-TRUST")
 	}
 
-	lint := lintHarness(harnessRoot)
-	for _, f := range lint.findings {
-		fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
+	if herr == nil {
+		lint := lintHarness(harnessRoot)
+		for _, f := range lint.findings {
+			fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
+		}
+		checked += lint.checked
+		failed += lint.failed
 	}
-	checked += lint.checked
-	failed += lint.failed
 
 	fmt.Printf("doctor: %d checks, %d/%d ok, %d failed\n", checked, checked-failed, checked, failed)
 	if failed > 0 {

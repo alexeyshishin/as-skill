@@ -58,7 +58,7 @@ PostToolUse, `memory-bank-load` — SessionStart, `memory-bank-logger` — Sessi
 снабдить этой строкой. Скрипт можно запускать и отдельно: `bash
 <skill-dir>/scripts/register-hooks.sh [--project DIR] [--dry-run]`.
 
-Обратная операция — `as-skill uninstall domain code`: вместе с файлами хуков он снимает и
+Обратная операция — `as-skill remove code`: вместе с файлами хуков он снимает и
 их записи из `settings.json`.
 
 Отказ, нет хуков или нет `jq` (хуки без него молча ничего не делают) — фраза про `test-gate`

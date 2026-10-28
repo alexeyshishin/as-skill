@@ -17,7 +17,7 @@ type statusOpts struct {
 }
 
 func parseStatusArgs(args []string) (statusOpts, error) {
-	opts := statusOpts{project: ".", harnessRoot: "."}
+	opts := statusOpts{project: "."}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		key, val, hasVal := a, "", false
@@ -49,7 +49,7 @@ func parseStatusArgs(args []string) (statusOpts, error) {
 				return opts, err
 			}
 			opts.harnessRoot = v
-		case "--platform":
+		case "--platform", "--agent", "-a":
 			v, err := takeValue()
 			if err != nil {
 				return opts, err

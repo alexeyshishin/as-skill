@@ -13,6 +13,10 @@ func Run(args []string) error {
 		return errors.New("no command given")
 	}
 	switch args[0] {
+	case "add":
+		return runAdd(args[1:])
+	case "remove":
+		return runRemove(args[1:])
 	case "install":
 		return runInstall(args[1:])
 	case "uninstall":
@@ -37,55 +41,39 @@ func Run(args []string) error {
 }
 
 func printUsage(w io.Writer) {
-	fmt.Fprint(w, `as-skill — install claude-harness domains and skills into a project's platform dirs (default .claude/)
+	fmt.Fprint(w, `as-skill — add claude-harness domains and skills to a project's platform dirs (default .claude/)
 
 Usage:
-  as-skill install domain  <name>              symlink one domain (default mode)
-  as-skill install domains <name> [name...]    symlink several domains
-  as-skill install all                         symlink every domain
-  as-skill install skill   <name>              symlink one skill (domain-owned)
-  as-skill install ... --copy                  copy a static snapshot instead of
-                                                symlinking (same shapes as above; for
-                                                sharing, or projects that shouldn't
-                                                depend on this checkout's lifetime)
-  as-skill uninstall domain|domains|all|skill ... remove whatever `+"`install`"+` placed
-                                                (symlinks for link-mode entries, the
-                                                real copied files/dirs for copy-mode
-                                                entries; never touches foreign paths)
-  as-skill list [domains|skills|platforms]      show what's installable; `+"`platforms`"+`
-                                                prints the platform x kind matrix
-                                                (location, mode, verified date)
-  as-skill hooks enable|disable <name|all>      register/unregister placed hook files (codex/cursor: UNVERIFIED)
-                --platform P [--project PATH]   in the platform's hook config
-                [--dry-run]                     (claude, codex, cursor; opencode: unsupported)
-  as-skill status [--project PATH]              list lockfile entries: mode,
-          [--platform P]                        platforms, path, health
-                                                (OK/MISSING/BROKEN)
-  as-skill doctor [--project PATH]
-                  [--harness-root PATH]         status, plus source-gone/hash-
-                                                drift/untracked/stale checks; exits
-                                                non-zero on any finding (CI gate);
-                                                duplicate-skill/unverified are warnings
-  as-skill check                                validate domains/*/manifest.yaml
-                                                and skills/*/SKILL.md in this
-                                                harness checkout; no --project
+  as-skill add <name...> -p <path> -y   add domains and/or skills (symlinks by default);
+                                         a name is a domain, else a skill; `+"`all`"+` = every domain
+  as-skill remove <name...> -p <path> -y
+                                         remove what `+"`add`"+` placed (driven by skills-lock.json)
+  as-skill list [domains|skills|platforms]
+                                         show what's installable; entries installed in -p are
+                                         marked; `+"`platforms`"+` prints the platform x kind matrix
+  as-skill doctor [-p <path>]            entry table plus source-gone/hash-drift/untracked/stale
+                                         checks; exits non-zero on any finding (CI gate)
 
-Flags (install/uninstall):
-  --project PATH        target project root, gets a .claude/ (default ".")
-  --harness-root PATH   this repo's checkout (default: auto-detected upward from ".")
-  --copy                 install: copy a static snapshot instead of symlinking
-                          (default: symlink)
-  --platform P           claude|codex|cursor|opencode|all, repeatable or comma-separated
-                          (default: claude); also on status/doctor/hooks
-  --dry-run              print what would happen, write nothing
-  --force                install: overwrite existing content at the destination
-                          even if as-skill isn't tracking it (default: refuse)
+Flags (add/remove):
+  -a, --agent P    claude|codex|cursor|opencode|all, repeatable or comma-separated
+                   (default: detected from the project, else claude)
+  -p, --project P  target project root (default: current directory; not $HOME)
+  --copy           add: copy a static snapshot instead of symlinking
+  -y, --yes        take the defaults, no confirmation
+  --dry-run        print what would happen, write nothing
+  -h               this help
+
+Advanced:
+  as-skill hooks enable|disable <name|all> -a P [-p <path>] [--dry-run]
+                                         register/unregister placed hook files
+                                         (claude, codex, cursor; opencode: unsupported)
+  as-skill check                         validate domains/*/manifest.yaml and skills/*/SKILL.md
+                                         in this harness checkout
 
 Examples:
-  as-skill install domain git --project ~/code/my-app
-  as-skill install domains git content --project .
-  as-skill install all --project ~/code/my-app --copy
-  as-skill install skill obsidian-ingest --project . --copy
-  as-skill uninstall domain git --project .
+  as-skill add code core -p ~/code/my-app -y
+  as-skill add git -p . --copy -y
+  as-skill add skill-name -a codex -p . -y
+  as-skill remove git -p . -y
 `)
 }

@@ -56,7 +56,7 @@ func parseInstallArgs(args []string) ([]string, installOpts, error) {
 				return nil, opts, err
 			}
 			opts.harnessRoot = v
-		case "--platform":
+		case "--platform", "--agent", "-a":
 			v, err := takeValue()
 			if err != nil {
 				return nil, opts, err

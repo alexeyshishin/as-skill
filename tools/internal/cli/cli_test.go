@@ -23,7 +23,21 @@ func fakeHarnessWithSkill(t *testing.T) (harnessRoot, skillDir string) {
 	if err := os.WriteFile(filepath.Join(harnessRoot, "domains", "testdomain", "manifest.yaml"), []byte("name: testdomain\ndescription: test domain\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	markHarness(t, harnessRoot)
 	return harnessRoot, skillDir
+}
+
+func markHarness(t *testing.T, root string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module claude-harness\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRunInstallDefaultsToSymlink(t *testing.T) {
