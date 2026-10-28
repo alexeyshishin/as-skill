@@ -112,3 +112,37 @@ func TestSameNameDifferentPathsDoNotCollide(t *testing.T) {
 		t.Fatalf("platforms not preserved: %+v %v", back, err)
 	}
 }
+
+func TestCovers(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	if err := os.MkdirAll(filepath.Join(src, "a"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	skills := filepath.Join(dir, ".claude", "skills")
+	lf := &Lockfile{}
+	lf.Record(Entry{Domain: "d", Kind: "skills", Name: "", Mode: "copy", Path: skills, Source: src})
+	lf.Record(Entry{Domain: "d", Kind: "skill", Name: "x", Mode: "link", Path: filepath.Join(skills, "x"), Source: "/s"})
+	for p, want := range map[string]bool{
+		filepath.Join(skills, "a"):         true,
+		filepath.Join(skills, "x"):         true,
+		filepath.Join(skills, "b"):         false,
+		filepath.Join(dir, "other", "a"):   false,
+		filepath.Join(skills, "a", "deep"): false,
+	} {
+		if got := lf.Covers(p); got != want {
+			t.Errorf("Covers(%s) = %v, want %v", p, got, want)
+		}
+	}
+}
+
+func TestRemoveAllAtIgnoresKind(t *testing.T) {
+	lf := &Lockfile{}
+	lf.Record(Entry{Domain: "d", Kind: "skill", Name: "x", Path: "/p/x"})
+	lf.Record(Entry{Domain: "d", Kind: "skills", Name: "x", Path: "/p/x"})
+	lf.Record(Entry{Domain: "d", Kind: "skills", Name: "y", Path: "/p/y"})
+	lf.RemoveAllAt("/p/x")
+	if len(lf.Entries) != 1 || lf.Entries[0].Name != "y" {
+		t.Fatalf("%+v", lf.Entries)
+	}
+}

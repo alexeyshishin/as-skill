@@ -26,6 +26,7 @@ type Entry struct {
 	SHA256      string    `json:"sha256,omitempty"`
 	Platforms   []string  `json:"platforms,omitempty"`
 	SrcSHA256   string    `json:"src_sha256,omitempty"`
+	Items       []string  `json:"items,omitempty"`
 	InstalledAt time.Time `json:"installed_at"`
 }
 
@@ -83,6 +84,80 @@ func (lf *Lockfile) Owns(target string) (Entry, bool) {
 		}
 	}
 	return Entry{}, false
+}
+
+func (lf *Lockfile) Covering(dst string) (Entry, bool) {
+	if e, ok := lf.Owns(dst); ok {
+		return e, true
+	}
+	clean := filepath.Clean(dst)
+	dir := filepath.Dir(clean)
+	base := filepath.Base(clean)
+	for _, e := range lf.Entries {
+		if e.Name != "" || filepath.Clean(e.Path) != dir {
+			continue
+		}
+		if len(e.Items) > 0 {
+			for _, n := range e.Items {
+				if n == base {
+					return e, true
+				}
+			}
+			continue
+		}
+		if e.Source == "" {
+			continue
+		}
+		if _, err := os.Lstat(filepath.Join(e.Source, base)); err == nil {
+			return e, true
+		}
+	}
+	return Entry{}, false
+}
+
+// CoveredPaths lists the concrete paths a kind-level row placed. Rows with
+// Items need no Source; legacy rows without Items fall back to listing Source
+// (every top-level entry, SkipTop not applied). Named rows return their own Path.
+func (e Entry) CoveredPaths() []string {
+	if e.Name != "" {
+		return []string{e.Path}
+	}
+	if len(e.Items) > 0 {
+		out := make([]string, 0, len(e.Items))
+		for _, n := range e.Items {
+			out = append(out, filepath.Join(e.Path, n))
+		}
+		return out
+	}
+	if e.Source == "" {
+		return nil
+	}
+	ents, err := os.ReadDir(e.Source)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, d := range ents {
+		out = append(out, filepath.Join(e.Path, d.Name()))
+	}
+	return out
+}
+
+func (lf *Lockfile) Covers(dst string) bool {
+	_, ok := lf.Covering(dst)
+	return ok
+}
+
+func (lf *Lockfile) RemoveAllAt(path string) {
+	clean := filepath.Clean(path)
+	out := lf.Entries[:0:0]
+	for _, e := range lf.Entries {
+		if filepath.Clean(e.Path) == clean {
+			continue
+		}
+		out = append(out, e)
+	}
+	lf.Entries = out
 }
 
 func (lf *Lockfile) Find(domain, kind, name string) (Entry, bool) {
