@@ -128,3 +128,30 @@ func TestLintReferenceSymlinks(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestLintSkillNameRules(t *testing.T) {
+	root := t.TempDir()
+	skill := func(domain, name string) {
+		d := filepath.Join(root, "domains", domain, "skills", name)
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(d, "SKILL.md"), []byte("---\nname: "+name+"\ndescription: d\n---\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	skill("a", "same")
+	skill("b", "same")
+	skill("a", "b")
+	skill("a", "all")
+	skill("a", "fine")
+	joined := strings.Join(lintHarness(root).findings, "\n")
+	for _, want := range []string{`skill dir name "same" duplicates`, `collides with a domain name`, `"all" is reserved`} {
+		if !strings.Contains(joined, want) {
+			t.Errorf("missing finding %q in:\n%s", want, joined)
+		}
+	}
+	if strings.Contains(joined, `"fine"`) {
+		t.Errorf("fine flagged:\n%s", joined)
+	}
+}

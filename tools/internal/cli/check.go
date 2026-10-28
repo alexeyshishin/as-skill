@@ -17,7 +17,7 @@ func runCheck(args []string) error {
 	if len(args) != 0 {
 		return fmt.Errorf("check takes no arguments (got %s)", strings.Join(args, " "))
 	}
-	harnessRoot, err := registry.ResolveHarnessRoot(".")
+	harnessRoot, err := registry.ResolveHarnessRootAuto("")
 	if err != nil {
 		return err
 	}

@@ -178,6 +178,15 @@ func lintHarness(harnessRoot string) lintResult {
 	skillMDs, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "SKILL.md"))
 	sort.Strings(skillMDs)
 	checked += len(skillMDs)
+	skillDirs := map[string]string{}
+	domainSet := map[string]bool{}
+	if des, err := os.ReadDir(domainsDir); err == nil {
+		for _, de := range des {
+			if de.IsDir() {
+				domainSet[de.Name()] = true
+			}
+		}
+	}
 	for _, path := range skillMDs {
 		skillDir := filepath.Dir(path)
 		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
@@ -197,6 +206,19 @@ func lintHarness(harnessRoot string) lintResult {
 		}
 		if !hasDescription {
 			findings = append(findings, fmt.Sprintf("%s: frontmatter missing \"description:\"", path))
+		}
+		dirName := filepath.Base(skillDir)
+		domainName := filepath.Base(filepath.Dir(filepath.Dir(skillDir)))
+		if prev, dup := skillDirs[dirName]; dup {
+			findings = append(findings, fmt.Sprintf("%s: skill dir name %q duplicates %s", path, dirName, prev))
+		} else {
+			skillDirs[dirName] = path
+		}
+		if dirName == "all" {
+			findings = append(findings, fmt.Sprintf("%s: skill dir name %q is reserved (selects every domain)", path, dirName))
+		}
+		if _, isDomain := domainSet[dirName]; isDomain {
+			findings = append(findings, fmt.Sprintf("%s: skill dir name %q collides with a domain name (domain %s)", path, dirName, domainName))
 		}
 
 		data, err := os.ReadFile(path)
