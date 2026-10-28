@@ -22,54 +22,21 @@ func runAdd(args []string) error {
 		printUsage(os.Stdout)
 		return nil
 	}
-	if len(opts.names) == 0 || !(opts.yes || opts.dryRun) {
+	dlg := wantDialog(opts)
+	if !dlg && (len(opts.names) == 0 || !(opts.yes || opts.dryRun)) {
 		return gateError(opts)
 	}
-	projectRoot, err := resolveProject(opts.project)
-	if err != nil {
-		return err
-	}
-	harnessRoot, err := registry.ResolveHarnessRootAuto(opts.harnessRoot)
-	if err != nil {
-		return err
-	}
-	reg, err := registry.LoadRegistry(harnessRoot)
-	if err != nil {
-		return err
-	}
-	sel, err := resolveNames(harnessRoot, reg, opts.names)
-	if err != nil {
-		return err
-	}
-	if len(sel.Domains) == 0 && len(sel.Skills) == 0 {
-		return errors.New("nothing to add")
-	}
-	lock, err := lockfile.Load(projectRoot)
-	if err != nil {
-		return err
-	}
-
-	var plats []platform.ID
-	detected := false
-	if len(opts.agents) > 0 {
-		plats, err = platform.ParsePlatforms(opts.agents)
-		if err != nil {
-			return err
-		}
+	var pl *addPlan
+	if dlg {
+		pl, err = addDialog(opts)
 	} else {
-		var src []string
-		plats, src = detectPlatforms(projectRoot, lock)
-		detected = len(src) > 0
-		if detected {
-			fmt.Printf("platforms: detected from %s\n", strings.Join(uniqStrings(src), ", "))
-		} else {
-			fmt.Println("platforms: default (claude)")
-		}
+		pl, err = planNonInteractive(opts)
 	}
-	mode := "link"
-	if opts.copy {
-		mode = "copy"
+	if err != nil {
+		return err
 	}
+	projectRoot, harnessRoot, reg, sel, lock, plats, mode := pl.project, pl.harness, pl.reg, pl.sel, pl.lock, pl.plats, pl.mode
+	detected := pl.detected || pl.dialog
 	in := &installer.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Force: opts.force, Mode: mode, Lock: lock, Platforms: plats,
@@ -81,7 +48,7 @@ func runAdd(args []string) error {
 			kinds = []string{"skills"}
 		}
 		if gerr := in.GuardRoots(kinds...); gerr != nil {
-			return fmt.Errorf("%w\n(platforms detected: %s) pass -a claude to install for claude only, or --copy to install a snapshot",
+			return fmt.Errorf("%w\n(platforms: %s) pass -a claude to install for claude only, or --copy to install a snapshot",
 				gerr, strings.Join(platformDirNames(plats), ", "))
 		}
 	}
@@ -119,4 +86,45 @@ func runAdd(args []string) error {
 		fmt.Printf("done -> %s\n", filepath.Join(projectRoot, "."+string(id)))
 	}
 	return nil
+}
+
+func planNonInteractive(opts addOpts) (*addPlan, error) {
+	pl := &addPlan{mode: "link"}
+	var err error
+	if pl.project, err = resolveProject(opts.project); err != nil {
+		return nil, err
+	}
+	if pl.harness, err = registry.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+		return nil, err
+	}
+	if pl.reg, err = registry.LoadRegistry(pl.harness); err != nil {
+		return nil, err
+	}
+	if pl.sel, err = resolveNames(pl.harness, pl.reg, opts.names); err != nil {
+		return nil, err
+	}
+	if len(pl.sel.Domains) == 0 && len(pl.sel.Skills) == 0 {
+		return nil, errors.New("nothing to add")
+	}
+	if pl.lock, err = lockfile.Load(pl.project); err != nil {
+		return nil, err
+	}
+	if len(opts.agents) > 0 {
+		if pl.plats, err = platform.ParsePlatforms(opts.agents); err != nil {
+			return nil, err
+		}
+	} else {
+		var src []string
+		pl.plats, src = detectPlatforms(pl.project, pl.lock)
+		pl.detected = len(src) > 0
+		if pl.detected {
+			fmt.Printf("platforms: detected from %s\n", strings.Join(uniqStrings(src), ", "))
+		} else {
+			fmt.Println("platforms: default (claude)")
+		}
+	}
+	if opts.copy {
+		pl.mode = "copy"
+	}
+	return pl, nil
 }

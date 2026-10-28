@@ -134,7 +134,7 @@ func gateError(o addOpts) error {
 	}
 	q = append(q, "confirmation: pass -y to accept defaults, or --dry-run to preview")
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s needs names and -y (or --dry-run); no interactive dialog yet. Unanswered:\n", o.verb)
+	fmt.Fprintf(&b, "%s needs names and -y (or --dry-run); the interactive dialog needs a terminal. Unanswered:\n", o.verb)
 	for _, s := range q {
 		fmt.Fprintf(&b, "  - %s\n", s)
 	}

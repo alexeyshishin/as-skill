@@ -12,6 +12,7 @@ import (
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
+	"claude-harness/tools/internal/prompt"
 	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
@@ -103,16 +104,29 @@ func runRemove(args []string) error {
 		printUsage(os.Stdout)
 		return nil
 	}
-	if len(opts.names) == 0 || !(opts.yes || opts.dryRun) {
+	dlg := wantDialog(opts)
+	if !dlg && (len(opts.names) == 0 || !(opts.yes || opts.dryRun)) {
 		return gateError(opts)
 	}
-	projectRoot, err := resolveProject(opts.project)
+	var pr prompt.Prompter
+	var projectRoot string
+	if dlg {
+		pr = newPrompter()
+		projectRoot, err = askProject(pr, opts)
+	} else {
+		projectRoot, err = resolveProject(opts.project)
+	}
 	if err != nil {
 		return err
 	}
 	lock, err := lockfile.Load(projectRoot)
 	if err != nil {
 		return err
+	}
+	if dlg && len(opts.names) == 0 {
+		if opts.names, err = askRemoveNames(pr, lock, projectRoot); err != nil {
+			return err
+		}
 	}
 	targets, err := removeTargets(lock, projectRoot, opts.names)
 	if err != nil {
@@ -148,6 +162,16 @@ func runRemove(args []string) error {
 		}
 	} else {
 		plats = recordedPlatforms(allRows)
+		if dlg && len(plats) > 1 {
+			if plats, err = askRemovePlatforms(pr, plats); err != nil {
+				return err
+			}
+		}
+	}
+	if dlg && !opts.dryRun {
+		if err := confirm(pr, "Remove?", removeSummary(projectRoot, opts.names, plats)); err != nil {
+			return err
+		}
 	}
 	fmt.Printf("platforms: %s\n", strings.Join(platformDirNames(plats), ", "))
 
