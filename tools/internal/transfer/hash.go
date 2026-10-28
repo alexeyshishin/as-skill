@@ -7,9 +7,36 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
+func TopNames(src, kind string) ([]string, error) {
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, e := range entries {
+		if !SkipTop(kind, e.Name()) {
+			names = append(names, e.Name())
+		}
+	}
+	return names, nil
+}
+
 func HashTree(dir string) (string, error) {
+	return hashTree(dir, nil)
+}
+
+func HashNames(dir string, names []string) (string, error) {
+	keep := make(map[string]bool, len(names))
+	for _, n := range names {
+		keep[n] = true
+	}
+	return hashTree(dir, keep)
+}
+
+func hashTree(dir string, keep map[string]bool) (string, error) {
 	var rels []string
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -24,6 +51,12 @@ func HashTree(dir string) (string, error) {
 		rel, err := filepath.Rel(dir, path)
 		if err != nil {
 			return err
+		}
+		if keep != nil {
+			top, _, _ := strings.Cut(rel, string(filepath.Separator))
+			if !keep[top] {
+				return nil
+			}
 		}
 		rels = append(rels, rel)
 		return nil

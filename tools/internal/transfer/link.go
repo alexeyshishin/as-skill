@@ -11,7 +11,7 @@ import (
 
 func LinkOne(src, dst string, dryRun, force bool, lock *lockfile.Lockfile) error {
 	if _, err := os.Lstat(dst); err == nil {
-		entry, tracked := lock.Owns(dst)
+		entry, tracked := lock.Covering(dst)
 		if !tracked && !force {
 			return fmt.Errorf("%s exists, not tracked by as-skill, use --force", dst)
 		}

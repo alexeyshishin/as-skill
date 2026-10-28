@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -49,28 +50,66 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 			}
 			return 1, nil
 		}
-		return transfer.LinkTree(domain, kind, src, dst, in.DryRun, in.Force, in.Lock)
+		n, err := transfer.LinkTree(domain, kind, src, dst, in.DryRun, in.Force, in.Lock)
+		if err == nil && !in.DryRun && name == "" {
+			in.Lock.RemoveAt(domain, kind, "", dst)
+		}
+		return n, err
 	}
 
 	if entry, ok := in.Lock.Owns(dst); ok && entry.Mode != "copy" {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a copy — mixed channels may cause confusion\n", dst, entry.Mode)
+	}
+	if !in.DryRun && name == "" {
+		in.dropLinksUnder(kind, src, dst)
 	}
 	n, err := transfer.CopyTree(kind, src, dst, in.DryRun)
 	if err != nil {
 		return n, err
 	}
 	if !in.DryRun {
-		hash, err := transfer.HashTree(dst)
+		var hash string
+		var items []string
+		if name == "" {
+			names, nerr := transfer.TopNames(src, kind)
+			items = append(items, names...)
+			sort.Strings(items)
+			if nerr != nil {
+				return n, nerr
+			}
+			hash, err = transfer.HashNames(dst, names)
+		} else {
+			hash, err = transfer.HashTree(dst)
+		}
 		if err != nil {
 			return n, fmt.Errorf("hashing %s: %w", dst, err)
 		}
 		in.Lock.Record(lockfile.Entry{
 			Domain: domain, Kind: kind, Name: name,
-			Mode: "copy", Path: dst, Source: src, SHA256: hash,
+			Mode: "copy", Path: dst, Source: src, SHA256: hash, Items: items,
 			InstalledAt: time.Now(),
 		})
 	}
 	return n, nil
+}
+
+func (in *Installer) dropLinksUnder(kind, src, dst string) {
+	names, err := transfer.TopNames(src, kind)
+	if err != nil {
+		return
+	}
+	for _, n := range names {
+		p := filepath.Join(dst, n)
+		fi, err := os.Lstat(p)
+		if err != nil || fi.Mode()&os.ModeSymlink == 0 {
+			continue
+		}
+		if e, ok := in.Lock.Owns(p); ok && e.Mode == "link" {
+			if os.Remove(p) == nil {
+				in.Lock.RemoveAllAt(p)
+			}
+		}
+	}
 }
 
 func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict bool) error {
@@ -198,6 +237,9 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 	if !ok {
 		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
 	}
+	if err := in.preflightUninstall(reg, name, ""); err != nil {
+		return err
+	}
 	if in.hasClaude() {
 		if err := in.uninstallClaudeDomain(m, name); err != nil {
 			return err
@@ -243,6 +285,16 @@ func (in *Installer) uninstallClaudeDomain(m *registry.Manifest, name string) er
 	return nil
 }
 
+type PartOfDomainError struct {
+	Skill  string
+	Domain string
+	Mode   string
+}
+
+func (e *PartOfDomainError) Error() string {
+	return fmt.Sprintf("skill %q installed as part of domain %s (%s); remove the domain", e.Skill, e.Domain, e.Mode)
+}
+
 func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
 	owner := ""
 	for _, dname := range reg.DomainNames() {
@@ -255,19 +307,30 @@ func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
 		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
 	}
 	m := reg.Domains[owner]
+	if err := in.preflightUninstall(reg, owner, name); err != nil {
+		return err
+	}
 	if in.hasClaude() {
 		destBase, err := in.resolveTarget(m, "skills")
 		if err != nil {
 			return fmt.Errorf("skill %q: %w", name, err)
 		}
-		in.uninstallOne(owner, "skill", name, filepath.Join(destBase, name))
+		dst := filepath.Join(destBase, name)
+		if _, owned := in.Lock.Owns(dst); !owned {
+			if parent, ok := in.Lock.Covering(dst); ok && parent.Name == "" {
+				if _, err := os.Lstat(dst); err == nil {
+					return &PartOfDomainError{Skill: name, Domain: parent.Domain, Mode: parent.Mode}
+				}
+			}
+		}
+		in.uninstallOne(owner, "skill", name, dst)
 	}
 	in.uninstallNonClaude(owner, name)
 	return nil
 }
 
 func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
-	entry, tracked := in.Lock.Owns(dst)
+	entry, tracked := in.Lock.Covering(dst)
 	if !tracked {
 		if parent, ok := in.Lock.Find(domain, kind, ""); ok {
 			entry, tracked = parent, true
@@ -323,7 +386,7 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
 		return false
 	}
-	in.Lock.RemoveAt(domain, kind, name, dst)
+	in.Lock.RemoveAllAt(dst)
 	fmt.Printf("uninstalled    %s\n", dst)
 	return true
 }

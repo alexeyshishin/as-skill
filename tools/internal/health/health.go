@@ -1,6 +1,7 @@
 package health
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -202,13 +203,10 @@ func UnverifiedCaps(lock *lockfile.Lockfile) []string {
 }
 
 func FindUntracked(projectRoot string, lock *lockfile.Lockfile) ([]string, error) {
-	tracked := map[string]bool{}
-	parentSrc := map[string][]string{}
+	opaque := map[string]bool{}
 	for _, e := range lock.Entries {
-		c := filepath.Clean(e.Path)
-		tracked[c] = true
-		if e.Name == "" && e.Source != "" {
-			parentSrc[c] = append(parentSrc[c], e.Source)
+		if e.Name != "" || e.Source == "" && len(e.Items) == 0 {
+			opaque[filepath.Clean(e.Path)] = true
 		}
 	}
 	var untracked []string
@@ -223,21 +221,7 @@ func FindUntracked(projectRoot string, lock *lockfile.Lockfile) ([]string, error
 		}
 		for _, e := range entries {
 			p := filepath.Join(dir, e.Name())
-			if tracked[filepath.Clean(p)] {
-				continue
-			}
-			if srcs, parent := parentSrc[filepath.Clean(dir)]; parent {
-				fromSource := false
-				for _, src := range srcs {
-					if _, err := os.Lstat(filepath.Join(src, e.Name())); err == nil {
-						fromSource = true
-						break
-					}
-				}
-				if fromSource {
-					continue
-				}
-			} else if tracked[filepath.Clean(dir)] {
+			if lock.Covers(p) || opaque[filepath.Clean(dir)] && !hasSourcedRow(lock, dir) {
 				continue
 			}
 			untracked = append(untracked, p)
@@ -245,4 +229,103 @@ func FindUntracked(projectRoot string, lock *lockfile.Lockfile) ([]string, error
 	}
 	sort.Strings(untracked)
 	return untracked, nil
+}
+
+var ErrCannotVerify = errors.New("cannot verify: row has no items and its source is gone")
+
+// CopyMatches verifies one row without lock context (no cumulative variant).
+func CopyMatches(e lockfile.Entry) (bool, error) {
+	return CopyMatchesIn(nil, e)
+}
+
+// CopyMatchesIn verifies a copy row. Rows with Items hash over Items. Legacy
+// kind-level rows try TopNames(Source), the cumulative set (earlier rows at the
+// same Path), then the whole-dir hash. Returns ErrCannotVerify when nothing
+// matched and the names are unknowable (Source gone, no Items).
+func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
+	if e.Name != "" || e.Kind == "" && e.Source == "" {
+		hash, err := transfer.HashPath(e.Path)
+		if err != nil {
+			return false, err
+		}
+		return hash == e.SHA256, nil
+	}
+	if len(e.Items) > 0 {
+		hash, err := transfer.HashNames(e.Path, e.Items)
+		if err != nil {
+			return false, err
+		}
+		return hash == e.SHA256, nil
+	}
+	try := func(names []string) (bool, error) {
+		hash, err := transfer.HashNames(e.Path, names)
+		if err != nil {
+			return false, err
+		}
+		return hash == e.SHA256, nil
+	}
+	srcKnown := false
+	var own []string
+	if e.Source != "" {
+		if names, err := transfer.TopNames(e.Source, e.Kind); err == nil {
+			srcKnown = true
+			own = names
+			if ok, err := try(own); err != nil || ok {
+				return ok, err
+			}
+		}
+	}
+	if lock != nil {
+		set := map[string]bool{}
+		for _, n := range own {
+			set[n] = true
+		}
+		complete := srcKnown
+		for _, o := range lock.Entries {
+			if o.Name != "" || filepath.Clean(o.Path) != filepath.Clean(e.Path) || !o.InstalledAt.Before(e.InstalledAt) {
+				continue
+			}
+			names := o.Items
+			if len(names) == 0 && o.Source != "" {
+				names, _ = transfer.TopNames(o.Source, o.Kind)
+			}
+			if len(names) == 0 {
+				complete = false
+			}
+			for _, n := range names {
+				set[n] = true
+			}
+		}
+		if len(set) > 0 && complete {
+			all := make([]string, 0, len(set))
+			for n := range set {
+				all = append(all, n)
+			}
+			sort.Strings(all)
+			if ok, err := try(all); err != nil || ok {
+				return ok, err
+			}
+		}
+	}
+	hash, err := transfer.HashPath(e.Path)
+	if err != nil {
+		return false, err
+	}
+	if hash == e.SHA256 {
+		return true, nil
+	}
+	if !srcKnown {
+		return false, ErrCannotVerify
+	}
+	return false, nil
+}
+
+func hasSourcedRow(lock *lockfile.Lockfile, dir string) bool {
+	clean := filepath.Clean(dir)
+	for _, e := range lock.Entries {
+		if e.Name == "" && (e.Source != "" || len(e.Items) > 0) && filepath.Clean(e.Path) == clean {
+			return true
+		}
+	}
+	return false
 }

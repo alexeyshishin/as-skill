@@ -303,6 +303,19 @@ func (in *Installer) preflightRoots(kinds map[string]bool) error {
 	return nil
 }
 
+func (in *Installer) GuardRoots(kinds ...string) error {
+	set := map[string]bool{}
+	for _, k := range kinds {
+		set[k] = true
+	}
+	for _, r := range in.touchedRoots(set) {
+		if err := in.guardRoot(r); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (in *Installer) runnable(m *registry.Manifest) bool {
 	for _, e := range m.RequiresEnv {
 		if os.Getenv(e) == "" {
@@ -576,7 +589,7 @@ func (in *Installer) refuseForeign(dst string) error {
 	if _, err := os.Lstat(dst); err != nil {
 		return nil
 	}
-	if _, ok := in.Lock.Owns(dst); ok || in.Force {
+	if _, ok := in.Lock.Covering(dst); ok || in.Force {
 		return nil
 	}
 	return fmt.Errorf("%s exists, not tracked by as-skill, use --force", dst)
@@ -905,6 +918,10 @@ func (in *Installer) removeEntry(e lockfile.Entry) bool {
 		}
 	default:
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", e.Path, e.Mode)
+		return false
+	}
+	if err := InsideRoots(in.ProjectRoot, e.Path); err != nil {
+		fmt.Fprintf(os.Stderr, "as-skill: error: refusing %v\n", err)
 		return false
 	}
 	if in.DryRun {
