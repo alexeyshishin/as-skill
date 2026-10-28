@@ -286,3 +286,63 @@ func TestDialogPlatformNoDetectedNoteInEmptyProject(t *testing.T) {
 		}
 	}
 }
+
+func TestDialogBackReasksWithPreselection(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["platforms"] = seq{prompt.ErrBack, []string{"claude", "codex"}}
+	ans["domains"] = seq{[]string{"git"}, []string{"git"}}
+	fp := newFake(t, ans)
+	enableDialog(t, fp)
+	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("project", "domains", "platforms", "domains", "platforms", "mode")
+	if got := fp.history["domains"]; !reflect.DeepEqual(got, [][]string{nil, {"git"}}) {
+		t.Fatalf("domains preselection %v", got)
+	}
+}
+
+func TestDialogBackOnFirstStepStays(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["project"] = seq{prompt.ErrBack, p}
+	fp := newFake(t, ans)
+	enableDialog(t, fp)
+	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("project", "project", "domains", "platforms", "mode")
+}
+
+func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["domains"] = seq{prompt.ErrBack, []string{"git"}}
+	fp := newFake(t, ans)
+	enableDialog(t, fp)
+	// -p pre-answers project: back from domains has nowhere to go, stays.
+	if _, err := run(t, "add", "--harness-root", h, "-p", p, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("domains", "domains", "platforms", "mode")
+}
+
+func TestDialogBackFromConfirmGoesToMode(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["mode"] = seq{"copy", "link"}
+	ans["confirm"] = seq{prompt.ErrBack, false}
+	fp := newFake(t, ans)
+	enableDialog(t, fp)
+	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+		t.Fatalf("got %v", err)
+	}
+	fp.wantAsked("project", "domains", "platforms", "mode", "confirm", "mode", "confirm")
+	if got := fp.history["mode"]; len(got) != 2 || !reflect.DeepEqual(got[1], []string{"copy"}) {
+		t.Fatalf("mode preselection %v", got)
+	}
+	if ents, _ := os.ReadDir(p); len(ents) != 0 {
+		t.Fatalf("project not empty: %v", ents)
+	}
+}

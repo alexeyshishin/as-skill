@@ -22,6 +22,7 @@ type fakePrompt struct {
 	options  map[string][]prompt.Option
 	validate map[string]func([]string) error
 	summary  string
+	history  map[string][][]string // per id: selected values at each ask
 }
 
 func newFake(t *testing.T, answers map[string]any) *fakePrompt {
@@ -36,12 +37,22 @@ func enableDialog(t *testing.T, fp *fakePrompt) {
 	t.Cleanup(func() { interactive, newPrompter = oldI, oldN })
 }
 
+// seq scripts successive answers to one question id (e.g. prompt.ErrBack, then a value).
+type seq []any
+
 func (f *fakePrompt) answer(id string) any {
 	f.t.Helper()
 	f.asked = append(f.asked, id)
 	a, ok := f.answers[id]
 	if !ok {
 		f.t.Fatalf("unexpected prompt id %q (asked so far: %v)", id, f.asked)
+	}
+	if q, ok := a.(seq); ok {
+		if len(q) == 0 {
+			f.t.Fatalf("scripted answers for %q exhausted", id)
+		}
+		a = q[0]
+		f.answers[id] = q[1:]
 	}
 	return a
 }
@@ -58,6 +69,7 @@ func (f *fakePrompt) MultiSelect(id, title string, opts []prompt.Option, validat
 	a := f.answer(id)
 	f.options[id] = opts
 	f.validate[id] = validate
+	f.record(id, opts)
 	if err, ok := a.(error); ok {
 		return nil, err
 	}
@@ -67,6 +79,7 @@ func (f *fakePrompt) MultiSelect(id, title string, opts []prompt.Option, validat
 func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) (string, error) {
 	a := f.answer(id)
 	f.options[id] = opts
+	f.record(id, opts)
 	if err, ok := a.(error); ok {
 		return "", err
 	}
@@ -106,4 +119,17 @@ func (f *fakePrompt) selected(id string) []string {
 		}
 	}
 	return out
+}
+
+func (f *fakePrompt) record(id string, opts []prompt.Option) {
+	if f.history == nil {
+		f.history = map[string][][]string{}
+	}
+	var sel []string
+	for _, o := range opts {
+		if o.Selected {
+			sel = append(sel, o.Value)
+		}
+	}
+	f.history[id] = append(f.history[id], sel)
 }

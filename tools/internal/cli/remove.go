@@ -109,69 +109,106 @@ func runRemove(args []string) error {
 		return gateError(opts)
 	}
 	var pr prompt.Prompter
-	var projectRoot string
 	if dlg {
 		pr = newPrompter()
-		projectRoot, err = askProject(pr, opts)
-	} else {
-		projectRoot, err = resolveProject(opts.project)
 	}
+	var (
+		projectRoot, harnessRoot string
+		prevProj                 string
+		prevNames                []string
+		prevPlats                []platform.ID
+		lock                     *lockfile.Lockfile
+		targets                  []removeTarget
+		reg                      *registry.Registry
+		plats                    []platform.ID
+	)
+	nameArgs := len(opts.names) > 0
+	names := opts.names
+	err = runSteps([]func() (bool, error){
+		func() (bool, error) {
+			var err error
+			if !dlg {
+				projectRoot, err = resolveProject(opts.project)
+				return false, err
+			}
+			projectRoot, err = askProject(pr, opts, prevProj)
+			if err == nil {
+				prevProj = projectRoot
+			}
+			return !opts.projectSet, err
+		},
+		func() (bool, error) {
+			var err error
+			lock, err = lockfile.Load(projectRoot)
+			return false, err
+		},
+		func() (bool, error) {
+			if !dlg || nameArgs {
+				return false, nil
+			}
+			var err error
+			if names, err = askRemoveNames(pr, lock, projectRoot, prevNames); err != nil {
+				return true, err
+			}
+			prevNames = names
+			return true, nil
+		},
+		func() (bool, error) {
+			var err error
+			targets, err = removeTargets(lock, projectRoot, names)
+			if err != nil {
+				return false, err
+			}
+			var herr error
+			harnessRoot, herr = resolveHarness(opts.harnessRoot)
+			reg = nil
+			if herr == nil {
+				r, rerr := registry.LoadRegistry(harnessRoot)
+				if rerr == nil {
+					reg = r
+				} else if opts.harnessRoot != "" {
+					return false, fmt.Errorf("remove: --harness-root rejected: %w", rerr)
+				}
+			} else if opts.harnessRoot != "" {
+				return false, fmt.Errorf("remove: --harness-root rejected: %w", herr)
+			}
+			return false, nil
+		},
+		func() (bool, error) {
+			var allRows []lockfile.Entry
+			for _, t := range targets {
+				allRows = append(allRows, t.rows...)
+				allRows = append(allRows, t.cover...)
+			}
+			if len(opts.agents) > 0 {
+				var err error
+				plats, err = platform.ParsePlatforms(opts.agents)
+				return false, err
+			}
+			plats = recordedPlatforms(allRows)
+			if dlg && len(plats) > 1 {
+				var err error
+				if plats, err = askRemovePlatforms(pr, plats, prevPlats); err != nil {
+					return true, err
+				}
+				prevPlats = plats
+				return true, nil
+			}
+			return false, nil
+		},
+		func() (bool, error) {
+			if dlg && !opts.dryRun {
+				return true, confirm(pr, "Remove?", removeSummary(projectRoot, names, plats))
+			}
+			return false, nil
+		},
+	})
 	if err != nil {
 		return err
 	}
-	lock, err := lockfile.Load(projectRoot)
-	if err != nil {
-		return err
-	}
-	if dlg && len(opts.names) == 0 {
-		if opts.names, err = askRemoveNames(pr, lock, projectRoot); err != nil {
-			return err
-		}
-	}
-	targets, err := removeTargets(lock, projectRoot, opts.names)
-	if err != nil {
-		return err
-	}
-
-	var reg *registry.Registry
-	harnessRoot, herr := resolveHarness(opts.harnessRoot)
-	if herr == nil {
-		r, rerr := registry.LoadRegistry(harnessRoot)
-		if rerr == nil {
-			reg = r
-		} else if opts.harnessRoot != "" {
-			return fmt.Errorf("remove: --harness-root rejected: %w", rerr)
-		}
-	} else if opts.harnessRoot != "" {
-		return fmt.Errorf("remove: --harness-root rejected: %w", herr)
-	}
+	opts.names = names
 	if reg == nil {
 		fmt.Fprintln(os.Stderr, "as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)")
-	}
-
-	var allRows []lockfile.Entry
-	for _, t := range targets {
-		allRows = append(allRows, t.rows...)
-		allRows = append(allRows, t.cover...)
-	}
-	var plats []platform.ID
-	if len(opts.agents) > 0 {
-		plats, err = platform.ParsePlatforms(opts.agents)
-		if err != nil {
-			return err
-		}
-	} else {
-		plats = recordedPlatforms(allRows)
-		if dlg && len(plats) > 1 {
-			if plats, err = askRemovePlatforms(pr, plats); err != nil {
-				return err
-			}
-		}
-	}
-	if dlg && !opts.dryRun {
-		if err := confirm(pr, "Remove?", removeSummary(projectRoot, opts.names, plats)); err != nil {
-			return err
-		}
 	}
 	fmt.Printf("platforms: %s\n", strings.Join(platformDirNames(plats), ", "))
 

@@ -28,6 +28,32 @@ func abortErr(err error) error {
 	return err
 }
 
+// runSteps runs dialog steps in order. A step reports whether it asked a
+// question. On prompt.ErrBack it returns to the previous step that asked
+// (pre-answered/computed steps are skipped); on the first it stays.
+func runSteps(steps []func() (bool, error)) error {
+	asked := make([]bool, len(steps))
+	for i := 0; i < len(steps); {
+		a, err := steps[i]()
+		if errors.Is(err, prompt.ErrBack) {
+			j := i - 1
+			for j >= 0 && !asked[j] {
+				j--
+			}
+			if j >= 0 {
+				i = j
+			}
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		asked[i] = a
+		i++
+	}
+	return nil
+}
+
 // wantDialog: a terminal, no -y, and not a fully specified dry-run.
 func wantDialog(o addOpts) bool {
 	if o.yes || (o.dryRun && len(o.names) > 0) {
@@ -36,7 +62,7 @@ func wantDialog(o addOpts) bool {
 	return interactive()
 }
 
-func askProject(p prompt.Prompter, o addOpts) (string, error) {
+func askProject(p prompt.Prompter, o addOpts, prev string) (string, error) {
 	if o.projectSet {
 		return resolveProject(o.project)
 	}
@@ -44,7 +70,11 @@ func askProject(p prompt.Prompter, o addOpts) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	v, err := p.Input("project", "Project directory", cwd, func(s string) error {
+	def := cwd
+	if prev != "" {
+		def = prev
+	}
+	v, err := p.Input("project", "Project directory", def, func(s string) error {
 		_, err := resolveProject(s)
 		return err
 	})
@@ -71,7 +101,7 @@ func gatedLabel(m *registry.Manifest) string {
 	return ""
 }
 
-func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, lock *lockfile.Lockfile) ([]string, error) {
+func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, lock *lockfile.Lockfile, prev []string) ([]string, error) {
 	var opts []prompt.Option
 	for _, n := range reg.DomainNames() {
 		m := reg.Domains[n]
@@ -89,7 +119,7 @@ func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, l
 		if domainInstalled(lock, harnessRoot, n) {
 			label += " [installed]"
 		}
-		opts = append(opts, prompt.Option{Value: n, Label: label})
+		opts = append(opts, prompt.Option{Value: n, Label: label, Selected: contains(prev, n)})
 	}
 	validate := func(sel []string) error {
 		if len(sel) == 0 {
@@ -114,6 +144,15 @@ func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, l
 	return got, nil
 }
 
+func contains(l []string, s string) bool {
+	for _, x := range l {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
+
 func allPlatformOptions(selected map[platform.ID]bool, note string) []prompt.Option {
 	var opts []prompt.Option
 	for _, id := range platform.IDs() {
@@ -126,10 +165,16 @@ func allPlatformOptions(selected map[platform.ID]bool, note string) []prompt.Opt
 	return opts
 }
 
-func askPlatforms(p prompt.Prompter, detected []platform.ID, real bool) ([]platform.ID, error) {
+func askPlatforms(p prompt.Prompter, detected []platform.ID, real bool, prev []platform.ID) ([]platform.ID, error) {
 	sel := map[platform.ID]bool{}
 	for _, id := range detected {
 		sel[id] = true
+	}
+	if prev != nil {
+		sel = map[platform.ID]bool{}
+		for _, id := range prev {
+			sel[id] = true
+		}
 	}
 	note := ""
 	if real {
@@ -150,11 +195,14 @@ func askPlatforms(p prompt.Prompter, detected []platform.ID, real bool) ([]platf
 	return platform.ParsePlatforms(got)
 }
 
-func askMode(p prompt.Prompter) (string, error) {
+func askMode(p prompt.Prompter, prev string) (string, error) {
+	if prev == "" {
+		prev = "link"
+	}
 	v, err := p.Select("mode", "Install mode", []prompt.Option{
-		{Value: "link", Label: "symlink — edits in the checkout show up immediately", Selected: true},
-		{Value: "copy", Label: "copy — static snapshot, independent of the checkout"},
-	}, "link")
+		{Value: "link", Label: "symlink — edits in the checkout show up immediately", Selected: prev == "link"},
+		{Value: "copy", Label: "copy — static snapshot, independent of the checkout", Selected: prev == "copy"},
+	}, prev)
 	if err != nil {
 		return "", abortErr(err)
 	}
@@ -186,54 +234,94 @@ type addPlan struct {
 func addDialog(opts addOpts) (*addPlan, error) {
 	p := newPrompter()
 	pl := &addPlan{dialog: true}
-	var err error
-	if pl.project, err = askProject(p, opts); err != nil {
-		return nil, err
-	}
-	if pl.harness, err = registry.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
-		return nil, err
-	}
-	if pl.reg, err = registry.LoadRegistry(pl.harness); err != nil {
-		return nil, err
-	}
-	if pl.lock, err = lockfile.Load(pl.project); err != nil {
-		return nil, err
-	}
+	var (
+		projRaw   string
+		prevDoms  []string
+		prevPlats []platform.ID
+		prevMode  string
+		platSrc   string
+	)
 	names := opts.names
-	if len(names) == 0 {
-		if names, err = askDomains(p, pl.harness, pl.reg, pl.lock); err != nil {
-			return nil, err
-		}
-	}
-	if pl.sel, err = resolveNames(pl.harness, pl.reg, names); err != nil {
-		return nil, err
-	}
-	if len(pl.sel.Domains) == 0 && len(pl.sel.Skills) == 0 {
-		return nil, errors.New("nothing to add")
-	}
-	det, src := detectPlatforms(pl.project, pl.lock)
-	platSrc := "default"
-	if len(src) > 0 {
-		platSrc = "detected from " + strings.Join(uniqStrings(src), ", ")
-	}
-	if len(opts.agents) > 0 {
-		platSrc = "-a"
-		if pl.plats, err = platform.ParsePlatforms(opts.agents); err != nil {
-			return nil, err
-		}
-	} else if pl.plats, err = askPlatforms(p, det, len(src) > 0); err != nil {
-		return nil, err
-	}
-	pl.mode = "link"
-	if opts.copy {
-		pl.mode = "copy"
-	} else if pl.mode, err = askMode(p); err != nil {
-		return nil, err
-	}
-	if opts.dryRun {
-		return pl, nil
-	}
-	if err := confirm(p, "Install?", addSummary(opts, pl, platSrc)); err != nil {
+	err := runSteps([]func() (bool, error){
+		func() (bool, error) {
+			var err error
+			pl.project, err = askProject(p, opts, projRaw)
+			if err == nil {
+				projRaw = pl.project
+			}
+			return !opts.projectSet, err
+		},
+		func() (bool, error) {
+			var err error
+			if pl.harness, err = registry.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+				return false, err
+			}
+			if pl.reg, err = registry.LoadRegistry(pl.harness); err != nil {
+				return false, err
+			}
+			pl.lock, err = lockfile.Load(pl.project)
+			return false, err
+		},
+		func() (bool, error) {
+			if len(opts.names) > 0 {
+				return false, nil
+			}
+			var err error
+			if names, err = askDomains(p, pl.harness, pl.reg, pl.lock, prevDoms); err != nil {
+				return true, err
+			}
+			prevDoms = names
+			return true, nil
+		},
+		func() (bool, error) {
+			var err error
+			if pl.sel, err = resolveNames(pl.harness, pl.reg, names); err != nil {
+				return false, err
+			}
+			if len(pl.sel.Domains) == 0 && len(pl.sel.Skills) == 0 {
+				return false, errors.New("nothing to add")
+			}
+			return false, nil
+		},
+		func() (bool, error) {
+			det, src := detectPlatforms(pl.project, pl.lock)
+			platSrc = "default"
+			if len(src) > 0 {
+				platSrc = "detected from " + strings.Join(uniqStrings(src), ", ")
+			}
+			var err error
+			if len(opts.agents) > 0 {
+				platSrc = "-a"
+				pl.plats, err = platform.ParsePlatforms(opts.agents)
+				return false, err
+			}
+			if pl.plats, err = askPlatforms(p, det, len(src) > 0, prevPlats); err != nil {
+				return true, err
+			}
+			prevPlats = pl.plats
+			return true, nil
+		},
+		func() (bool, error) {
+			pl.mode = "link"
+			if opts.copy {
+				pl.mode = "copy"
+				return false, nil
+			}
+			var err error
+			if pl.mode, err = askMode(p, prevMode); err != nil {
+				return true, err
+			}
+			prevMode = pl.mode
+			return true, nil
+		},
+		func() (bool, error) {
+			if opts.dryRun {
+				return false, nil
+			}
+			return true, confirm(p, "Install?", addSummary(opts, pl, platSrc))
+		},
+	})
+	if err != nil {
 		return nil, err
 	}
 	return pl, nil
@@ -322,8 +410,11 @@ func sortedKeys(m map[string]bool) []string {
 	return out
 }
 
-func askRemoveNames(p prompt.Prompter, lock *lockfile.Lockfile, project string) ([]string, error) {
+func askRemoveNames(p prompt.Prompter, lock *lockfile.Lockfile, project string, prev []string) ([]string, error) {
 	opts := removeChoices(lock)
+	for i := range opts {
+		opts[i].Selected = contains(prev, opts[i].Value)
+	}
 	if len(opts) == 0 {
 		return nil, fmt.Errorf("nothing installed in %s (see `as-skill doctor`)", project)
 	}
@@ -342,14 +433,10 @@ func askRemoveNames(p prompt.Prompter, lock *lockfile.Lockfile, project string) 
 	return got, nil
 }
 
-func askRemovePlatforms(p prompt.Prompter, recorded []platform.ID) ([]platform.ID, error) {
-	sel := map[platform.ID]bool{}
-	for _, id := range recorded {
-		sel[id] = true
-	}
+func askRemovePlatforms(p prompt.Prompter, recorded, prev []platform.ID) ([]platform.ID, error) {
 	var opts []prompt.Option
 	for _, id := range recorded {
-		opts = append(opts, prompt.Option{Value: string(id), Label: string(id), Selected: true})
+		opts = append(opts, prompt.Option{Value: string(id), Label: string(id), Selected: prev == nil || containsPlat(prev, id)})
 	}
 	got, err := p.MultiSelect("platforms", "Platforms to remove from", opts, func(s []string) error {
 		if len(s) == 0 {
@@ -364,6 +451,15 @@ func askRemovePlatforms(p prompt.Prompter, recorded []platform.ID) ([]platform.I
 		return nil, errors.New("no platform selected")
 	}
 	return platform.ParsePlatforms(got)
+}
+
+func containsPlat(l []platform.ID, id platform.ID) bool {
+	for _, x := range l {
+		if x == id {
+			return true
+		}
+	}
+	return false
 }
 
 func removeSummary(project string, names []string, plats []platform.ID) string {
