@@ -3,6 +3,7 @@ package fsys
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -87,5 +88,37 @@ func TestCopyTreeBrokenSymlinkErrors(t *testing.T) {
 	}
 	if _, err := CopyTreeRoot(false, skill, filepath.Join(t.TempDir(), "out"), root, false); err == nil {
 		t.Fatal("want error for broken symlink")
+	}
+}
+
+func TestNonExecutableScripts(t *testing.T) {
+	dir := t.TempDir()
+	files := map[string]os.FileMode{
+		"b.sh":    0o644,
+		"a.sh":    0o644,
+		"exec.sh": 0o755,
+		"note.md": 0o644,
+		"c.txt":   0o600,
+	}
+	for n, m := range files {
+		if err := os.WriteFile(filepath.Join(dir, n), nil, m); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(filepath.Join(dir, n), m); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Mkdir(filepath.Join(dir, "d.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{filepath.Join(dir, "a.sh"), filepath.Join(dir, "b.sh")}
+	for i := 0; i < 3; i++ {
+		got := NonExecutableScripts(dir)
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %v want %v", got, want)
+		}
+	}
+	if got := NonExecutableScripts(filepath.Join(dir, "missing")); got != nil {
+		t.Fatalf("missing dir: %v", got)
 	}
 }
