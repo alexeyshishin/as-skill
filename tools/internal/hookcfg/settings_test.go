@@ -1,4 +1,4 @@
-package installer
+package hookcfg
 
 import (
 	"encoding/json"
