@@ -8,19 +8,34 @@ import (
 	"time"
 )
 
-const (
-	ModeLink   = "link"
-	ModeCopy   = "copy"
-	ModeRender = "render"
+type Mode string
 
-	DefaultPlatform = "claude"
+const (
+	ModeLink   Mode = "link"
+	ModeCopy   Mode = "copy"
+	ModeRender Mode = "render"
+	ModeBlock  Mode = "block"
 )
+
+type Kind string
+
+const (
+	KindRules        Kind = "rules"
+	KindSkills       Kind = "skills"
+	KindSkill        Kind = "skill"
+	KindAgents       Kind = "agents"
+	KindHooks        Kind = "hooks"
+	KindPrompts      Kind = "prompts"
+	KindInstructions Kind = "instructions"
+)
+
+const DefaultPlatform = "claude"
 
 type Entry struct {
 	Domain      string    `json:"domain"`
-	Kind        string    `json:"kind"`
+	Kind        Kind      `json:"kind"`
 	Name        string    `json:"name"`
-	Mode        string    `json:"mode"`
+	Mode        Mode      `json:"mode"`
 	Path        string    `json:"path"`
 	Source      string    `json:"source"`
 	SHA256      string    `json:"sha256,omitempty"`
@@ -70,7 +85,7 @@ func claudeOnly(p []string) bool {
 
 func migrateCoreSkillKind(lf *Lockfile) {
 	for i, e := range lf.Entries {
-		if e.Domain == "core" && e.Kind == "skill" {
+		if e.Domain == "core" && e.Kind == KindSkill {
 			lf.Entries[i].Kind = "skills"
 		}
 	}
@@ -160,7 +175,7 @@ func (lf *Lockfile) RemoveAllAt(path string) {
 	lf.Entries = out
 }
 
-func (lf *Lockfile) Find(domain, kind, name string) (Entry, bool) {
+func (lf *Lockfile) Find(domain string, kind Kind, name string) (Entry, bool) {
 	for _, e := range lf.Entries {
 		if e.Domain == domain && e.Kind == kind && e.Name == name {
 			return e, true
@@ -169,7 +184,7 @@ func (lf *Lockfile) Find(domain, kind, name string) (Entry, bool) {
 	return Entry{}, false
 }
 
-func (lf *Lockfile) FindAt(domain, kind, name, path string) (Entry, bool) {
+func (lf *Lockfile) FindAt(domain string, kind Kind, name string, path string) (Entry, bool) {
 	clean := filepath.Clean(path)
 	for _, e := range lf.Entries {
 		if e.Domain == domain && e.Kind == kind && e.Name == name && filepath.Clean(e.Path) == clean {
@@ -193,7 +208,7 @@ func (lf *Lockfile) Record(entry Entry) {
 	lf.Entries = append(lf.Entries, entry)
 }
 
-func (lf *Lockfile) Remove(domain, kind, name string) {
+func (lf *Lockfile) Remove(domain string, kind Kind, name string) {
 	out := lf.Entries[:0:0]
 	for _, e := range lf.Entries {
 		if e.Domain == domain && e.Kind == kind && e.Name == name {
@@ -204,7 +219,7 @@ func (lf *Lockfile) Remove(domain, kind, name string) {
 	lf.Entries = out
 }
 
-func (lf *Lockfile) RemoveAt(domain, kind, name, path string) {
+func (lf *Lockfile) RemoveAt(domain string, kind Kind, name string, path string) {
 	clean := filepath.Clean(path)
 	out := lf.Entries[:0:0]
 	for _, e := range lf.Entries {
