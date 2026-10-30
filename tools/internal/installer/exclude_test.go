@@ -307,12 +307,8 @@ func TestUninstallAfterPartialInstallNoNotTrackedNoiseForAbsentExcluded(t *testi
 }
 
 func collectAlpha(in *Installer, reg *harness.Registry) ([]ConflictError, error) {
-	return in.Collect(func() error {
-		if err := in.Preflight(reg, []string{"alpha"}); err != nil {
-			return err
-		}
-		return in.InstallDomain(reg, "alpha", true)
-	})
+	plan, err := in.PlanInstall(reg, []DomainReq{{Name: "alpha", Strict: true}}, nil)
+	return plan.Conflicts, err
 }
 
 func TestCollectGathersConflictsWithoutWritingOrPrinting(t *testing.T) {
@@ -383,8 +379,8 @@ func TestCollectGathersConflictsWithoutWritingOrPrinting(t *testing.T) {
 			if len(lock.Entries) != 0 {
 				t.Fatalf("collect recorded rows: %+v", lock.Entries)
 			}
-			if in.DryRun || in.collecting {
-				t.Fatal("collect left installer in dry/collecting state")
+			if in.DryRun {
+				t.Fatal("collect left installer in dry state")
 			}
 		})
 	}
@@ -520,7 +516,7 @@ func TestCollectGuardFailureIsNotIgnoredConflict(t *testing.T) {
 	err = in.Preflight(reg, []string{"alpha"})
 	var ce *ConflictError
 	if !errors.As(err, &ce) || ce.Reason != ReasonNotIgnored || !strings.Contains(err.Error(), "is not git-ignored") {
-		t.Fatalf("non-collecting Preflight must still refuse, got %v", err)
+		t.Fatalf("strict Preflight must still refuse, got %v", err)
 	}
 
 	in.Mode = "copy"

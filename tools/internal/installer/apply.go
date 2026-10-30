@@ -30,9 +30,12 @@ func (e *OpError) Unwrap() error { return e.Err }
 // Apply runs the plan in order. With in.DryRun it prints the same rows and
 // writes nothing.
 func (in *Installer) Apply(p *Plan) error {
+	if p.git == nil {
+		p.git = gitCache{}
+	}
 	for i, op := range p.Ops {
 		in.emitWarnings(p, i)
-		if err := in.applyOp(op); err != nil {
+		if err := in.applyOp(p.git, op); err != nil {
 			return err
 		}
 	}
@@ -53,15 +56,15 @@ func (in *Installer) emitWarnings(p *Plan, before int) {
 	}
 }
 
-func (in *Installer) applyOp(op Op) error {
+func (in *Installer) applyOp(c gitCache, op Op) error {
 	switch {
 	case op.Item:
-		if err := in.placeOne(op.Domain, op.Kind, op.Name, op.Src, op.Dst, op.Platforms); err != nil {
+		if err := in.placeOne(c, op.Domain, op.Kind, op.Name, op.Src, op.Dst, op.Platforms); err != nil {
 			return &OpError{op, stagePlace, err}
 		}
 		return nil
 	case op.Type == OpRender:
-		if err := in.applyRender(op); err != nil {
+		if err := in.applyRender(c, op); err != nil {
 			return &OpError{op, stagePlace, err}
 		}
 		return nil
@@ -83,7 +86,7 @@ func (in *Installer) applyOp(op Op) error {
 		defer in.applyPlatforms(op.Domain, op.Kind, op.Dst, op.Platforms, prior)
 	}
 	if len(op.Exclude) > 0 && op.Type == OpCopy {
-		if err := in.placeItems(op.Domain, op.Kind, op.Src, op.Dst, op.Platforms); err != nil {
+		if err := in.placeItems(c, op.Domain, op.Kind, op.Src, op.Dst, op.Platforms); err != nil {
 			return &OpError{op, stagePlace, err}
 		}
 		if !in.DryRun {
@@ -107,14 +110,14 @@ func (in *Installer) applyOp(op Op) error {
 	return nil
 }
 
-func (in *Installer) applyRender(op Op) error {
-	data, err := os.ReadFile(op.Src)
+// renderOp reads op.Src and renders it; writes nothing.
+func (in *Installer) renderOp(op Op) (data, out []byte, pf platform.Platform, err error) {
+	data, err = os.ReadFile(op.Src)
 	if err != nil {
-		return err
+		return nil, nil, pf, err
 	}
-	pf, _ := platform.Get(op.Platforms[0])
+	pf, _ = platform.Get(op.Platforms[0])
 	stem := strings.TrimSuffix(op.Name, ".md")
-	var out []byte
 	if op.Kind == lockfile.KindAgents {
 		promptRel := ""
 		if in.Mode == lockfile.ModeLink {
@@ -122,10 +125,18 @@ func (in *Installer) applyRender(op Op) error {
 		}
 		out, err = render.RenderAgent(data, filepath.ToSlash(relToHarness(in.HarnessRoot, op.Src)), stem, pf.Agents.Format, in.Mode, promptRel)
 		if err != nil {
-			return err
+			return nil, nil, pf, err
 		}
 	} else {
 		out = render.MDCStub(stem, platform.AgentsRulesDir+"/"+op.Name, string(data), in.Mode)
 	}
-	return in.writeRendered(op.Domain, op.Kind, op.Name, op.Src, op.Dst, data, out, pf.ID)
+	return data, out, pf, nil
+}
+
+func (in *Installer) applyRender(c gitCache, op Op) error {
+	data, out, pf, err := in.renderOp(op)
+	if err != nil {
+		return err
+	}
+	return in.writeRendered(c, op.Domain, op.Kind, op.Name, op.Src, op.Dst, data, out, pf.ID)
 }

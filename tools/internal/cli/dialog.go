@@ -164,11 +164,8 @@ func unignoredRoots(project string, copyMode, force bool) map[platform.ID]string
 	}
 	for _, id := range platform.IDs() {
 		in := &installer.Installer{ProjectRoot: project, Mode: lockfile.ModeLink, Platforms: []platform.ID{id}}
-		cs, _ := in.Collect(func() error {
-			return in.GuardRoots(lockfile.KindSkills, lockfile.KindAgents, lockfile.KindRules, lockfile.KindHooks)
-		})
 		var roots []string
-		for _, c := range cs {
+		for _, c := range in.PlanRoots(lockfile.KindSkills, lockfile.KindAgents, lockfile.KindRules, lockfile.KindHooks).Conflicts {
 			if c.Reason == installer.ReasonNotIgnored {
 				roots = append(roots, c.Path)
 			}

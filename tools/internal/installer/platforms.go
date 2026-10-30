@@ -13,7 +13,6 @@ import (
 
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsys"
-	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/hookcfg"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -161,36 +160,47 @@ func (in *Installer) setEntryPlatforms(e lockfile.Entry, plats []string) {
 	}
 }
 
-func (in *Installer) guard(dst string) error {
+// gitCache memoizes git-ignore answers per root for one Plan.
+type gitCache map[string]bool
+
+// unignored: a link-mode write under root would be committed (root not git-ignored).
+func (in *Installer) unignored(c gitCache, root string) bool {
+	if in.Mode != lockfile.ModeLink || in.Force || !platform.IsLinkRoot(root) {
+		return false
+	}
+	ok, done := c[root]
+	if !done {
+		ok = gitIgnored(in.ProjectRoot, root)
+		c[root] = ok
+	}
+	return !ok
+}
+
+func (in *Installer) guardRootErr(c gitCache, root string) error {
+	if in.unignored(c, root) {
+		return &ConflictError{Path: root, Reason: ReasonNotIgnored}
+	}
+	return nil
+}
+
+// dstRoot is the first path segment of dst under the project.
+func (in *Installer) dstRoot(dst string) (string, bool) {
+	rel, err := filepath.Rel(in.ProjectRoot, dst)
+	if err != nil {
+		return "", false
+	}
+	return strings.Split(filepath.ToSlash(rel), "/")[0], true
+}
+
+func (in *Installer) guard(c gitCache, dst string) error {
 	if in.Mode != lockfile.ModeLink || in.Force {
 		return nil
 	}
-	rel, err := filepath.Rel(in.ProjectRoot, dst)
-	if err != nil {
+	root, ok := in.dstRoot(dst)
+	if !ok {
 		return nil
 	}
-	return in.guardRoot(strings.Split(filepath.ToSlash(rel), "/")[0])
-}
-
-func (in *Installer) guardRoot(root string) error {
-	if in.Mode != lockfile.ModeLink || in.Force || !platform.IsLinkRoot(root) {
-		return nil
-	}
-	if ok, done := in.gitChecked[root]; done {
-		if ok {
-			return nil
-		}
-		return in.conflict(root, ReasonNotIgnored)
-	}
-	if in.gitChecked == nil {
-		in.gitChecked = map[string]bool{}
-	}
-	ok := gitIgnored(in.ProjectRoot, root)
-	in.gitChecked[root] = ok
-	if ok {
-		return nil
-	}
-	return in.conflict(root, ReasonNotIgnored)
+	return in.guardRootErr(c, root)
 }
 
 func gitIgnored(project, root string) bool {
@@ -208,10 +218,6 @@ func gitIgnored(project, root string) bool {
 		return false
 	}
 	return true
-}
-
-func (in *Installer) noteGaps() {
-	_ = in.Apply(in.planGaps())
 }
 
 func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
@@ -246,127 +252,6 @@ func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-func (in *Installer) preflightRoots(kinds map[lockfile.Kind]bool) error {
-	in.noteGaps()
-	for _, r := range in.touchedRoots(kinds) {
-		if err := in.guardRoot(r); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (in *Installer) GuardRoots(kinds ...lockfile.Kind) error {
-	set := map[lockfile.Kind]bool{}
-	for _, k := range kinds {
-		set[k] = true
-	}
-	for _, r := range in.touchedRoots(set) {
-		if err := in.guardRoot(r); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (in *Installer) runnable(m *harness.Manifest) bool {
-	_, gated := m.Gate()
-	return !gated
-}
-
-func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
-	for _, name := range domains {
-		m, ok := reg.Domains[name]
-		if !ok || !in.runnable(m) {
-			continue
-		}
-		kinds := map[lockfile.Kind]bool{}
-		for _, kind := range harness.DomainKinds {
-			if fsys.DirExists(harness.KindDir(in.HarnessRoot, name, kind)) {
-				kinds[kind] = true
-			}
-		}
-		if kinds[lockfile.KindAgents] {
-			if err := in.checkReserved(harness.KindDir(in.HarnessRoot, name, lockfile.KindAgents)); err != nil {
-				return fmt.Errorf("domain %q: %w", name, err)
-			}
-		}
-		if err := in.preflightRoots(kinds); err != nil {
-			return err
-		}
-		if err := in.preflightForeign(name, kinds); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (in *Installer) preflightForeign(name string, kinds map[lockfile.Kind]bool) error {
-	var paths []string
-	itemPaths := func(kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) {
-		entries, err := os.ReadDir(srcDir)
-		if err != nil {
-			return
-		}
-		for _, e := range entries {
-			if fsys.SkipTop(kind.SkipsReadme(), e.Name()) || in.excluded(name, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
-				continue
-			}
-			paths = append(paths, filepath.Join(dstDir, e.Name()))
-		}
-	}
-	for kind := range kinds {
-		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
-		if kind == lockfile.KindSkills {
-			locs, _ := platform.SkillLocations(in.plats())
-			for loc, plats := range locs {
-				if (loc != platform.ClaudeSkillsLoc || in.hasExclusions(name)) && in.Mode != lockfile.ModeLink {
-					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, loc), plats)
-				}
-			}
-			continue
-		}
-		for _, id := range in.plats() {
-			if id == platform.Claude {
-				continue
-			}
-			p, _ := platform.Get(id)
-			switch kind {
-			case lockfile.KindHooks:
-				if p.Hooks.Schema != platform.HooksNone && in.Mode != lockfile.ModeLink {
-					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, p.Hooks.Dir), []platform.ID{id})
-				}
-			case lockfile.KindAgents, lockfile.KindRules:
-				entries, err := in.mdItems(srcDir)
-				if err != nil {
-					return err
-				}
-				for _, e := range entries {
-					stem := strings.TrimSuffix(e.Name(), ".md")
-					switch {
-					case kind == lockfile.KindAgents:
-						data, err := os.ReadFile(filepath.Join(srcDir, e.Name()))
-						if err != nil {
-							return err
-						}
-						paths = append(paths, filepath.Join(in.ProjectRoot, p.Agents.Dir, agentNameOf(data, stem)+p.Agents.Ext))
-					case p.Rules.Mode == platform.RulesDirMDC:
-						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc"))
-					case in.Mode != lockfile.ModeLink:
-						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()))
-					}
-				}
-			}
-		}
-	}
-	for _, dst := range paths {
-		if err := in.refuseForeign(dst); err != nil {
-			return fmt.Errorf("domain %q: %w", name, err)
-		}
-	}
-	return nil
 }
 
 func hookWanted(kind lockfile.Kind, path string, plats []platform.ID) bool {
@@ -404,14 +289,6 @@ func (in *Installer) checkReserved(srcDir string) error {
 	return nil
 }
 
-func (in *Installer) installKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) error {
-	plan, perr := in.planKind(m, name, kind, srcDir)
-	if err := in.Apply(plan); err != nil {
-		return kindApplyErr(name, kind, err)
-	}
-	return perr
-}
-
 // kindApplyErr keeps the per-platform error wording of the pre-plan installer.
 func kindApplyErr(name string, kind lockfile.Kind, err error) error {
 	var oe *OpError
@@ -435,11 +312,12 @@ func skipItem(in *Installer, domain string, kind lockfile.Kind, srcDir, name str
 	return fsys.SkipTop(kind.SkipsReadme(), name) || in.excluded(domain, kind, name) || !hookWanted(kind, filepath.Join(srcDir, name), plats)
 }
 
-func (in *Installer) placeItems(domain string, kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) error {
+func (in *Installer) placeItems(c gitCache, domain string, kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) error {
 	plan, err := in.planItems(domain, kind, srcDir, dstDir, plats)
 	if err != nil {
 		return err
 	}
+	plan.git = c
 	if err := in.Apply(plan); err != nil {
 		var oe *OpError
 		if errors.As(err, &oe) {
@@ -450,8 +328,8 @@ func (in *Installer) placeItems(domain string, kind lockfile.Kind, srcDir, dstDi
 	return nil
 }
 
-func (in *Installer) placeOne(domain string, kind lockfile.Kind, name, src, dst string, plats []platform.ID) error {
-	if err := in.guard(dst); err != nil {
+func (in *Installer) placeOne(c gitCache, domain string, kind lockfile.Kind, name, src, dst string, plats []platform.ID) error {
+	if err := in.guard(c, dst); err != nil {
 		return err
 	}
 	pl := strs(plats)
@@ -514,18 +392,26 @@ func (in *Installer) placeOne(domain string, kind lockfile.Kind, name, src, dst 
 	return nil
 }
 
-func (in *Installer) refuseForeign(dst string) error {
+// isForeign: dst exists, no lock row covers it and nothing allows overwriting it.
+func (in *Installer) isForeign(dst string) bool {
 	if _, err := os.Lstat(dst); err != nil {
-		return nil
+		return false
 	}
 	if _, ok := in.Lock.Covering(dst); ok || in.Force || in.overwrites(dst) {
-		return nil
+		return false
 	}
-	return in.conflict(dst, ReasonForeign)
+	return true
 }
 
-func (in *Installer) writeRendered(domain string, kind lockfile.Kind, name, src, dst string, srcData, out []byte, p platform.ID) error {
-	if err := in.guard(dst); err != nil {
+func (in *Installer) refuseForeign(dst string) error {
+	if in.isForeign(dst) {
+		return &ConflictError{Path: dst, Reason: ReasonForeign}
+	}
+	return nil
+}
+
+func (in *Installer) writeRendered(c gitCache, domain string, kind lockfile.Kind, name, src, dst string, srcData, out []byte, p platform.ID) error {
+	if err := in.guard(c, dst); err != nil {
 		return err
 	}
 	if err := in.refuseForeign(dst); err != nil {

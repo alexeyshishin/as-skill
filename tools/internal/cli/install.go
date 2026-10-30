@@ -136,35 +136,30 @@ func runInstall(args []string, d Deps) error {
 		if len(positionals) != 1 {
 			return errors.New("install domain needs exactly one domain name")
 		}
-		if err := in.Preflight(reg, positionals); err != nil {
-			return err
-		}
 		runErr = installDomains(in, reg, positionals, true)
 	case "domains":
 		if len(positionals) == 0 {
 			return errors.New("install domains needs at least one domain name")
-		}
-		if err := in.Preflight(reg, positionals); err != nil {
-			return err
 		}
 		runErr = installDomains(in, reg, positionals, true)
 	case "all":
 		if len(positionals) != 0 {
 			return fmt.Errorf("install all takes no domain names (got %s)", strings.Join(positionals, ", "))
 		}
-		if err := in.Preflight(reg, reg.DomainNames()); err != nil {
-			return err
-		}
 		runErr = installDomains(in, reg, reg.DomainNames(), false)
 	case "skill":
 		if len(positionals) != 1 {
 			return errors.New("install skill needs exactly one skill name")
 		}
-		runErr = in.InstallSkill(reg, positionals[0])
+		runErr = in.InstallAll(reg, nil, positionals[:1])
 	default:
 		return fmt.Errorf("unknown install verb %q (want domain|domains|all|skill)", verb)
 	}
 
+	var pre *installer.PreflightError
+	if errors.As(runErr, &pre) {
+		return runErr
+	}
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
 			if runErr != nil {
@@ -181,10 +176,9 @@ func runInstall(args []string, d Deps) error {
 }
 
 func installDomains(in *installer.Installer, reg *harness.Registry, names []string, strict bool) error {
-	for _, name := range names {
-		if err := in.InstallDomain(reg, name, strict); err != nil {
-			return err
-		}
+	reqs := make([]installer.DomainReq, len(names))
+	for k, name := range names {
+		reqs[k] = installer.DomainReq{Name: name, Strict: strict}
 	}
-	return nil
+	return in.InstallAll(reg, reqs, nil)
 }

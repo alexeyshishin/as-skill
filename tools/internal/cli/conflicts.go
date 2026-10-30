@@ -13,34 +13,21 @@ import (
 	"claude-harness/tools/internal/prompt"
 )
 
-func preflightAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
-	if len(sel.Domains) == 0 {
-		return nil
+func domainReqs(sel selection) []installer.DomainReq {
+	reqs := make([]installer.DomainReq, len(sel.Domains))
+	for i, d := range sel.Domains {
+		reqs[i] = installer.DomainReq{Name: d.Name, Strict: d.Strict}
 	}
-	return in.Preflight(reg, sel.domainNames())
+	return reqs
 }
 
 func installAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
-	for _, d := range sel.Domains {
-		if err := in.InstallDomain(reg, d.Name, d.Strict); err != nil {
-			return err
-		}
-	}
-	for _, s := range sel.Skills {
-		if err := in.InstallSkill(reg, s); err != nil {
-			return err
-		}
-	}
-	return nil
+	return in.InstallAll(reg, domainReqs(sel), sel.Skills)
 }
 
 func collectConflicts(in *installer.Installer, reg *harness.Registry, sel selection) ([]installer.ConflictError, error) {
-	return in.Collect(func() error {
-		if err := preflightAll(in, reg, sel); err != nil {
-			return err
-		}
-		return installAll(in, reg, sel)
-	})
+	plan, err := in.PlanInstall(reg, domainReqs(sel), sel.Skills)
+	return plan.Conflicts, err
 }
 
 func conflictsError(cs []installer.ConflictError) error {

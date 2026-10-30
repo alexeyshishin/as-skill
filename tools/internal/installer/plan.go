@@ -36,6 +36,9 @@ type Op struct {
 	Exclude   []string
 	// Item: placed through placeOne (lockfile entry carries Platforms), not place().
 	Item bool
+	// unit/unitKind: the domain (or skill) and kind this op was planned for; error wording only.
+	unit     string
+	unitKind lockfile.Kind
 }
 
 // Warning is printed before Ops[Before] (Before == len(Ops): after the last op).
@@ -53,4 +56,6 @@ type Plan struct {
 	Ops       []Op
 	Conflicts []Conflict
 	Warnings  []Warning
+	// git: git-ignore answers shared by the planner and Apply for this plan.
+	git gitCache
 }

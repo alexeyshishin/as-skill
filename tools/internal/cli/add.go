@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -59,10 +60,11 @@ func runAdd(args []string, d Deps) error {
 		}
 	}
 
-	if err := preflightAll(in, reg, sel); err != nil {
-		return err
-	}
 	runErr := installAll(in, reg, sel)
+	var pre *installer.PreflightError
+	if errors.As(runErr, &pre) {
+		return runErr
+	}
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
 			if runErr != nil {

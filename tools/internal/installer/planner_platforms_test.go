@@ -35,7 +35,7 @@ func newPlanInstaller(mode lockfile.Mode, ids ...platform.ID) (*Installer, strin
 func TestPlanKindAgentsCodexCopy(t *testing.T) {
 	src := srcTree(t, map[string]string{"a.md": "---\nname: alpha\n---\nbody"})
 	in, proj := newPlanInstaller(lockfile.ModeCopy, platform.Codex)
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
+	p, err := in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestPlanKindAgentsCodexCopy(t *testing.T) {
 func TestPlanKindAgentsLinkAddsPromptOp(t *testing.T) {
 	src := srcTree(t, map[string]string{"a.md": "body"})
 	in, proj := newPlanInstaller(lockfile.ModeLink, platform.OpenCode)
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
+	p, err := in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestPlanKindAgentsLinkAddsPromptOp(t *testing.T) {
 func TestPlanKindRulesCursorMDCAndBlock(t *testing.T) {
 	src := srcTree(t, map[string]string{"r.md": "rule"})
 	in, proj := newPlanInstaller(lockfile.ModeLink, platform.Cursor)
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindRules, src)
+	p, err := in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindRules, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestPlanKindRulesCursorMDCAndBlock(t *testing.T) {
 	}
 
 	in, proj = newPlanInstaller(lockfile.ModeCopy, platform.Codex)
-	p, err = in.planKind(&harness.Manifest{}, "d", lockfile.KindRules, src)
+	p, err = in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindRules, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestPlanKindRulesCursorMDCAndBlock(t *testing.T) {
 func TestPlanKindHooks(t *testing.T) {
 	src := srcTree(t, map[string]string{"h.sh": "#!/bin/sh\n"})
 	in, _ := newPlanInstaller(lockfile.ModeCopy, platform.OpenCode)
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindHooks, src)
+	p, err := in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindHooks, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestPlanKindHooks(t *testing.T) {
 	}
 
 	in, _ = newPlanInstaller(lockfile.ModeCopy, platform.Codex)
-	p, err = in.planKind(&harness.Manifest{}, "d", lockfile.KindHooks, src)
+	p, err = in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindHooks, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,8 @@ func TestPlanKindHooks(t *testing.T) {
 func TestPlanKindSkillsMixedClaudeCodexDupWarning(t *testing.T) {
 	src := srcTree(t, map[string]string{"s/SKILL.md": "x"})
 	in, proj := newPlanInstaller(lockfile.ModeCopy, platform.Claude, platform.Codex, platform.OpenCode)
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindSkills, src)
+	pl := in.newPlanner(false)
+	p, err := pl.planKind(&harness.Manifest{}, "d", lockfile.KindSkills, src)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +133,7 @@ func TestPlanKindSkillsMixedClaudeCodexDupWarning(t *testing.T) {
 		!strings.Contains(p.Warnings[0].Text, "DUPLICATE-SKILL") {
 		t.Fatalf("warnings = %+v", p.Warnings)
 	}
-	p, _ = in.planKind(&harness.Manifest{}, "d", lockfile.KindSkills, src)
+	p, _ = pl.planKind(&harness.Manifest{}, "d", lockfile.KindSkills, src)
 	for _, w := range p.Warnings {
 		if strings.Contains(w.Text, "DUPLICATE-SKILL") {
 			t.Fatalf("dup warned twice: %+v", p.Warnings)
@@ -148,7 +149,7 @@ func TestPlanKindReservedAgentIsPartial(t *testing.T) {
 		t.Skip("no reserved names")
 	}
 	src = srcTree(t, map[string]string{"a.md": "body", pf.ReservedAgentNames[0] + ".md": "x"})
-	p, err := in.planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
+	p, err := in.newPlanner(false).planKind(&harness.Manifest{}, "d", lockfile.KindAgents, src)
 	if err == nil || !strings.Contains(err.Error(), "reserved") || len(p.Ops) != 1 {
 		t.Fatalf("err=%v ops=%+v", err, p.Ops)
 	}
@@ -156,13 +157,14 @@ func TestPlanKindReservedAgentIsPartial(t *testing.T) {
 
 func TestPlanGapsOnce(t *testing.T) {
 	in, _ := newPlanInstaller(lockfile.ModeCopy, platform.Codex, platform.Cursor, platform.OpenCode)
-	first := in.planGaps()
+	pl := in.newPlanner(false)
+	first := pl.planGaps()
 	for _, w := range first.Warnings {
 		if w.Stream != Stderr || !strings.HasPrefix(w.Text, "as-skill: note: ") {
 			t.Fatalf("warning = %+v", w)
 		}
 	}
-	if len(in.planGaps().Warnings) != 0 {
+	if len(pl.planGaps().Warnings) != 0 {
 		t.Fatal("gaps planned twice")
 	}
 }

@@ -1,7 +1,6 @@
 package installer
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,12 +25,6 @@ type Installer struct {
 
 	ExcludeSkills map[string]bool
 	Overwrite     map[string]bool
-
-	gitChecked map[string]bool
-	dupWarned  bool
-	gapsDone   bool
-	collecting bool
-	conflicts  []ConflictError
 }
 
 func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst string) (int, error) {
@@ -165,63 +158,11 @@ func (in *Installer) dropLinksUnder(kind lockfile.Kind, src, dst string) {
 }
 
 func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bool) error {
-	m, ok := reg.Domains[name]
-	if !ok {
-		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
-	}
-	if miss, gated := m.Gate(); gated {
-		var msg string
-		if miss.Kind == harness.MissEnv {
-			msg = fmt.Sprintf("domain %q requires $%s, which is not set", name, miss.Name)
-		} else {
-			msg = fmt.Sprintf("domain %q requires the %q binary, which is not on $PATH", name, miss.Name)
-		}
-		if strict {
-			return errors.New(msg)
-		}
-		fmt.Fprintf(os.Stderr, "as-skill: skipping — %s\n", msg)
-		return nil
-	}
-	if err := in.Preflight(reg, []string{name}); err != nil {
-		return err
-	}
-	for _, kind := range harness.DomainKinds {
-		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
-		if !fsys.DirExists(srcDir) {
-			continue
-		}
-		if err := in.installKind(m, name, kind, srcDir); err != nil {
-			return err
-		}
-	}
-	return nil
+	return in.InstallAll(reg, []DomainReq{{Name: name, Strict: strict}}, nil)
 }
 
 func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
-	owner := reg.SkillOwner(in.HarnessRoot, name)
-	if owner == "" {
-		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
-	}
-	m := reg.Domains[owner]
-	if miss, gated := m.Gate(); gated {
-		if miss.Kind == harness.MissEnv {
-			return fmt.Errorf("skill %q belongs to domain %q, which requires $%s (not set)", name, owner, miss.Name)
-		}
-		return fmt.Errorf("skill %q belongs to domain %q, which requires the %q binary (not found on $PATH)", name, owner, miss.Name)
-	}
-	src := harness.SkillDir(in.HarnessRoot, owner, name)
-	if err := in.preflightRoots(map[lockfile.Kind]bool{lockfile.KindSkills: true}); err != nil {
-		return err
-	}
-	plan, perr := in.planSkill(m, owner, name, src)
-	if err := in.Apply(plan); err != nil {
-		var oe *OpError
-		if errors.As(err, &oe) {
-			err = oe.Err
-		}
-		return fmt.Errorf("skill %q: %w", name, err)
-	}
-	return perr
+	return in.InstallAll(reg, nil, []string{name})
 }
 
 func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {

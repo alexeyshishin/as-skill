@@ -40,27 +40,27 @@ func (in *Installer) itemOp(domain string, kind lockfile.Kind, name, src, dst st
 	return Op{Type: t, Src: src, Dst: dst, Mode: in.Mode, Domain: domain, Kind: kind, Name: name, Platforms: plats, Item: true}
 }
 
-// planDup queues the duplicate-skills warning, once per Installer.
-func (in *Installer) planDup(p *Plan, locs map[string][]platform.ID) {
-	dup := in.dupPlatforms(locs)
-	if len(dup) == 0 || in.dupWarned {
+// planDup queues the duplicate-skills warning, once per Plan.
+func (pl *Planner) planDup(p *Plan, locs map[string][]platform.ID) {
+	dup := pl.in.dupPlatforms(locs)
+	if len(dup) == 0 || pl.dupNoted {
 		return
 	}
-	in.dupWarned = true
+	pl.dupNoted = true
 	p.Warnings = append(p.Warnings, Warning{
 		Text:   fmt.Sprintf("as-skill: warning: skills land in both .claude/skills and .agents/skills; %s will see each skill twice (doctor reports DUPLICATE-SKILL)", strings.Join(strs(dup), ", ")),
 		Stream: Stderr, Before: len(p.Ops),
 	})
 }
 
-// planGaps queues the capability-gap notes, once per Installer.
-func (in *Installer) planGaps() *Plan {
+// planGaps queues the capability-gap notes, once per Plan.
+func (pl *Planner) planGaps() *Plan {
 	p := &Plan{}
-	if in.gapsDone {
+	if pl.gapsNoted {
 		return p
 	}
-	in.gapsDone = true
-	for _, id := range in.plats() {
+	pl.gapsNoted = true
+	for _, id := range pl.in.plats() {
 		if g := platform.CapGap(id); g != "" {
 			p.Warnings = append(p.Warnings, Warning{Text: fmt.Sprintf("as-skill: note: %s: %s", id, g), Stream: Stderr})
 		}
@@ -186,11 +186,12 @@ func (in *Installer) planHooks(domain, srcDir string, pf platform.Platform) (*Pl
 // planKind plans one domain kind across all selected platforms. On error the
 // returned Plan holds everything planned before the failure; the caller applies
 // it first so partial-progress output matches the old interleaved flow.
-func (in *Installer) planKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) (*Plan, error) {
+func (pl *Planner) planKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) (*Plan, error) {
+	in := pl.in
 	p := &Plan{}
 	if kind == lockfile.KindSkills {
 		locs, _ := platform.SkillLocations(in.plats())
-		in.planDup(p, locs)
+		pl.planDup(p, locs)
 		for _, loc := range slices.Sorted(maps.Keys(locs)) {
 			if loc == platform.ClaudeSkillsLoc {
 				sub, err := in.planClaudeKind(m, name, kind, srcDir, locs[loc])
@@ -239,10 +240,11 @@ func (in *Installer) planKind(m *harness.Manifest, name string, kind lockfile.Ki
 }
 
 // planSkill plans one skill across all selected skill locations.
-func (in *Installer) planSkill(m *harness.Manifest, owner, name, src string) (*Plan, error) {
+func (pl *Planner) planSkill(m *harness.Manifest, owner, name, src string) (*Plan, error) {
+	in := pl.in
 	p := &Plan{}
 	locs, _ := platform.SkillLocations(in.plats())
-	in.planDup(p, locs)
+	pl.planDup(p, locs)
 	for _, loc := range slices.Sorted(maps.Keys(locs)) {
 		if loc == platform.ClaudeSkillsLoc {
 			sub, err := in.planClaudeSkill(m, owner, name, src, locs[loc])
