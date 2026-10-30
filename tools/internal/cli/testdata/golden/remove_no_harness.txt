@@ -9,12 +9,20 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
 
 ### step 2: remove alpha -y -p <P> --harness-root <P>/nowhere
 == stdout ==
 == stderr ==
 == result ==
 remove: --harness-root rejected: no claude-harness checkout found at or above "<P>/nowhere" (looked for domains/) — pass --harness-root
+== combined ==
 
 ### step 3: remove alpha -y -p <P>
 == stdout ==
@@ -31,6 +39,22 @@ done -> <P>/.claude
 as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)
 == result ==
 ok
+== combined ==
+as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
 
 ### tree
 .claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": []
+}
+

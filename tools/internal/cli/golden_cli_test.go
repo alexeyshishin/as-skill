@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -122,17 +123,89 @@ func (c *gcase) norm(s string) string {
 	return reHash.ReplaceAllString(s, "<SHA256>")
 }
 
-// run executes `as-skill args...` and appends a normalized record.
+// captureCombined points stdout and stderr at ONE pipe so the relative order
+// of writes is preserved.
+func captureCombined(t *testing.T, fn func() error) (out string, err error) {
+	t.Helper()
+	oldO, oldE := os.Stdout, os.Stderr
+	r, w, e := os.Pipe()
+	if e != nil {
+		t.Fatal(e)
+	}
+	c := make(chan string)
+	go func() {
+		var b bytes.Buffer
+		_, _ = io.Copy(&b, r)
+		c <- b.String()
+	}()
+	func() {
+		defer func() {
+			w.Close()
+			os.Stdout, os.Stderr = oldO, oldE
+		}()
+		os.Stdout, os.Stderr = w, w
+		err = fn()
+	}()
+	return <-c, err
+}
+
+func copyDir(t *testing.T, src, dst string) {
+	t.Helper()
+	err := filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(src, path)
+		to := filepath.Join(dst, rel)
+		switch {
+		case fi.Mode()&os.ModeSymlink != 0:
+			tgt, _ := os.Readlink(path)
+			return os.Symlink(tgt, to)
+		case fi.IsDir():
+			return os.MkdirAll(to, fi.Mode().Perm())
+		default:
+			b, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(to, b, fi.Mode().Perm())
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// run executes `as-skill args...` twice from the same project state: once with
+// stdout/stderr captured separately, once through a single shared pipe
+// (relative order). The project is restored between the passes.
 func (c *gcase) run(args ...string) {
 	c.t.Helper()
+	backup := c.t.TempDir()
+	copyDir(c.t, c.p, backup)
 	so, se, err := captureBoth(c.t, func() error { return Run(args) })
+	if e := os.RemoveAll(c.p); e != nil {
+		c.t.Fatal(e)
+	}
+	if e := os.MkdirAll(c.p, 0o755); e != nil {
+		c.t.Fatal(e)
+	}
+	copyDir(c.t, backup, c.p)
+	comb, err2 := captureCombined(c.t, func() error { return Run(args) })
+	if fmt.Sprint(err) != fmt.Sprint(err2) {
+		c.t.Fatalf("passes disagree on result: %v vs %v", err, err2)
+	}
 	res := "ok"
 	if err != nil {
 		res = err.Error()
 	}
 	c.steps++
-	fmt.Fprintf(&c.out, "### step %d: %s\n== stdout ==\n%s== stderr ==\n%s== result ==\n%s\n\n",
-		c.steps, c.norm(strings.Join(args, " ")), c.norm(so), c.norm(se), c.norm(res))
+	fmt.Fprintf(&c.out, "### step %d: %s\n== stdout ==\n%s== stderr ==\n%s== result ==\n%s\n== combined ==\n%s\n",
+		c.steps, c.norm(strings.Join(args, " ")), c.norm(so), c.norm(se), c.norm(res), c.norm(comb))
+}
+
+func (c *gcase) note(s string) {
+	fmt.Fprintf(&c.out, "### note\n%s\n\n", c.norm(s))
 }
 
 // args appends the standard -p/--harness-root flags.
@@ -156,6 +229,11 @@ func (c *gcase) tree() {
 		return nil
 	})
 	fmt.Fprintf(&c.out, "### tree\n%s\n", c.norm(strings.Join(lines, "\n")))
+	for _, f := range []string{".claude/settings.json", ".codex/hooks.json", ".cursor/hooks.json", ".claude/skills-lock.json"} {
+		if b, err := os.ReadFile(filepath.Join(c.p, f)); err == nil {
+			fmt.Fprintf(&c.out, "### file %s\n%s\n", f, c.norm(string(b)))
+		}
+	}
 }
 
 func goldenCase(t *testing.T, name string, body func(c *gcase)) {
@@ -163,7 +241,13 @@ func goldenCase(t *testing.T, name string, body func(c *gcase)) {
 		t.Setenv("HOME", t.TempDir())
 		t.Setenv("GOLDEN_GATE_VAR", "x")
 		os.Unsetenv("GOLDEN_GATE_VAR")
+		t.Setenv("CI", "x")
+		os.Unsetenv("CI")
+		t.Setenv("TERM", "xterm")
 		c := &gcase{t: t, h: goldenHarness(t), p: t.TempDir()}
+		t.Setenv("GIT_CEILING_DIRECTORIES", filepath.Dir(c.p))
+		t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
+		t.Setenv("GIT_CONFIG_SYSTEM", os.DevNull)
 		body(c)
 		got := c.out.String()
 		path := filepath.Join(goldenDir, name+".txt")
@@ -405,6 +489,67 @@ func TestGoldenCLI(t *testing.T) {
 		c.run(c.std("status")...)
 		c.run(c.std("uninstall", "domains", "beta")...)
 		c.run(c.std("status")...)
+		c.tree()
+	})
+
+	// review round 2
+	goldenCase(t, "remove_kept_still_used", func(c *gcase) {
+		c.run(c.std("add", "alpha", "-y", "-a", "codex,cursor", "--copy")...)
+		c.run(c.std("remove", "alpha", "-y", "-a", "cursor", "--dry-run")...)
+		c.run(c.std("remove", "alpha", "-y", "-a", "cursor")...)
+		c.tree()
+		c.run(c.std("remove", "alpha", "-y", "-a", "codex")...)
+		c.tree()
+	})
+	goldenCase(t, "add_cursor_link_guard", func(c *gcase) {
+		if out, err := exec.Command("git", "init", "-q", c.p).CombinedOutput(); err != nil {
+			t.Skipf("git init: %v %s", err, out)
+		}
+		c.run(c.std("add", "alpha", "-y", "-a", "cursor")...)
+		c.run(c.std("add", "alpha", "-y", "-a", "claude,cursor")...)
+		c.run(c.std("add", "alpha", "-y", "-a", "cursor", "--copy")...)
+		c.tree()
+	})
+	goldenCase(t, "hooks_cursor", func(c *gcase) {
+		c.run(c.std("add", "alpha", "-y", "--copy", "-a", "cursor")...)
+		c.run(c.std("hooks", "enable", "all", "-a", "cursor")...)
+		c.run(c.std("hooks", "enable", "gate", "-a", "cursor", "--dry-run")...)
+		c.tree()
+		c.run(c.std("hooks", "disable", "gate", "-a", "cursor")...)
+		c.run(c.std("hooks", "enable", "gate", "-a", "cursor")...)
+		c.run(c.std("hooks", "disable", "all", "-a", "cursor")...)
+		c.tree()
+	})
+	goldenCase(t, "remove_legacy_copy_row", func(c *gcase) {
+		gWrite(t, filepath.Join(c.p, ".claude", "skills", "beta-one", "SKILL.md"), "legacy copy\n", 0o644)
+		lockPath := filepath.Join(c.p, ".claude", "skills-lock.json")
+		lock := `{"entries":[{"domain":"beta","kind":"skills","name":"","mode":"copy","path":"` + filepath.Join(c.p, ".claude", "skills") + `","source":"` + filepath.Join(c.h, "domains", "beta", "gone-skills") + `","installed_at":"2026-01-01T00:00:00Z"}]}`
+		gWrite(t, lockPath, lock, 0o644)
+		old := resolveHarness
+		resolveHarness = func(string) (string, error) { return "", errors.New("no harness (stub)") }
+		c.run("remove", "beta", "-y", "-p", c.p)
+		c.tree()
+		resolveHarness = old
+		c.run(c.std("remove", "beta", "-y")...)
+		c.tree()
+	})
+	goldenCase(t, "gating_requires_bin", func(c *gcase) {
+		gWrite(t, filepath.Join(c.h, "domains", "binned", "manifest.yaml"), "name: binned\ndescription: binned domain\nrequires_bin:\n  - golden-missing-bin-xyz\n\ntargets:\n  skills: ${CLAUDE_HOME}/skills\n", 0o644)
+		gWrite(t, filepath.Join(c.h, "domains", "binned", "skills", "binned-one", "SKILL.md"), "---\nname: binned-one\ndescription: binned skill\n---\nb\n", 0o644)
+		c.run(c.std("list", "domains")...)
+		c.run(c.std("list", "skills")...)
+		c.run(c.std("add", "binned", "-y")...)
+		c.run(c.std("add", "binned-one", "-y")...)
+		c.run(c.std("add", "all", "-y")...)
+		// dialog per-bin label: reachable only through the interactive seam with a fake prompter
+		fp := newFake(t, map[string]any{"project": c.p, "domains": []string{"alpha"}, "customize": false, "platforms": []string{"claude"}, "mode": "copy", "hooks": []string{}, "confirm": false})
+		enableDialog(t, fp)
+		_, _, err := captureBoth(t, func() error { return Run([]string{"add", "--harness-root", c.h}) })
+		var labels []string
+		for _, o := range fp.options["domains"] {
+			labels = append(labels, o.Label)
+		}
+		c.note("dialog domain labels (err=" + fmt.Sprint(err) + "):\n" + strings.Join(labels, "\n"))
 		c.tree()
 	})
 }

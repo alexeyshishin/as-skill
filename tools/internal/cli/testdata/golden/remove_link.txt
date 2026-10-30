@@ -11,6 +11,15 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
 
 ### step 2: remove alpha -y -p <P> --harness-root <H>
 == stdout ==
@@ -26,11 +35,45 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
 
 ### tree
 .claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
 .claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
 .claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "beta",
+      "kind": "skills",
+      "name": "beta-one",
+      "mode": "link",
+      "path": "<P>/.claude/skills/beta-one",
+      "source": "<H>/domains/beta/skills/beta-one",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "beta-agent.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/beta-agent.md",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
 ### step 3: remove beta -y --dry-run -p <P> --harness-root <H>
 == stdout ==
 platforms: .claude
@@ -40,6 +83,11 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: .claude
+would remove   <P>/.claude/skills/beta-one
+would remove   <P>/.claude/agents/beta-agent.md
+done -> <P>/.claude
 
 ### step 4: remove beta -y -p <P> --harness-root <H>
 == stdout ==
@@ -50,6 +98,16 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: .claude
+uninstalled    <P>/.claude/skills/beta-one
+uninstalled    <P>/.claude/agents/beta-agent.md
+done -> <P>/.claude
 
 ### tree
 .claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": []
+}
+

@@ -15,6 +15,19 @@ as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE)
 as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
 == result ==
 ok
+== combined ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+would install alpha    rules   -> <P>/.claude/rules (1 file)
+would install alpha    rules   -> <P>/.agents/rules (1 file)
+would install alpha    skills  -> <P>/.agents/skills (2 files)
+would install alpha    skills  -> <P>/.claude/skills (4 files)
+would install alpha    agents  -> <P>/.claude/agents (2 files)
+would install alpha    agents  -> <P>/.codex/agents (2 files)
+would install alpha    hooks   -> <P>/.claude/hooks (2 files)
+would install alpha    hooks   -> <P>/.codex/hooks (1 file)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+done -> <P>/.claude
+done -> <P>/.codex
 
 ### step 2: add alpha --copy -y -a claude,codex -p <P> --harness-root <H>
 == stdout ==
@@ -33,6 +46,19 @@ as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE)
 as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
 == result ==
 ok
+== combined ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+done -> <P>/.claude
+done -> <P>/.codex
 
 ### tree
 .agents/rules/alpha-rule.md
@@ -54,3 +80,156 @@ ok
 .codex/agents/plain.toml
 .codex/hooks/gate.sh
 AGENTS.md
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/rules",
+      "source": "<H>/domains/alpha/rules",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-rule.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "copy",
+      "path": "<P>/.agents/rules/alpha-rule.md",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "as-skill",
+      "kind": "instructions",
+      "name": "AGENTS.md",
+      "mode": "block",
+      "path": "<P>/AGENTS.md",
+      "source": "created",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/skills",
+      "source": "<H>/domains/alpha/skills",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-one",
+        "alpha-two"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/agents",
+      "source": "<H>/domains/alpha/agents",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-agent.md",
+        "plain.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/alpha-agent.toml",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/plain.toml",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/hooks",
+      "source": "<H>/domains/alpha/hooks",
+      "sha256": "<SHA256>",
+      "items": [
+        "claude-only.sh",
+        "gate.sh"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "copy",
+      "path": "<P>/.codex/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+

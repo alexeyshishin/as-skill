@@ -5,4 +5,7 @@ doctor: 9 checks, 9/9 ok, 0 failed
 == stderr ==
 == result ==
 ok
+== combined ==
+no entries tracked in skills-lock.json
+doctor: 9 checks, 9/9 ok, 0 failed
 

@@ -6,6 +6,10 @@ done -> <P>/.claude
 == stderr ==
 == result ==
 ok
+== combined ==
+platforms: default (claude)
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (1 file)
+done -> <P>/.claude
 
 ### step 2: add alpha-one beta-one -y --copy -p <P> --harness-root <H>
 == stdout ==
@@ -17,8 +21,40 @@ done -> <P>/.claude
 as-skill: warning: <P>/.claude/skills/alpha-one was installed via "link", replacing with a copy — mixed channels may cause confusion
 == result ==
 ok
+== combined ==
+platforms: detected from .claude
+as-skill: warning: <P>/.claude/skills/alpha-one was installed via "link", replacing with a copy — mixed channels may cause confusion
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (2 files)
+installed     beta     skill   -> <P>/.claude/skills/beta-one (1 file)
+done -> <P>/.claude
 
 ### tree
 .claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .claude/skills/beta-one/SKILL.md
 .claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "skill",
+      "name": "alpha-one",
+      "mode": "copy",
+      "path": "<P>/.claude/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "skill",
+      "name": "beta-one",
+      "mode": "copy",
+      "path": "<P>/.claude/skills/beta-one",
+      "source": "<H>/domains/beta/skills/beta-one",
+      "sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+

@@ -1,0 +1,286 @@
+### step 1: add alpha -y --copy -a cursor -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+done -> <P>/.cursor
+== stderr ==
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+== combined ==
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+done -> <P>/.cursor
+
+### step 2: hooks enable all -a cursor -p <P> --harness-root <H>
+== stdout ==
+registered      gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+== stderr ==
+== result ==
+ok
+== combined ==
+registered      gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+
+### step 3: hooks enable gate -a cursor --dry-run -p <P> --harness-root <H>
+== stdout ==
+present         gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+== stderr ==
+== result ==
+ok
+== combined ==
+present         gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+
+### tree
+.agents/skills/alpha-one/README.md
+.agents/skills/alpha-one/SKILL.md
+.agents/skills/alpha-two/README.md
+.agents/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+.cursor/agents/alpha-agent.md
+.cursor/agents/plain.md
+.cursor/hooks/gate.sh
+.cursor/hooks.json
+.cursor/rules/alpha-rule.mdc
+### file .cursor/hooks.json
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "./.cursor/hooks/gate.sh",
+        "loop_limit": 2
+      }
+    ]
+  }
+}
+
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "render",
+      "path": "<P>/.cursor/rules/alpha-rule.mdc",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "copy",
+      "path": "<P>/.cursor/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
+### step 4: hooks disable gate -a cursor -p <P> --harness-root <H>
+== stdout ==
+unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
+== stderr ==
+== result ==
+ok
+== combined ==
+unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
+
+### step 5: hooks enable gate -a cursor -p <P> --harness-root <H>
+== stdout ==
+registered      gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+== stderr ==
+== result ==
+ok
+== combined ==
+registered      gate.sh (Stop) in <P>/.cursor/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).
+
+### step 6: hooks disable all -a cursor -p <P> --harness-root <H>
+== stdout ==
+unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
+== stderr ==
+== result ==
+ok
+== combined ==
+unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
+
+### tree
+.agents/skills/alpha-one/README.md
+.agents/skills/alpha-one/SKILL.md
+.agents/skills/alpha-two/README.md
+.agents/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+.cursor/agents/alpha-agent.md
+.cursor/agents/plain.md
+.cursor/hooks/gate.sh
+.cursor/hooks.json
+.cursor/rules/alpha-rule.mdc
+### file .cursor/hooks.json
+{
+  "version": 1
+}
+
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "render",
+      "path": "<P>/.cursor/rules/alpha-rule.mdc",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "copy",
+      "path": "<P>/.cursor/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+

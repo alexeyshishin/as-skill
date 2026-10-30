@@ -33,6 +33,37 @@ as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to
 as-skill: warning: hooks unsupported on opencode
 == result ==
 ok
+== combined ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+as-skill: note: opencode: agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+as-skill: warning: skills land in both .claude/skills and .agents/skills; cursor, opencode will see each skill twice (doctor reports DUPLICATE-SKILL)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    agents  -> <P>/.opencode/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks unsupported on opencode
+installed     beta     skills  -> <P>/.agents/skills (1 file)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+installed     beta     agents  -> <P>/.codex/agents (1 file)
+installed     beta     agents  -> <P>/.cursor/agents (1 file)
+installed     beta     agents  -> <P>/.opencode/agents (1 file)
+done -> <P>/.claude
+done -> <P>/.codex
+done -> <P>/.cursor
+done -> <P>/.opencode
 
 ### tree
 .agents/prompts/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
@@ -65,3 +96,374 @@ ok
 .opencode/agents/beta-agent.md
 .opencode/agents/plain.md
 AGENTS.md
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "link",
+      "path": "<P>/.claude/rules/alpha-rule.md",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "link",
+      "path": "<P>/.agents/rules/alpha-rule.md",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "platforms": [
+        "codex",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "as-skill",
+      "kind": "instructions",
+      "name": "AGENTS.md",
+      "mode": "block",
+      "path": "<P>/AGENTS.md",
+      "source": "created",
+      "platforms": [
+        "codex",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "render",
+      "path": "<P>/.cursor/rules/alpha-rule.mdc",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "link",
+      "path": "<P>/.agents/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "link",
+      "path": "<P>/.agents/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "link",
+      "path": "<P>/.claude/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "platforms": [
+        "claude",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "link",
+      "path": "<P>/.claude/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "platforms": [
+        "claude",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "prompts",
+      "name": "alpha-agent.md",
+      "mode": "link",
+      "path": "<P>/.agents/prompts/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "platforms": [
+        "codex",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/alpha-agent.toml",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "prompts",
+      "name": "plain.md",
+      "mode": "link",
+      "path": "<P>/.agents/prompts/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "platforms": [
+        "codex",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/plain.toml",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.opencode/agents/alpha-agent.md",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "opencode"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.opencode/agents/plain.md",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "opencode"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "claude-only.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/claude-only.sh",
+      "source": "<H>/domains/alpha/hooks/claude-only.sh",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "link",
+      "path": "<P>/.claude/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "link",
+      "path": "<P>/.codex/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "link",
+      "path": "<P>/.cursor/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "platforms": [
+        "cursor"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "skills",
+      "name": "beta-one",
+      "mode": "link",
+      "path": "<P>/.agents/skills/beta-one",
+      "source": "<H>/domains/beta/skills/beta-one",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "skills",
+      "name": "beta-one",
+      "mode": "link",
+      "path": "<P>/.claude/skills/beta-one",
+      "source": "<H>/domains/beta/skills/beta-one",
+      "platforms": [
+        "claude",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "beta-agent.md",
+      "mode": "link",
+      "path": "<P>/.claude/agents/beta-agent.md",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "prompts",
+      "name": "beta-agent.md",
+      "mode": "link",
+      "path": "<P>/.agents/prompts/beta-agent.md",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "platforms": [
+        "codex",
+        "cursor",
+        "opencode"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "beta-agent.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/beta-agent.toml",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "beta-agent.md",
+      "mode": "render",
+      "path": "<P>/.cursor/agents/beta-agent.md",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "cursor"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "beta-agent.md",
+      "mode": "render",
+      "path": "<P>/.opencode/agents/beta-agent.md",
+      "source": "<H>/domains/beta/agents/beta-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "opencode"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+

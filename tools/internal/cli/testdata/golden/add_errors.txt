@@ -3,6 +3,7 @@
 == stderr ==
 == result ==
 unknown name "nope" (domains: alpha, beta, gated; see `as-skill list skills`)
+== combined ==
 
 ### step 2: add -p <P> --harness-root <H>
 == stdout ==
@@ -14,16 +15,19 @@ add needs names and -y (or --dry-run); the interactive dialog needs a terminal. 
   - mode (--copy): default symlink
   - confirmation: pass -y to accept defaults, or --dry-run to preview
 example: as-skill add code core -p <path> -y
+== combined ==
 
 ### step 3: add alpha -a bogus -y -p <P> --harness-root <H>
 == stdout ==
 == stderr ==
 == result ==
 unknown platform "bogus" (valid: claude, codex, cursor, opencode, all)
+== combined ==
 
 ### step 4: add alpha -y -p <P> --harness-root <P>/nowhere
 == stdout ==
 == stderr ==
 == result ==
 no claude-harness checkout found at or above "<P>/nowhere" (looked for domains/) — pass --harness-root
+== combined ==
 

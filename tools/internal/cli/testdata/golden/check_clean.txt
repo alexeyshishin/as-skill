@@ -4,4 +4,6 @@ check: OK — 3 manifest(s), 4 SKILL.md(s)
 == stderr ==
 == result ==
 ok
+== combined ==
+check: OK — 3 manifest(s), 4 SKILL.md(s)
 

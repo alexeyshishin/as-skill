@@ -1,0 +1,220 @@
+### step 1: add alpha -y -a codex,cursor --copy -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+done -> <P>/.codex
+done -> <P>/.cursor
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+== combined ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+done -> <P>/.codex
+done -> <P>/.cursor
+
+### step 2: remove alpha -y -a cursor --dry-run -p <P> --harness-root <H>
+== stdout ==
+platforms: .cursor
+would remove   <P>/.cursor/rules/alpha-rule.mdc
+would keep     <P>/.agents/skills/alpha-one — still used by codex
+would keep     <P>/.agents/skills/alpha-two — still used by codex
+would remove   <P>/.cursor/agents/alpha-agent.md
+would remove   <P>/.cursor/agents/plain.md
+would remove   <P>/.cursor/hooks/gate.sh
+would update   <P>/AGENTS.md
+done -> <P>/.cursor
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .cursor
+would remove   <P>/.cursor/rules/alpha-rule.mdc
+would keep     <P>/.agents/skills/alpha-one — still used by codex
+would keep     <P>/.agents/skills/alpha-two — still used by codex
+would remove   <P>/.cursor/agents/alpha-agent.md
+would remove   <P>/.cursor/agents/plain.md
+would remove   <P>/.cursor/hooks/gate.sh
+would update   <P>/AGENTS.md
+done -> <P>/.cursor
+
+### step 3: remove alpha -y -a cursor -p <P> --harness-root <H>
+== stdout ==
+platforms: .cursor
+uninstalled    <P>/.cursor/rules/alpha-rule.mdc
+kept           <P>/.agents/skills/alpha-one — still used by codex
+kept           <P>/.agents/skills/alpha-two — still used by codex
+uninstalled    <P>/.cursor/agents/alpha-agent.md
+uninstalled    <P>/.cursor/agents/plain.md
+uninstalled    <P>/.cursor/hooks/gate.sh
+done -> <P>/.cursor
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .cursor
+uninstalled    <P>/.cursor/rules/alpha-rule.mdc
+kept           <P>/.agents/skills/alpha-one — still used by codex
+kept           <P>/.agents/skills/alpha-two — still used by codex
+uninstalled    <P>/.cursor/agents/alpha-agent.md
+uninstalled    <P>/.cursor/agents/plain.md
+uninstalled    <P>/.cursor/hooks/gate.sh
+done -> <P>/.cursor
+
+### tree
+.agents/rules/alpha-rule.md
+.agents/skills/alpha-one/README.md
+.agents/skills/alpha-one/SKILL.md
+.agents/skills/alpha-two/README.md
+.agents/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+.codex/agents/alpha-agent.toml
+.codex/agents/plain.toml
+.codex/hooks/gate.sh
+AGENTS.md
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "alpha-rule.md",
+      "mode": "copy",
+      "path": "<P>/.agents/rules/alpha-rule.md",
+      "source": "<H>/domains/alpha/rules/alpha-rule.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "as-skill",
+      "kind": "instructions",
+      "name": "AGENTS.md",
+      "mode": "block",
+      "path": "<P>/AGENTS.md",
+      "source": "created",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-one",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-one",
+      "source": "<H>/domains/alpha/skills/alpha-one",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "alpha-two",
+      "mode": "copy",
+      "path": "<P>/.agents/skills/alpha-two",
+      "source": "<H>/domains/alpha/skills/alpha-two",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "alpha-agent.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/alpha-agent.toml",
+      "source": "<H>/domains/alpha/agents/alpha-agent.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "plain.md",
+      "mode": "render",
+      "path": "<P>/.codex/agents/plain.toml",
+      "source": "<H>/domains/alpha/agents/plain.md",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "src_sha256": "<SHA256>",
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "gate.sh",
+      "mode": "copy",
+      "path": "<P>/.codex/hooks/gate.sh",
+      "source": "<H>/domains/alpha/hooks/gate.sh",
+      "sha256": "<SHA256>",
+      "platforms": [
+        "codex"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
+### step 4: remove alpha -y -a codex -p <P> --harness-root <H>
+== stdout ==
+platforms: .codex
+uninstalled    <P>/.agents/rules/alpha-rule.md
+uninstalled    <P>/.agents/skills/alpha-one
+uninstalled    <P>/.agents/skills/alpha-two
+uninstalled    <P>/.codex/agents/alpha-agent.toml
+uninstalled    <P>/.codex/agents/plain.toml
+uninstalled    <P>/.codex/hooks/gate.sh
+done -> <P>/.codex
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .codex
+uninstalled    <P>/.agents/rules/alpha-rule.md
+uninstalled    <P>/.agents/skills/alpha-one
+uninstalled    <P>/.agents/skills/alpha-two
+uninstalled    <P>/.codex/agents/alpha-agent.toml
+uninstalled    <P>/.codex/agents/plain.toml
+uninstalled    <P>/.codex/hooks/gate.sh
+done -> <P>/.codex
+
+### tree
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": []
+}
+
