@@ -85,9 +85,6 @@ func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst str
 		return n, err
 	}
 
-	if entry, ok := in.Lock.Owns(dst); ok && entry.Mode != lockfile.ModeCopy {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a copy — mixed channels may cause confusion\n", dst, entry.Mode)
-	}
 	if !in.DryRun && name == "" {
 		in.dropLinksUnder(kind, src, dst)
 	}
@@ -203,34 +200,20 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 }
 
 func (in *Installer) claudeKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string, plats []platform.ID) error {
-	destPath, err := in.resolveTarget(m, kind)
+	plan, err := in.planClaudeKind(m, name, kind, srcDir, plats)
 	if err != nil {
-		return fmt.Errorf("domain %q: %w", name, err)
+		return err
 	}
-	prior := in.snapshotPlatforms(name, kind, destPath)
-	defer in.applyPlatforms(name, kind, destPath, plats, prior)
-	if kind == lockfile.KindSkills && in.Mode != lockfile.ModeLink && in.hasExclusions(name) {
-		if err := in.placeItems(name, kind, srcDir, destPath, plats); err != nil {
-			return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
+	if err := in.Apply(plan); err != nil {
+		var oe *OpError
+		if errors.As(err, &oe) && oe.Stage == stageChmod {
+			return fmt.Errorf("domain %q: chmod hooks: %w", name, oe.Err)
 		}
-		if !in.DryRun {
-			in.keepExcluded(name, kind, destPath, func(item string) bool { return in.excluded(name, kind, item) })
+		var cause error = err
+		if oe != nil {
+			cause = oe.Err
 		}
-		return nil
-	}
-	n, err := in.place(name, kind, "", srcDir, destPath)
-	if err != nil {
-		return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
-	}
-	in.report(name, string(kind), destPath, n)
-	if kind == lockfile.KindHooks && !in.DryRun {
-		if in.Mode == lockfile.ModeCopy {
-			if err := fsys.MakeShellScriptsExecutable(destPath); err != nil {
-				return fmt.Errorf("domain %q: chmod hooks: %w", name, err)
-			}
-		} else {
-			warnHooksNotExecutable(srcDir)
-		}
+		return fmt.Errorf("domain %q: copying %s: %w", name, kind, cause)
 	}
 	return nil
 }
@@ -254,23 +237,17 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	locs, _ := platform.SkillLocations(in.plats())
 	in.warnDup(locs)
 	for _, loc := range slices.Sorted(maps.Keys(locs)) {
-		var dest string
 		if loc == platform.ClaudeSkillsLoc {
-			destBase, err := in.resolveTarget(m, lockfile.KindSkills)
+			plan, err := in.planClaudeSkill(m, owner, name, src, locs[loc])
 			if err != nil {
+				return err
+			}
+			if err := in.Apply(plan); err != nil {
 				return fmt.Errorf("skill %q: %w", name, err)
 			}
-			dest = filepath.Join(destBase, name)
-			prior := in.snapshotPlatforms(owner, lockfile.KindSkill, dest)
-			n, err := in.place(owner, lockfile.KindSkill, name, src, dest)
-			if err != nil {
-				return fmt.Errorf("skill %q: %w", name, err)
-			}
-			in.applyPlatforms(owner, lockfile.KindSkill, dest, locs[loc], prior)
-			in.report(owner, string(lockfile.KindSkill), dest, n)
 			continue
 		}
-		dest = filepath.Join(in.ProjectRoot, loc, name)
+		dest := filepath.Join(in.ProjectRoot, loc, name)
 		if err := in.placeOne(owner, lockfile.KindSkill, name, src, dest, locs[loc]); err != nil {
 			return fmt.Errorf("skill %q: %w", name, err)
 		}
@@ -448,7 +425,7 @@ func (in *Installer) report(scope, kind, dest string, n int) {
 }
 
 func warnHooksNotExecutable(srcDir string) {
-	for _, p := range fsys.NonExecutableScripts(srcDir) {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s is not executable; the symlinked hook won't be either (fix it in domains/)\n", p)
+	for _, t := range hookExecWarnings(srcDir) {
+		fmt.Fprintln(os.Stderr, t)
 	}
 }
