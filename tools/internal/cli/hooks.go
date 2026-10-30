@@ -9,11 +9,12 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runHooks(args []string) error {
+func runHooks(args []string, ios *iostreams.IOStreams) error {
 	if len(args) == 0 {
 		return errors.New("hooks needs a verb: enable|disable")
 	}
@@ -38,7 +39,7 @@ func runHooks(args []string) error {
 	}
 	in := &installer.Installer{ProjectRoot: projectRoot, DryRun: opts.dryRun, Lock: &lockfile.Lockfile{}}
 	if len(opts.domains) > 0 {
-		return runHooksDomain(in, verb, positionals, opts, plats)
+		return runHooksDomain(in, verb, positionals, opts, plats, ios)
 	}
 	for _, p := range plats {
 		if verb == "enable" {
@@ -56,7 +57,7 @@ func runHooks(args []string) error {
 	return nil
 }
 
-func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID) error {
+func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID, ios *iostreams.IOStreams) error {
 	root := ""
 	if opts.harnessSet {
 		root = opts.harnessRoot
@@ -83,7 +84,7 @@ func runHooksDomain(in *installer.Installer, verb string, names []string, opts i
 	}
 	for _, p := range plats {
 		if spec, _ := platform.Get(p); spec.Hooks.Schema == platform.HooksNone {
-			fmt.Printf("hooks unsupported on %s\n", p)
+			fmt.Fprintf(ios.Stdout(), "hooks unsupported on %s\n", p)
 			continue
 		}
 		avail, err := in.DomainHookNames(reg, opts.domains, p)
@@ -108,7 +109,7 @@ func runHooksDomain(in *installer.Installer, verb string, names []string, opts i
 			}
 		}
 		if len(sel) == 0 {
-			fmt.Printf("no registerable hooks in %s for %s\n", strings.Join(opts.domains, ", "), p)
+			fmt.Fprintf(ios.Stdout(), "no registerable hooks in %s for %s\n", strings.Join(opts.domains, ", "), p)
 			continue
 		}
 		if verb == "enable" {

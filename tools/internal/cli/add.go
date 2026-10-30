@@ -3,22 +3,22 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runAdd(args []string) error {
+func runAdd(args []string, ios *iostreams.IOStreams) error {
 	opts, err := parseAddArgs("add", args)
 	if err != nil {
 		return err
 	}
 	if opts.help {
-		printUsage(os.Stdout)
+		printUsage(ios.Stdout())
 		return nil
 	}
 	dlg := wantDialog(opts)
@@ -29,7 +29,7 @@ func runAdd(args []string) error {
 	if dlg {
 		pl, err = addDialog(opts)
 	} else {
-		pl, err = planNonInteractive(opts)
+		pl, err = planNonInteractive(opts, ios)
 	}
 	if err != nil {
 		return err
@@ -78,12 +78,12 @@ func runAdd(args []string) error {
 		return runErr
 	}
 	for _, id := range plats {
-		fmt.Printf("done -> %s\n", filepath.Join(projectRoot, "."+string(id)))
+		fmt.Fprintf(ios.Stdout(), "done -> %s\n", filepath.Join(projectRoot, "."+string(id)))
 	}
 	return nil
 }
 
-func planNonInteractive(opts addOpts) (*addPlan, error) {
+func planNonInteractive(opts addOpts, ios *iostreams.IOStreams) (*addPlan, error) {
 	pl := &addPlan{mode: lockfile.ModeLink}
 	var err error
 	if pl.project, err = resolveProject(opts.project); err != nil {
@@ -113,9 +113,9 @@ func planNonInteractive(opts addOpts) (*addPlan, error) {
 		pl.plats, src = detectPlatforms(pl.project, pl.lock)
 		pl.detected = len(src) > 0
 		if pl.detected {
-			fmt.Printf("platforms: detected from %s\n", strings.Join(uniqStrings(src), ", "))
+			fmt.Fprintf(ios.Stdout(), "platforms: detected from %s\n", strings.Join(uniqStrings(src), ", "))
 		} else {
-			fmt.Println("platforms: default (claude)")
+			fmt.Fprintln(ios.Stdout(), "platforms: default (claude)")
 		}
 	}
 	if opts.copy {

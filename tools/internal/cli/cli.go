@@ -1,41 +1,43 @@
 package cli
 
 import (
+	"claude-harness/tools/internal/iostreams"
 	"errors"
 	"fmt"
 	"io"
-	"os"
 )
 
-func Run(args []string) error {
+func Run(args []string) error { return Main(args, iostreams.Std()) }
+
+func Main(args []string, ios *iostreams.IOStreams) error {
 	if len(args) == 0 {
-		printUsage(os.Stderr)
+		printUsage(ios.Stderr())
 		return errors.New("no command given")
 	}
 	switch args[0] {
 	case "add":
-		return runAdd(args[1:])
+		return runAdd(args[1:], ios)
 	case "remove":
-		return runRemove(args[1:])
+		return runRemove(args[1:], ios)
 	case "install":
-		return runInstall(args[1:])
+		return runInstall(args[1:], ios)
 	case "uninstall":
-		return runUninstall(args[1:])
+		return runUninstall(args[1:], ios)
 	case "list":
-		return runList(args[1:])
+		return runList(args[1:], ios)
 	case "status":
-		return runStatus(args[1:])
+		return runStatus(args[1:], ios)
 	case "doctor":
-		return runDoctor(args[1:])
+		return runDoctor(args[1:], ios)
 	case "hooks":
-		return runHooks(args[1:])
+		return runHooks(args[1:], ios)
 	case "check":
-		return runCheck(args[1:])
+		return runCheck(args[1:], ios)
 	case "help", "-h", "--help":
-		printUsage(os.Stdout)
+		printUsage(ios.Stdout())
 		return nil
 	default:
-		printUsage(os.Stderr)
+		printUsage(ios.Stderr())
 		return fmt.Errorf("unknown command %q", args[0])
 	}
 }

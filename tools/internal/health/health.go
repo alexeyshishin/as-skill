@@ -3,6 +3,7 @@ package health
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -77,14 +78,14 @@ func FilterEntries(entries []lockfile.Entry, plats []string) []lockfile.Entry {
 	return out
 }
 
-func PrintEntryTable(entries []lockfile.Entry, healthOf func(lockfile.Entry) string) {
+func PrintEntryTable(w io.Writer, entries []lockfile.Entry, healthOf func(lockfile.Entry) string) {
 	if len(entries) == 0 {
-		fmt.Println("no entries tracked in skills-lock.json")
+		fmt.Fprintln(w, "no entries tracked in skills-lock.json")
 		return
 	}
-	fmt.Printf("%-10s %-8s %-24s %-6s %-11s %-22s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PLATFORMS", "PATH")
+	fmt.Fprintf(w, "%-10s %-8s %-24s %-6s %-11s %-22s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PLATFORMS", "PATH")
 	for _, e := range entries {
-		fmt.Printf("%-10s %-8s %-24s %-6s %-11s %-22s %s\n", e.Domain, e.Kind, e.Name, e.Mode, healthOf(e), strings.Join(e.Platforms, ","), e.Path)
+		fmt.Fprintf(w, "%-10s %-8s %-24s %-6s %-11s %-22s %s\n", e.Domain, e.Kind, e.Name, e.Mode, healthOf(e), strings.Join(e.Platforms, ","), e.Path)
 	}
 }
 

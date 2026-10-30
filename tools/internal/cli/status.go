@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/health"
+	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -62,7 +63,7 @@ func parseStatusArgs(args []string) (statusOpts, error) {
 	return opts, nil
 }
 
-func runStatus(args []string) error {
+func runStatus(args []string, ios *iostreams.IOStreams) error {
 	opts, err := parseStatusArgs(args)
 	if err != nil {
 		return err
@@ -79,7 +80,7 @@ func runStatus(args []string) error {
 	if err != nil {
 		return err
 	}
-	health.PrintEntryTable(health.FilterEntries(health.SortedEntries(lock), filter), health.EntryHealth)
+	health.PrintEntryTable(ios.Stdout(), health.FilterEntries(health.SortedEntries(lock), filter), health.EntryHealth)
 	return nil
 }
 

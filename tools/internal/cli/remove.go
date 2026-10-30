@@ -11,6 +11,7 @@ import (
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
@@ -95,13 +96,13 @@ func recordedPlatforms(rows []lockfile.Entry) []platform.ID {
 	return out
 }
 
-func runRemove(args []string) error {
+func runRemove(args []string, ios *iostreams.IOStreams) error {
 	opts, err := parseAddArgs("remove", args)
 	if err != nil {
 		return err
 	}
 	if opts.help {
-		printUsage(os.Stdout)
+		printUsage(ios.Stdout())
 		return nil
 	}
 	dlg := wantDialog(opts)
@@ -208,9 +209,9 @@ func runRemove(args []string) error {
 	}
 	opts.names = names
 	if reg == nil {
-		fmt.Fprintln(os.Stderr, "as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)")
+		fmt.Fprintln(ios.Stderr(), "as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)")
 	}
-	fmt.Printf("platforms: %s\n", strings.Join(platformDirNames(plats), ", "))
+	fmt.Fprintf(ios.Stdout(), "platforms: %s\n", strings.Join(platformDirNames(plats), ", "))
 
 	for _, t := range targets {
 		if err := checkPartOfDomain(t, plats); err != nil {
@@ -222,7 +223,7 @@ func runRemove(args []string) error {
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Lock: lock, Platforms: plats,
 	}
-	rm := &remover{want: map[string]bool{}, lock: lock, project: projectRoot, dry: opts.dryRun}
+	rm := &remover{ios: ios, want: map[string]bool{}, lock: lock, project: projectRoot, dry: opts.dryRun}
 	for _, p := range plats {
 		rm.want[string(p)] = true
 	}
@@ -253,7 +254,7 @@ func runRemove(args []string) error {
 		return err
 	}
 	for _, id := range plats {
-		fmt.Printf("done -> %s\n", filepath.Join(projectRoot, "."+string(id)))
+		fmt.Fprintf(ios.Stdout(), "done -> %s\n", filepath.Join(projectRoot, "."+string(id)))
 	}
 	return nil
 }
@@ -316,6 +317,7 @@ func removeOne(in *installer.Installer, reg *harness.Registry, rm *remover, t re
 }
 
 type remover struct {
+	ios     *iostreams.IOStreams
 	lock    *lockfile.Lockfile
 	project string
 	dry     bool
@@ -366,7 +368,7 @@ func (r *remover) removeRow(e lockfile.Entry) {
 		return
 	}
 	if e.Mode == lockfile.ModeBlock {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — managed block needs the harness checkout\n", e.Path)
+		fmt.Fprintf(r.ios.Stderr(), "as-skill: warning: skipping %s — managed block needs the harness checkout\n", e.Path)
 		return
 	}
 	var remaining []string
@@ -377,24 +379,24 @@ func (r *remover) removeRow(e lockfile.Entry) {
 	}
 	if len(remaining) > 0 {
 		if r.dry {
-			fmt.Printf("would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+			fmt.Fprintf(r.ios.Stdout(), "would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 			return
 		}
 		e.Platforms = remaining
 		r.lock.Record(e)
-		fmt.Printf("kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+		fmt.Fprintf(r.ios.Stdout(), "kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 		return
 	}
 	paths, ok := r.rowPaths(e)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — legacy copy row has no item list and its source is gone\n", e.Path)
+		fmt.Fprintf(r.ios.Stderr(), "as-skill: warning: skipping %s — legacy copy row has no item list and its source is gone\n", e.Path)
 		r.legacy = append(r.legacy, e.Path)
 		return
 	}
 	clean := true
 	for _, p := range paths {
 		if ierr := installer.InsideRoots(r.project, p); ierr != nil {
-			fmt.Fprintf(os.Stderr, "as-skill: error: refusing %v\n", ierr)
+			fmt.Fprintf(r.ios.Stderr(), "as-skill: error: refusing %v\n", ierr)
 			r.refused = append(r.refused, p)
 			clean = false
 			continue
@@ -405,12 +407,12 @@ func (r *remover) removeRow(e lockfile.Entry) {
 		}
 		isLink := fi.Mode()&os.ModeSymlink != 0
 		if e.Mode == lockfile.ModeLink && !isLink {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", p)
+			fmt.Fprintf(r.ios.Stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", p)
 			clean = false
 			continue
 		}
 		if r.dry {
-			fmt.Printf("would remove   %s\n", p)
+			fmt.Fprintf(r.ios.Stdout(), "would remove   %s\n", p)
 			continue
 		}
 		var rerr error
@@ -420,11 +422,11 @@ func (r *remover) removeRow(e lockfile.Entry) {
 			rerr = os.RemoveAll(p)
 		}
 		if rerr != nil {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: failed removing %s: %v\n", p, rerr)
+			fmt.Fprintf(r.ios.Stderr(), "as-skill: warning: failed removing %s: %v\n", p, rerr)
 			clean = false
 			continue
 		}
-		fmt.Printf("uninstalled    %s\n", p)
+		fmt.Fprintf(r.ios.Stdout(), "uninstalled    %s\n", p)
 	}
 	if clean && !r.dry {
 		if e.Name == "" {

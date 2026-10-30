@@ -11,9 +11,10 @@ import (
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/iostreams"
 )
 
-func runCheck(args []string) error {
+func runCheck(args []string, ios *iostreams.IOStreams) error {
 	if len(args) != 0 {
 		return fmt.Errorf("check takes no arguments (got %s)", strings.Join(args, " "))
 	}
@@ -68,11 +69,11 @@ func runCheck(args []string) error {
 
 	if len(failures) > 0 {
 		for _, f := range failures {
-			fmt.Fprintln(os.Stderr, "as-skill: check:", f)
+			fmt.Fprintln(ios.Stderr(), "as-skill: check:", f)
 		}
 		return fmt.Errorf("check: %d failure(s)", len(failures))
 	}
-	fmt.Printf("check: OK — %d manifest(s), %d SKILL.md(s)\n", len(domainNames), len(skillMDs))
+	fmt.Fprintf(ios.Stdout(), "check: OK — %d manifest(s), %d SKILL.md(s)\n", len(domainNames), len(skillMDs))
 	return nil
 }
 

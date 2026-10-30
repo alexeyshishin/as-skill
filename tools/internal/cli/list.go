@@ -8,11 +8,12 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runList(args []string) error {
+func runList(args []string, ios *iostreams.IOStreams) error {
 	what := "all"
 	project, harnessFlag := ".", ""
 	var pos []string
@@ -43,7 +44,7 @@ func runList(args []string) error {
 		what = pos[0]
 	}
 	if what == "platforms" {
-		printPlatforms(os.Stdout)
+		printPlatforms(ios.Stdout())
 		return nil
 	}
 	if what != "all" && what != "domains" && what != "skills" {
@@ -74,7 +75,7 @@ func runList(args []string) error {
 	}
 
 	if what == "all" || what == "domains" {
-		fmt.Println("domains:")
+		fmt.Fprintln(ios.Stdout(), "domains:")
 		for _, name := range reg.DomainNames() {
 			m := reg.Domains[name]
 			status := "available"
@@ -85,11 +86,11 @@ func runList(args []string) error {
 					status = fmt.Sprintf("blocked — needs %q binary", miss.Name)
 				}
 			}
-			fmt.Printf("  %-10s %-24s %s%s\n", name, "["+status+"]", m.Description, mark(domainInstalled(lock, harnessRoot, name)))
+			fmt.Fprintf(ios.Stdout(), "  %-10s %-24s %s%s\n", name, "["+status+"]", m.Description, mark(domainInstalled(lock, harnessRoot, name)))
 		}
 	}
 	if what == "all" || what == "skills" {
-		fmt.Println("skills:")
+		fmt.Fprintln(ios.Stdout(), "skills:")
 		for _, name := range reg.DomainNames() {
 			skillsDir := harness.KindDir(harnessRoot, name, lockfile.KindSkills)
 			entries, err := os.ReadDir(skillsDir)
@@ -99,7 +100,7 @@ func runList(args []string) error {
 			for _, e := range entries {
 				if e.IsDir() {
 					installed := skillInstalled(lock, projectRoot, e.Name())
-					fmt.Printf("  %-30s (%s)%s\n", e.Name(), name, mark(installed))
+					fmt.Fprintf(ios.Stdout(), "  %-30s (%s)%s\n", e.Name(), name, mark(installed))
 				}
 			}
 		}
