@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -43,11 +44,6 @@ func PlatformRoots(project string) []string {
 	return out
 }
 
-func relInside(root, p string) bool {
-	rel, err := filepath.Rel(root, p)
-	return err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
-}
-
 // InsideRoots reports an error unless p is an absolute path strictly inside one
 // of the project's platform roots. If p exists, its symlink-resolved parent must
 // also stay under a resolved platform root. Gate for every lockfile-derived
@@ -57,7 +53,7 @@ func InsideRoots(projectRoot, p string) error {
 	matched := ""
 	if filepath.IsAbs(p) {
 		for _, root := range PlatformRoots(projectRoot) {
-			if relInside(root, p) {
+			if fsys.StrictlyInside(root, p) {
 				matched = root
 				break
 			}
@@ -90,7 +86,7 @@ func InsideRoots(projectRoot, p string) error {
 	}
 	parent, err := filepath.EvalSymlinks(anc)
 	if err == nil {
-		if rel, rerr := filepath.Rel(base, parent); rerr == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		if fsys.Within(base, parent) {
 			return nil
 		}
 	}

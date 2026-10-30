@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/frontmatter"
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/platform"
 )
@@ -54,11 +55,6 @@ func bareAgentRefIssues(path, body string, stems map[string]bool) []string {
 	return out
 }
 
-func within(root, p string) bool {
-	r, err := filepath.Rel(root, p)
-	return err == nil && r != ".." && !strings.HasPrefix(r, ".."+string(filepath.Separator))
-}
-
 func referenceLinkIssues(domainsDir string) []string {
 	var out []string
 	links, _ := filepath.Glob(filepath.Join(domainsDir, "*", "skills", "*", "references"))
@@ -85,7 +81,7 @@ func referenceLinkIssues(domainsDir string) []string {
 			}
 			ok := false
 			for _, a := range allowed {
-				ok = ok || within(a, real)
+				ok = ok || fsys.Within(a, real)
 			}
 			if !ok {
 				out = append(out, fmt.Sprintf("%s: symlink escapes its domain (resolves to %s)", p, real))

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 )
@@ -54,11 +55,6 @@ func CopyTreeRoot(kind lockfile.Kind, src, dst, root string, dryRun bool) (int, 
 	return copyDir(kind, src, dst, "", realRoot, map[string]bool{realSrc: true}, dryRun)
 }
 
-func inside(root, p string) bool {
-	rel, err := filepath.Rel(root, p)
-	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
-}
-
 func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
 	if !dryRun {
 		if err := os.MkdirAll(dstDir, 0o755); err != nil {
@@ -84,7 +80,7 @@ func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack
 			if err != nil {
 				return count, fmt.Errorf("resolving symlink %s: %w", path, err)
 			}
-			if !inside(realRoot, resolved) {
+			if !fsys.Within(realRoot, resolved) {
 				return count, fmt.Errorf("symlink %s resolves to %s, outside the harness root %s", path, resolved, realRoot)
 			}
 			st, err := os.Stat(resolved)
