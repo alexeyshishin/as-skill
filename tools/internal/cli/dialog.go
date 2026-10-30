@@ -436,10 +436,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string, loc harness.Locator) 
 func removeChoices(lock *lockfile.Lockfile) []prompt.Option {
 	domains := map[string]bool{}
 	skills := map[string]bool{}
-	// A domain is "whole" when any of its rows is not a named skill row; a
-	// domain with only named skill rows (install skill, or a claude per-item
-	// link of skills alone; the lockfile loader folds kind "skill" into
-	// "skills") is offered as standalone skills.
+	// "whole" = any row that is not a named skill row; otherwise offered as standalone skills.
 	whole := map[string]bool{}
 	for _, e := range lock.Entries {
 		if e.Domain == "as-skill" || e.Kind == lockfile.KindInstructions {

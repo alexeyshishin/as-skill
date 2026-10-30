@@ -295,7 +295,6 @@ func TestGoldenCLI(t *testing.T) {
 	if werr != nil {
 		t.Fatal(werr)
 	}
-	// add: platforms x mode
 	for _, mode := range []string{"link", "copy"} {
 		extra := []string{}
 		if mode == "copy" {
@@ -351,7 +350,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.tree()
 	})
 
-	// remove
 	goldenCase(t, "remove_link", func(c *gcase) {
 		c.run(c.std("add", "alpha", "beta", "-y")...)
 		c.run(c.std("remove", "alpha", "-y")...)
@@ -393,7 +391,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run(c.std("remove")...)
 	})
 
-	// list
 	goldenCase(t, "list", func(c *gcase) {
 		for _, a := range [][]string{{"list"}, {"list", "domains"}, {"list", "skills"}, {"list", "platforms"}} {
 			c.run(c.std(a...)...)
@@ -405,7 +402,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run(c.std("list", "bogus")...)
 	})
 
-	// doctor
 	goldenCase(t, "doctor_clean", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y")...)
 		c.run(c.std("add", "beta", "-y", "--copy")...)
@@ -445,7 +441,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run("doctor", "-p", c.p)
 	})
 
-	// check
 	goldenCase(t, "check_clean", func(c *gcase) {
 		t.Chdir(c.h)
 		c.run("check")
@@ -456,7 +451,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run("check")
 	})
 
-	// hooks
 	goldenCase(t, "hooks_claude", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y", "--copy")...)
 		c.run(c.std("hooks", "enable", "all", "-a", "claude")...)
@@ -472,7 +466,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.tree()
 	})
 
-	// top level
 	goldenCase(t, "top_level", func(c *gcase) {
 		c.run()
 		c.run("help")
@@ -480,7 +473,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run("frobnicate")
 	})
 
-	// legacy
 	goldenCase(t, "legacy_install_status", func(c *gcase) {
 		c.run(c.std("install", "domains", "alpha", "beta")...)
 		c.run(c.std("status")...)
@@ -489,7 +481,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.tree()
 	})
 
-	// review round 2
 	goldenCase(t, "remove_kept_still_used", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y", "-a", "codex,cursor", "--copy")...)
 		c.run(c.std("remove", "alpha", "-y", "-a", "cursor", "--dry-run")...)
