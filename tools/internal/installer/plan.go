@@ -34,8 +34,8 @@ type Op struct {
 	Name      string
 	Platforms []platform.ID
 	Exclude   []string
-	// Item: placed through placeOne (lockfile entry carries Platforms), not place().
-	Item bool
+	Item      bool
+	rm        *removeUnit
 	// unit/unitKind: the domain (or skill) and kind this op was planned for; error wording only.
 	unit     string
 	unitKind lockfile.Kind
@@ -56,6 +56,6 @@ type Plan struct {
 	Ops       []Op
 	Conflicts []Conflict
 	Warnings  []Warning
-	// git: git-ignore answers shared by the planner and Apply for this plan.
-	git gitCache
+	git       gitCache
+	rm        *removeState
 }

@@ -27,9 +27,13 @@ type OpError struct {
 func (e *OpError) Error() string { return e.Err.Error() }
 func (e *OpError) Unwrap() error { return e.Err }
 
-// Apply runs the plan in order. With in.DryRun it prints the same rows and
-// writes nothing.
 func (in *Installer) Apply(p *Plan) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+	if p.rm != nil {
+		return in.applyRemove(p)
+	}
 	if p.git == nil {
 		p.git = gitCache{}
 	}

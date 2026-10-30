@@ -2,10 +2,10 @@ package installer
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
 	"claude-harness/tools/internal/fsys"
@@ -22,6 +22,8 @@ type Installer struct {
 	Mode        lockfile.Mode
 	Lock        *lockfile.Lockfile
 	Platforms   []platform.ID
+	Out         io.Writer
+	Err         io.Writer
 
 	ExcludeSkills map[string]bool
 	Overwrite     map[string]bool
@@ -163,162 +165,6 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 
 func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	return in.InstallAll(reg, nil, []string{name})
-}
-
-func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
-	m, ok := reg.Domains[name]
-	if !ok {
-		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
-	}
-	if err := in.preflightUninstall(reg, name, ""); err != nil {
-		return err
-	}
-	if in.hasClaude() {
-		if err := in.uninstallClaudeDomain(m, name); err != nil {
-			return err
-		}
-	}
-	in.uninstallNonClaude(name, "")
-	return nil
-}
-
-func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) error {
-	for _, kind := range harness.DomainKinds {
-		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
-		if !fsys.DirExists(srcDir) {
-			continue
-		}
-		destPath, err := in.resolveTarget(m, kind)
-		if err != nil {
-			return fmt.Errorf("domain %q: %w", name, err)
-		}
-		entries, err := os.ReadDir(srcDir)
-		if err != nil {
-			return fmt.Errorf("domain %q: %w", name, err)
-		}
-		var goneHooks []string
-		for _, e := range entries {
-			itemName := e.Name()
-			if fsys.SkipTop(kind.SkipsReadme(), itemName) {
-				continue
-			}
-			dst := filepath.Join(destPath, itemName)
-			if gone := in.uninstallOne(name, kind, itemName, dst); gone && kind == lockfile.KindHooks {
-				goneHooks = append(goneHooks, itemName)
-			}
-		}
-		if kind == lockfile.KindHooks {
-			in.unregisterHooks(goneHooks)
-		}
-
-		if parent, tracked := in.Lock.Find(name, kind, ""); tracked && len(minusPlats(parent.Platforms, in.plats())) == 0 {
-			in.Lock.Remove(name, kind, "")
-		}
-	}
-	return nil
-}
-
-type PartOfDomainError struct {
-	Skill  string
-	Domain string
-	Mode   lockfile.Mode
-}
-
-func (e *PartOfDomainError) Error() string {
-	return fmt.Sprintf("skill %q installed as part of domain %s (%s); remove the domain", e.Skill, e.Domain, e.Mode)
-}
-
-func (in *Installer) UninstallSkill(reg *harness.Registry, name string) error {
-	owner := reg.SkillOwner(in.HarnessRoot, name)
-	if owner == "" {
-		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
-	}
-	m := reg.Domains[owner]
-	if err := in.preflightUninstall(reg, owner, name); err != nil {
-		return err
-	}
-	if in.hasClaude() {
-		destBase, err := in.resolveTarget(m, lockfile.KindSkills)
-		if err != nil {
-			return fmt.Errorf("skill %q: %w", name, err)
-		}
-		dst := filepath.Join(destBase, name)
-		if _, owned := in.Lock.Owns(dst); !owned {
-			if parent, ok := in.Lock.Covering(dst); ok && parent.Name == "" {
-				if _, err := os.Lstat(dst); err == nil {
-					return &PartOfDomainError{Skill: name, Domain: parent.Domain, Mode: parent.Mode}
-				}
-			}
-		}
-		in.uninstallOne(owner, lockfile.KindSkill, name, dst)
-	}
-	in.uninstallNonClaude(owner, name)
-	return nil
-}
-
-func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst string) bool {
-	entry, tracked := in.Lock.Covering(dst)
-	if !tracked {
-		if parent, ok := in.Lock.Find(domain, kind, ""); ok {
-			entry, tracked = parent, true
-		}
-	}
-	if !tracked {
-		if _, err := os.Lstat(dst); os.IsNotExist(err) {
-			return false
-		}
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — not tracked by as-skill\n", dst)
-		return false
-	}
-	fi, err := os.Lstat(dst)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked but nothing on disk\n", dst)
-		return os.IsNotExist(err)
-	}
-	if remaining := minusPlats(entry.Platforms, in.plats()); len(entry.Platforms) > 0 && len(remaining) == len(entry.Platforms) {
-		return false
-	} else if len(remaining) > 0 {
-		if in.DryRun {
-			fmt.Printf("would keep     %s — still used by %s\n", dst, strings.Join(remaining, ","))
-			return false
-		}
-		in.setEntryPlatforms(entry, remaining)
-		fmt.Printf("kept           %s — still used by %s\n", dst, strings.Join(remaining, ","))
-		return false
-	}
-	isSymlink := fi.Mode()&os.ModeSymlink != 0
-	switch entry.Mode {
-	case lockfile.ModeLink:
-		if !isSymlink {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", dst)
-			return false
-		}
-	case lockfile.ModeCopy:
-		if isSymlink {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a copy but is a symlink on disk\n", dst)
-			return false
-		}
-	default:
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", dst, entry.Mode)
-		return false
-	}
-	if in.DryRun {
-		fmt.Printf("would remove   %s\n", dst)
-		return true
-	}
-	var removeErr error
-	if entry.Mode == lockfile.ModeLink {
-		removeErr = os.Remove(dst)
-	} else {
-		removeErr = os.RemoveAll(dst)
-	}
-	if removeErr != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
-		return false
-	}
-	in.Lock.RemoveAllAt(dst)
-	fmt.Printf("uninstalled    %s\n", dst)
-	return true
 }
 
 func (in *Installer) report(scope, kind, dest string, n int) {

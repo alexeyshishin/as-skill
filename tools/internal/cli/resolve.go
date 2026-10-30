@@ -8,6 +8,7 @@ import (
 
 	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -173,7 +174,7 @@ func skillInstalled(lock *lockfile.Lockfile, projectRoot, name string) bool {
 			return true
 		}
 	}
-	for _, p := range skillLocPaths(projectRoot, name) {
+	for _, p := range installer.SkillLocPaths(projectRoot, name) {
 		if lock.Covers(p) {
 			return true
 		}

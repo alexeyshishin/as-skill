@@ -23,7 +23,7 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — %v\n", path, err)
+			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — %v\n", path, err)
 		}
 		return
 	}
@@ -33,7 +33,7 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 	}
 	out, removed, err := hookcfg.RemoveRegistrations(data, in.ProjectRoot, names, p)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — %v, hook entries left in place\n", path, err)
+		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — %v, hook entries left in place\n", path, err)
 		return
 	}
 	if len(removed) == 0 {
@@ -44,13 +44,13 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 		verb = "would unregister"
 	}
 	for _, r := range removed {
-		fmt.Printf("%s %s (%s) in %s\n", verb, r.Hook, r.Event, path)
+		fmt.Fprintf(in.stdout(), "%s %s (%s) in %s\n", verb, r.Hook, r.Event, path)
 	}
 	if in.DryRun {
 		return
 	}
 	if err := hookcfg.WriteFileAtomic(path, out); err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: failed updating %s: %v\n", path, err)
+		fmt.Fprintf(in.stderr(), "as-skill: warning: failed updating %s: %v\n", path, err)
 	}
 }
 
