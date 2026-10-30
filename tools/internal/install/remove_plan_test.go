@@ -275,3 +275,44 @@ func TestRemovePlanValidateRejectsOutsideRootBeforeAnyOp(t *testing.T) {
 		t.Fatalf("Apply = %v, want %v", aerr, verr)
 	}
 }
+
+func TestUninstallOneKeepsUntrackedFileUnderItemizedParent(t *testing.T) {
+	proj := rmProject(t)
+	dir := filepath.Join(proj, ".claude", "skills")
+	rmWrite(t, filepath.Join(dir, "tracked", "SKILL.md"), "x")
+	rmWrite(t, filepath.Join(dir, "mine", "SKILL.md"), "user")
+	row := lockfile.Entry{Domain: "d", Kind: lockfile.KindSkills, Mode: lockfile.ModeCopy, Path: dir, Items: []string{"tracked"}, Platforms: []string{"claude"}}
+	in := rmInstaller(proj, []lockfile.Entry{row})
+	ios, _, errBuf := iostreams.Test()
+	in.Reporter = Reporter{IO: ios}
+	dst := filepath.Join(dir, "mine")
+	if in.uninstallOne("d", lockfile.KindSkills, "mine", dst) {
+		t.Fatal("uninstallOne reported clean for untracked file")
+	}
+	if !rmExists(filepath.Join(dst, "SKILL.md")) {
+		t.Fatal("untracked user file was removed")
+	}
+	if want := "skipping " + dst + " — not tracked by as-skill"; !strings.Contains(errBuf.String(), want) {
+		t.Fatalf("missing warning %q, got %q", want, errBuf.String())
+	}
+	if len(in.Lock.Entries) != 1 || len(in.Lock.Entries[0].Items) != 1 || in.Lock.Entries[0].Items[0] != "tracked" {
+		t.Fatalf("row changed: %+v", in.Lock.Entries)
+	}
+}
+
+func TestUninstallOneLegacyWholeTreeRowStillRemoves(t *testing.T) {
+	proj := rmProject(t)
+	dir := filepath.Join(proj, ".claude", "skills")
+	rmWrite(t, filepath.Join(dir, "beta-one", "SKILL.md"), "x")
+	row := lockfile.Entry{Domain: "d", Kind: lockfile.KindSkills, Mode: lockfile.ModeCopy, Path: dir, Source: filepath.Join(proj, "gone"), Platforms: []string{"claude"}}
+	in := rmInstaller(proj, []lockfile.Entry{row})
+	ios, _, _ := iostreams.Test()
+	in.Reporter = Reporter{IO: ios}
+	dst := filepath.Join(dir, "beta-one")
+	if !in.uninstallOne("d", lockfile.KindSkills, "beta-one", dst) {
+		t.Fatal("legacy row did not report removal")
+	}
+	if rmExists(dst) {
+		t.Fatal("legacy row file kept")
+	}
+}

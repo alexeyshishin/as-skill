@@ -360,7 +360,7 @@ func (in *Installer) uninstallSkill(reg *harness.Registry, name string) error {
 func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst string) bool {
 	entry, tracked := in.Lock.Covering(dst)
 	if !tracked {
-		if parent, ok := in.Lock.Find(domain, kind, ""); ok {
+		if parent, ok := in.Lock.Find(domain, kind, ""); ok && len(parent.Items) == 0 {
 			entry, tracked = parent, true
 		}
 	}
