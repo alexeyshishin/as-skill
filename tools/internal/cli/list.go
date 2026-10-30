@@ -73,7 +73,7 @@ func runList(args []string, d Deps) error {
 					status = fmt.Sprintf("blocked — needs %q binary", miss.Name)
 				}
 			}
-			fmt.Fprintf(ios.Stdout(), "  %-10s %-24s %s%s\n", name, "["+status+"]", m.Description, mark(domainInstalled(lock, harnessRoot, name)))
+			fmt.Fprintf(ios.Stdout(), "  %-10s %-24s %s%s\n", name, "["+status+"]", shorten(m.Description, 60), mark(domainInstalled(lock, harnessRoot, name)))
 		}
 	}
 	if what == "all" || what == "skills" {
@@ -93,6 +93,18 @@ func runList(args []string, d Deps) error {
 		}
 	}
 	return nil
+}
+
+func shorten(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	cut := string(r[:max])
+	if i := strings.LastIndex(cut, " "); i > 0 {
+		cut = cut[:i]
+	}
+	return strings.TrimRight(cut, " ,;:-—") + "…"
 }
 
 func platformCaps(p platform.Platform) [][3]string {
