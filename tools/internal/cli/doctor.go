@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/doctor"
+	"claude-harness/tools/internal/lint"
 	"claude-harness/tools/internal/lockfile"
 )
 
@@ -56,12 +57,12 @@ func runDoctor(args []string, d Deps) error {
 	checked, failed := res.Checked, res.Failed
 
 	if herr == nil {
-		lint := lintHarness(harnessRoot)
-		for _, f := range lint.findings {
+		res := lint.Harness(harnessRoot)
+		for _, f := range res.Findings {
 			fmt.Fprintf(ios.Stdout(), "as-skill: doctor: %-11s %s\n", "lint", f)
 		}
-		checked += lint.checked
-		failed += lint.failed
+		checked += res.Checked
+		failed += res.Failed
 	}
 
 	fmt.Fprintf(ios.Stdout(), "doctor: %d checks, %d/%d ok, %d failed\n", checked, checked-failed, checked, failed)

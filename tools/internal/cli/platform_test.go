@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"claude-harness/tools/internal/lint"
 )
 
 func capture(t *testing.T, fn func() error) (string, error) {
@@ -188,14 +190,14 @@ func TestLintAgentNames(t *testing.T) {
 	if err := os.WriteFile(other, []byte("---\nname: helper\ndescription: d\n---\nx\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	res := lintHarness(harness)
-	if !strings.Contains(strings.Join(res.findings, "\n"), `agent name "helper" duplicates`) {
-		t.Fatalf("no duplicate finding: %v", res.findings)
+	res := lint.Harness(harness)
+	if !strings.Contains(findingsText(res.Findings), `agent name "helper" duplicates`) {
+		t.Fatalf("no duplicate finding: %v", res.Findings)
 	}
 	if err := os.WriteFile(other, []byte("---\nname: explorer\ndescription: d\n---\nx\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(strings.Join(lintHarness(harness).findings, "\n"), `reserved on codex`) {
+	if !strings.Contains(findingsText(lint.Harness(harness).Findings), `reserved on codex`) {
 		t.Fatal("no reserved finding")
 	}
 }
@@ -238,4 +240,12 @@ func TestDoctorCodexHooksTrustWarning(t *testing.T) {
 	if !strings.Contains(out, "codex hooks need trust: review in /hooks") {
 		t.Fatalf("no trust warning:\n%s", out)
 	}
+}
+
+func findingsText(fs []lint.Finding) string {
+	var out []string
+	for _, f := range fs {
+		out = append(out, f.String())
+	}
+	return strings.Join(out, "\n")
 }

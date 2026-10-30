@@ -1,4 +1,4 @@
-package cli
+package lint
 
 import (
 	"os"
@@ -6,6 +6,14 @@ import (
 	"strings"
 	"testing"
 )
+
+func joinFindings(fs []Finding) string {
+	var out []string
+	for _, f := range fs {
+		out = append(out, f.String())
+	}
+	return strings.Join(out, "\n")
+}
 
 func TestLintHarness(t *testing.T) {
 	good := "---\nname: s1\ndescription: d\n---\n"
@@ -87,14 +95,14 @@ func TestLintHarness(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got := lintHarness(root).findings
+			got := Harness(root).Findings
 			if len(got) != len(tc.want) {
 				t.Fatalf("got %d findings %q, want %d", len(got), got, len(tc.want))
 			}
 			for _, w := range tc.want {
 				found := false
 				for _, g := range got {
-					found = found || strings.Contains(g, w)
+					found = found || strings.Contains(g.String(), w)
 				}
 				if !found {
 					t.Errorf("no finding containing %q in %q", w, got)
@@ -119,11 +127,11 @@ func TestLintReferenceSymlinks(t *testing.T) {
 	os.Symlink("../../../shared/ok.md", filepath.Join(refs, "ok.md"))
 	os.Symlink("../../../shared/nope.md", filepath.Join(refs, "dangling.md"))
 	os.Symlink("../../../../../outside.md", filepath.Join(refs, "escape.md"))
-	got := lintHarness(root).findings
+	got := Harness(root).Findings
 	if len(got) != 2 {
 		t.Fatalf("got %q", got)
 	}
-	joined := strings.Join(got, "\n")
+	joined := joinFindings(got)
 	if !strings.Contains(joined, "dangling.md: dangling") || !strings.Contains(joined, "escape.md: symlink escapes") {
 		t.Fatalf("got %q", got)
 	}
@@ -145,7 +153,7 @@ func TestLintSkillNameRules(t *testing.T) {
 	skill("a", "b")
 	skill("a", "all")
 	skill("a", "fine")
-	joined := strings.Join(lintHarness(root).findings, "\n")
+	joined := joinFindings(Harness(root).Findings)
 	for _, want := range []string{`skill dir name "same" duplicates`, `collides with a domain name`, `"all" is reserved`} {
 		if !strings.Contains(joined, want) {
 			t.Errorf("missing finding %q in:\n%s", want, joined)
@@ -153,5 +161,32 @@ func TestLintSkillNameRules(t *testing.T) {
 	}
 	if strings.Contains(joined, `"fine"`) {
 		t.Errorf("fine flagged:\n%s", joined)
+	}
+}
+
+func TestCheckSkillSpec(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "my-skill")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(dir, "SKILL.md")
+	cases := map[string]struct {
+		src  string
+		want string
+	}{
+		"ok":        {"---\nname: my-skill\ndescription: d\nargument-hint: \"[x]\"\nallowed-tools: Read, Write\nmetadata:\n  k: v\n---\n", ""},
+		"extra key": {"---\nname: my-skill\ndescription: d\nmodel: x\n---\n", "line 4"},
+		"list tool": {"---\nname: my-skill\ndescription: d\nallowed-tools:\n  - Read\n---\n", "allowed-tools must be a string"},
+		"bad name":  {"---\nname: My_Skill\ndescription: d\n---\n", "does not match directory"},
+		"long desc": {"---\nname: my-skill\ndescription: " + strings.Repeat("a", 1025) + "\n---\n", "max 1024"},
+	}
+	for name, c := range cases {
+		if err := os.WriteFile(p, []byte(c.src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		got := strings.Join(checkSkillSpec(p), "\n")
+		if c.want == "" && got != "" || c.want != "" && !strings.Contains(got, c.want) {
+			t.Errorf("%s: got %q, want %q", name, got, c.want)
+		}
 	}
 }
