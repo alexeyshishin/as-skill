@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -80,18 +79,11 @@ func runList(args []string) error {
 		for _, name := range reg.DomainNames() {
 			m := reg.Domains[name]
 			status := "available"
-			for _, envVar := range m.RequiresEnv {
-				if os.Getenv(envVar) == "" {
-					status = fmt.Sprintf("blocked — needs $%s", envVar)
-					break
-				}
-			}
-			if status == "available" {
-				for _, bin := range m.RequiresBin {
-					if !fsutil.HasBin(bin) {
-						status = fmt.Sprintf("blocked — needs %q binary", bin)
-						break
-					}
+			if miss, gated := m.Gate(); gated {
+				if miss.Kind == harness.MissEnv {
+					status = fmt.Sprintf("blocked — needs $%s", miss.Name)
+				} else {
+					status = fmt.Sprintf("blocked — needs %q binary", miss.Name)
 				}
 			}
 			fmt.Printf("  %-10s %-24s %s%s\n", name, "["+status+"]", m.Description, mark(domainInstalled(lock, harnessRoot, name)))

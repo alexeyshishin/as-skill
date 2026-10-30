@@ -24,17 +24,14 @@ type selection struct {
 }
 
 func gatedReason(m *harness.Manifest) string {
-	for _, e := range m.RequiresEnv {
-		if os.Getenv(e) == "" {
-			return "$" + e + " is not set"
-		}
+	miss, gated := m.Gate()
+	if !gated {
+		return ""
 	}
-	for _, b := range m.RequiresBin {
-		if !fsutil.HasBin(b) {
-			return fmt.Sprintf("the %q binary is not on $PATH", b)
-		}
+	if miss.Kind == harness.MissEnv {
+		return "$" + miss.Name + " is not set"
 	}
-	return ""
+	return fmt.Sprintf("the %q binary is not on $PATH", miss.Name)
 }
 
 func skillOwner(harnessRoot string, reg *harness.Registry, name string) string {

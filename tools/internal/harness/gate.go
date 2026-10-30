@@ -1,0 +1,38 @@
+package harness
+
+import (
+	"os"
+
+	"claude-harness/tools/internal/fsutil"
+)
+
+type MissKind int
+
+const (
+	MissEnv MissKind = iota
+	MissBin
+)
+
+type Miss struct {
+	Kind MissKind
+	Name string
+}
+
+// GateWith returns the first unmet requirement (env before bin, declared order).
+func (m *Manifest) GateWith(lookupEnv func(string) string, hasBin func(string) bool) (Miss, bool) {
+	for _, e := range m.RequiresEnv {
+		if lookupEnv(e) == "" {
+			return Miss{Kind: MissEnv, Name: e}, true
+		}
+	}
+	for _, b := range m.RequiresBin {
+		if !hasBin(b) {
+			return Miss{Kind: MissBin, Name: b}, true
+		}
+	}
+	return Miss{}, false
+}
+
+func (m *Manifest) Gate() (Miss, bool) {
+	return m.GateWith(os.Getenv, fsutil.HasBin)
+}

@@ -89,17 +89,14 @@ func askProject(p prompt.Prompter, o addOpts, prev string) (string, error) {
 }
 
 func gatedLabel(m *harness.Manifest) string {
-	for _, e := range m.RequiresEnv {
-		if os.Getenv(e) == "" {
-			return "needs $" + e
-		}
+	miss, gated := m.Gate()
+	if !gated {
+		return ""
 	}
-	for _, b := range m.RequiresBin {
-		if gatedReason(&harness.Manifest{RequiresBin: []string{b}}) != "" {
-			return "needs " + b + " on $PATH"
-		}
+	if miss.Kind == harness.MissEnv {
+		return "needs $" + miss.Name
 	}
-	return ""
+	return "needs " + miss.Name + " on $PATH"
 }
 
 func askDomains(p prompt.Prompter, harnessRoot string, reg *harness.Registry, lock *lockfile.Lockfile, prev []string) ([]string, error) {

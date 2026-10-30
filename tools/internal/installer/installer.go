@@ -161,22 +161,13 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 	if !ok {
 		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
 	}
-	for _, envVar := range m.RequiresEnv {
-		if os.Getenv(envVar) != "" {
-			continue
+	if miss, gated := m.Gate(); gated {
+		var msg string
+		if miss.Kind == harness.MissEnv {
+			msg = fmt.Sprintf("domain %q requires $%s, which is not set", name, miss.Name)
+		} else {
+			msg = fmt.Sprintf("domain %q requires the %q binary, which is not on $PATH", name, miss.Name)
 		}
-		msg := fmt.Sprintf("domain %q requires $%s, which is not set", name, envVar)
-		if strict {
-			return errors.New(msg)
-		}
-		fmt.Fprintf(os.Stderr, "as-skill: skipping — %s\n", msg)
-		return nil
-	}
-	for _, bin := range m.RequiresBin {
-		if fsutil.HasBin(bin) {
-			continue
-		}
-		msg := fmt.Sprintf("domain %q requires the %q binary, which is not on $PATH", name, bin)
 		if strict {
 			return errors.New(msg)
 		}
@@ -243,15 +234,11 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
 	}
 	m := reg.Domains[owner]
-	for _, envVar := range m.RequiresEnv {
-		if os.Getenv(envVar) == "" {
-			return fmt.Errorf("skill %q belongs to domain %q, which requires $%s (not set)", name, owner, envVar)
+	if miss, gated := m.Gate(); gated {
+		if miss.Kind == harness.MissEnv {
+			return fmt.Errorf("skill %q belongs to domain %q, which requires $%s (not set)", name, owner, miss.Name)
 		}
-	}
-	for _, bin := range m.RequiresBin {
-		if !fsutil.HasBin(bin) {
-			return fmt.Errorf("skill %q belongs to domain %q, which requires the %q binary (not found on $PATH)", name, owner, bin)
-		}
+		return fmt.Errorf("skill %q belongs to domain %q, which requires the %q binary (not found on $PATH)", name, owner, miss.Name)
 	}
 	src := filepath.Join(in.HarnessRoot, "domains", owner, "skills", name)
 	if err := in.preflightRoots(map[lockfile.Kind]bool{lockfile.KindSkills: true}); err != nil {

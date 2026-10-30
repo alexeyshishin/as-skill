@@ -315,17 +315,8 @@ func (in *Installer) GuardRoots(kinds ...lockfile.Kind) error {
 }
 
 func (in *Installer) runnable(m *harness.Manifest) bool {
-	for _, e := range m.RequiresEnv {
-		if os.Getenv(e) == "" {
-			return false
-		}
-	}
-	for _, b := range m.RequiresBin {
-		if !fsutil.HasBin(b) {
-			return false
-		}
-	}
-	return true
+	_, gated := m.Gate()
+	return !gated
 }
 
 func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {

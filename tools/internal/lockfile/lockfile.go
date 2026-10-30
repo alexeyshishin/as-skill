@@ -86,7 +86,7 @@ func claudeOnly(p []string) bool {
 func migrateCoreSkillKind(lf *Lockfile) {
 	for i, e := range lf.Entries {
 		if e.Domain == "core" && e.Kind == KindSkill {
-			lf.Entries[i].Kind = "skills"
+			lf.Entries[i].Kind = KindSkills
 		}
 	}
 }
