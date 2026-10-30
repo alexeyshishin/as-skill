@@ -25,66 +25,26 @@ type installOpts struct {
 
 func parseInstallArgs(args []string) ([]string, installOpts, error) {
 	opts := installOpts{project: ".", harnessRoot: "."}
-	var positionals []string
-
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		key, val, hasVal := a, "", false
-		if strings.HasPrefix(a, "--") {
-			if before, after, found := strings.Cut(a, "="); found {
-				key, val, hasVal = before, after, true
+	var domains []string
+	fs := newFlagSet()
+	fs.StringVarP(&opts.project, "project", "p", ".", "")
+	fs.StringVar(&opts.harnessRoot, "harness-root", ".", "")
+	fs.VarP(listValue{&opts.platforms}, "agent", "a", "")
+	hiddenAlias(fs, "platform", &opts.platforms)
+	fs.VarP(listValue{&domains}, "domain", "d", "")
+	fs.BoolVar(&opts.dryRun, "dry-run", false, "")
+	fs.BoolVar(&opts.force, "force", false, "")
+	fs.BoolVar(&opts.copy, "copy", false, "")
+	positionals, err := parseFlags(fs, args)
+	if err != nil {
+		return nil, opts, err
+	}
+	opts.harnessSet = fs.Changed("harness-root")
+	for _, v := range domains {
+		for _, d := range strings.Split(v, ",") {
+			if d = strings.TrimSpace(d); d != "" {
+				opts.domains = append(opts.domains, d)
 			}
-		}
-		takeValue := func() (string, error) {
-			if hasVal {
-				return val, nil
-			}
-			i++
-			if i >= len(args) {
-				return "", fmt.Errorf("%s needs a value", key)
-			}
-			return args[i], nil
-		}
-		switch key {
-		case "--project", "-p":
-			v, err := takeValue()
-			if err != nil {
-				return nil, opts, err
-			}
-			opts.project = v
-		case "--harness-root":
-			v, err := takeValue()
-			if err != nil {
-				return nil, opts, err
-			}
-			opts.harnessRoot, opts.harnessSet = v, true
-		case "--platform", "--agent", "-a":
-			v, err := takeValue()
-			if err != nil {
-				return nil, opts, err
-			}
-			opts.platforms = append(opts.platforms, v)
-		case "--domain", "-d":
-			v, err := takeValue()
-			if err != nil {
-				return nil, opts, err
-			}
-			for _, d := range strings.Split(v, ",") {
-				if d = strings.TrimSpace(d); d != "" {
-					opts.domains = append(opts.domains, d)
-				}
-			}
-		case "--dry-run":
-			opts.dryRun = true
-		case "--force":
-			opts.force = true
-		case "--copy":
-			opts.copy = true
-		default:
-			if strings.HasPrefix(a, "-") {
-				return nil, opts, fmt.Errorf("unknown flag %q", a)
-			}
-			positionals = append(positionals, a)
 		}
 	}
 	return positionals, opts, nil

@@ -12,33 +12,20 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
+func parseListArgs(args []string) (project, harnessRoot string, pos []string, err error) {
+	fs := newFlagSet()
+	fs.StringVarP(&project, "project", "p", ".", "")
+	fs.StringVar(&harnessRoot, "harness-root", "", "")
+	pos, err = parseFlags(fs, args)
+	return project, harnessRoot, pos, err
+}
+
 func runList(args []string, d Deps) error {
 	ios := d.IO
 	what := "all"
-	project, harnessFlag := ".", ""
-	var pos []string
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		switch {
-		case a == "-p" || a == "--project":
-			i++
-			if i >= len(args) {
-				return fmt.Errorf("%s needs a value", a)
-			}
-			project = args[i]
-		case a == "--harness-root":
-			i++
-			if i >= len(args) {
-				return fmt.Errorf("%s needs a value", a)
-			}
-			harnessFlag = args[i]
-		case strings.HasPrefix(a, "--project="):
-			project = strings.TrimPrefix(a, "--project=")
-		case strings.HasPrefix(a, "-"):
-			return fmt.Errorf("unknown flag %q", a)
-		default:
-			pos = append(pos, a)
-		}
+	project, harnessFlag, pos, err := parseListArgs(args)
+	if err != nil {
+		return err
 	}
 	if len(pos) > 0 {
 		what = pos[0]

@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/lockfile"
@@ -18,46 +17,17 @@ type statusOpts struct {
 
 func parseStatusArgs(args []string) (statusOpts, error) {
 	opts := statusOpts{project: "."}
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		key, val, hasVal := a, "", false
-		if strings.HasPrefix(a, "--") {
-			if before, after, found := strings.Cut(a, "="); found {
-				key, val, hasVal = before, after, true
-			}
-		}
-		takeValue := func() (string, error) {
-			if hasVal {
-				return val, nil
-			}
-			i++
-			if i >= len(args) {
-				return "", fmt.Errorf("%s needs a value", key)
-			}
-			return args[i], nil
-		}
-		switch key {
-		case "--project", "-p":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.project = v
-		case "--harness-root":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.harnessRoot = v
-		case "--platform", "--agent", "-a":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.platforms = append(opts.platforms, v)
-		default:
-			return opts, fmt.Errorf("unknown flag %q", a)
-		}
+	fs := newFlagSet()
+	fs.StringVarP(&opts.project, "project", "p", ".", "")
+	fs.StringVar(&opts.harnessRoot, "harness-root", "", "")
+	fs.VarP(listValue{&opts.platforms}, "agent", "a", "")
+	hiddenAlias(fs, "platform", &opts.platforms)
+	positionals, err := parseFlags(fs, args)
+	if err != nil {
+		return opts, err
+	}
+	if len(positionals) > 0 {
+		return opts, fmt.Errorf("unknown flag %q", positionals[0])
 	}
 	return opts, nil
 }

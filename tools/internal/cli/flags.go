@@ -1,10 +1,14 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
 
 type addOpts struct {
@@ -21,65 +25,110 @@ type addOpts struct {
 	help        bool
 }
 
-func parseAddArgs(verb string, args []string) (addOpts, error) {
-	opts := addOpts{verb: verb, project: "."}
-	for i := 0; i < len(args); i++ {
-		a := args[i]
-		key, val, hasVal := a, "", false
-		if strings.HasPrefix(a, "--") {
-			if before, after, found := strings.Cut(a, "="); found {
-				key, val, hasVal = before, after, true
+type listValue struct{ p *[]string }
+
+func (l listValue) String() string {
+	if l.p == nil {
+		return ""
+	}
+	return strings.Join(*l.p, ",")
+}
+
+func (l listValue) Set(v string) error {
+	*l.p = append(*l.p, v)
+	return nil
+}
+
+func (l listValue) Type() string { return "string" }
+
+func newFlagSet() *pflag.FlagSet {
+	fs := pflag.NewFlagSet("as-skill", pflag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.Usage = func() {}
+	fs.SortFlags = false
+	return fs
+}
+
+func hiddenAlias(fs *pflag.FlagSet, name string, target *[]string) {
+	fs.Var(listValue{target}, name, "")
+	_ = fs.MarkHidden(name)
+}
+
+func parseFlags(fs *pflag.FlagSet, args []string) ([]string, error) {
+	if err := fs.Parse(args); err != nil {
+		return nil, flagError(args, err)
+	}
+	if fs.NArg() == 0 {
+		return nil, nil
+	}
+	return fs.Args(), nil
+}
+
+func flagError(args []string, err error) error {
+	var notExist *pflag.NotExistError
+	var required *pflag.ValueRequiredError
+	var syntax *pflag.InvalidSyntaxError
+	switch {
+	case errors.Is(err, pflag.ErrHelp):
+		return fmt.Errorf("unknown flag %q", findArg(args, func(a string) bool {
+			return a == "-h" || a == "--help" || strings.HasPrefix(a, "--help=")
+		}, "--help"))
+	case errors.As(err, &notExist):
+		short := notExist.GetSpecifiedShortnames()
+		name := notExist.GetSpecifiedName()
+		return fmt.Errorf("unknown flag %q", findArg(args, func(a string) bool {
+			if short != "" {
+				return a == "-"+short
 			}
-		}
-		takeValue := func() (string, error) {
-			if hasVal {
-				return val, nil
-			}
-			i++
-			if i >= len(args) {
-				return "", fmt.Errorf("%s needs a value", key)
-			}
-			return args[i], nil
-		}
-		switch key {
-		case "-a", "--agent", "--platform":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.agents = append(opts.agents, v)
-		case "-p", "--project":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.project, opts.projectSet = v, true
-		case "--harness-root":
-			v, err := takeValue()
-			if err != nil {
-				return opts, err
-			}
-			opts.harnessRoot = v
-		case "--copy":
-			if verb == "remove" {
-				return opts, fmt.Errorf("--copy applies to add only")
-			}
-			opts.copy = true
-		case "-y", "--yes":
-			opts.yes = true
-		case "--dry-run":
-			opts.dryRun = true
-		case "--force":
-			opts.force = true
-		case "-h", "--help":
-			opts.help = true
-		default:
-			if strings.HasPrefix(a, "-") {
-				return opts, fmt.Errorf("unknown flag %q", a)
-			}
-			opts.names = append(opts.names, a)
+			return a == "--"+name || strings.HasPrefix(a, "--"+name+"=")
+		}, flagLabel(name, short)))
+	case errors.As(err, &required):
+		return fmt.Errorf("%s needs a value", flagLabel(required.GetSpecifiedName(), required.GetSpecifiedShortnames()))
+	case errors.As(err, &syntax):
+		return fmt.Errorf("unknown flag %q", syntax.GetSpecifiedFlag())
+	}
+	return err
+}
+
+func flagLabel(name, short string) string {
+	if short != "" {
+		return "-" + name
+	}
+	return "--" + name
+}
+
+func findArg(args []string, match func(string) bool, fallback string) string {
+	for _, a := range args {
+		if match(a) {
+			return a
 		}
 	}
+	return fallback
+}
+
+func parseAddArgs(verb string, args []string) (addOpts, error) {
+	opts := addOpts{verb: verb, project: "."}
+	fs := newFlagSet()
+	fs.VarP(listValue{&opts.agents}, "agent", "a", "")
+	hiddenAlias(fs, "platform", &opts.agents)
+	fs.StringVarP(&opts.project, "project", "p", ".", "")
+	fs.StringVar(&opts.harnessRoot, "harness-root", "", "")
+	_ = fs.MarkHidden("harness-root")
+	fs.BoolVar(&opts.copy, "copy", false, "")
+	fs.BoolVarP(&opts.yes, "yes", "y", false, "")
+	fs.BoolVar(&opts.dryRun, "dry-run", false, "")
+	fs.BoolVar(&opts.force, "force", false, "")
+	_ = fs.MarkHidden("force")
+	fs.BoolVarP(&opts.help, "help", "h", false, "")
+	names, err := parseFlags(fs, args)
+	if err != nil {
+		return opts, err
+	}
+	if verb == "remove" && fs.Changed("copy") {
+		return opts, fmt.Errorf("--copy applies to add only")
+	}
+	opts.projectSet = fs.Changed("project")
+	opts.names = names
 	return opts, nil
 }
 
