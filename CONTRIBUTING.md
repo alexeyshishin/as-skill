@@ -35,7 +35,7 @@ rm -rf .claude
 ## Добавление хука
 
 1. `domains/<домен>/hooks/<имя>.sh`, исполняемый (`chmod +x`). Хуки сейчас есть только у `code` и `core`.
-2. В шапке — строка `# register: <Event> [<matcher>]` (например `# register: PostToolUse Edit|Write|MultiEdit|Bash`). По ней `/code-init` через `code-init/scripts/register-hooks.sh` прописывает хук в `.claude/settings.json` проекта — сам скрипт для нового хука не правится.
+2. В шапке — строка `# register: <Event> [<matcher>]` (например `# register: PostToolUse Edit|Write|MultiEdit|Bash`). Её читает и шаг `hooks` диалога `as-skill add`. По ней `/code-init` через `code-init/scripts/register-hooks.sh` прописывает хук в `.claude/settings.json` проекта — сам скрипт для нового хука не правится.
 3. Fail-open: `set -Eeuo pipefail` + `trap 'exit 0' ERR`, нет нужного бинаря (`jq`, `claude`, …) или входных данных — `exit 0`.
 4. Общая для нескольких хуков логика — в отдельный `*-lib.sh`, который хуки `source`-ят (пример — `test-gate-lib.sh`); у библиотеки нет строки `# register:`.
 5. Опиши хук в `domains/<домен>/hooks/README.md` и добавь строку в таблицу «Хуки» корневого `README.md`. Если хук ходит в сеть или запускает что-то в фоне — раздел в `SECURITY.md`.

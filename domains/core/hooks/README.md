@@ -1,6 +1,6 @@
 # core hooks
 
-Shell-хуки Claude Code для домена `core`. Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` скиллом `/code-init` (механизм `# register:` и удаление — см. `domains/code/hooks/README.md`).
+Shell-хуки Claude Code для домена `core`. Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` по явному выбору на шаге `hooks` диалога `as-skill add` (по умолчанию ничего), скиллом `/code-init` или `as-skill hooks enable` (механизм `# register:` и удаление — см. `domains/code/hooks/README.md`).
 
 Хуки fail-open: любая ошибка (`trap 'exit 0' ERR`) — хук молча пропускается. Без `jq` — no-op.
 

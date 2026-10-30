@@ -1,6 +1,6 @@
 # code hooks
 
-Shell-хуки Claude Code для домена `code`. Хуки Memory Bank живут в `core` (`domains/core/hooks/`). Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` скиллом `/code-init`.
+Shell-хуки Claude Code для домена `code`. Хуки Memory Bank живут в `core` (`domains/core/hooks/`). Ставятся installer-ом в `<project>/.claude/hooks/`, регистрируются в `<project>/.claude/settings.json` тремя путями: явный выбор на шаге `hooks` диалога `as-skill add` (по умолчанию ничего, `-y` не регистрирует), скилл `/code-init`, `as-skill hooks enable`.
 
 Все хуки fail-open: любая ошибка (`trap 'exit 0' ERR`) — хук молча пропускается, сессию не ломает. Без `jq` все они no-op.
 
@@ -42,7 +42,7 @@ Shell-хуки Claude Code для домена `code`. Хуки Memory Bank жи
 as-skill add code core -p <target> --copy -y
 ```
 
-Затем `/code-init` в целевом проекте — зарегистрирует хуки (с согласия пользователя).
+Хуки по умолчанию не регистрируются. Выбрать их можно в диалоге `as-skill add` (шаг `hooks`, opt-in), либо затем `/code-init` в целевом проекте зарегистрирует хуки (с согласия пользователя), либо `as-skill hooks enable`.
 
 ## Удаление
 
