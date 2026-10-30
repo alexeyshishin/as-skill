@@ -190,3 +190,31 @@ func TestCheckSkillSpec(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckReportsNameMismatchOnce(t *testing.T) {
+	root := t.TempDir()
+	dom := filepath.Join(root, "domains", "d")
+	skill := filepath.Join(dom, "skills", "s1")
+	if err := os.MkdirAll(skill, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dom, "manifest.yaml"), []byte("name: d\ndescription: d\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(skill, "SKILL.md"), []byte("---\nname: other\ndescription: d\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Check(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, f := range res.Findings {
+		if strings.Contains(f.Msg, "does not match directory name") {
+			n++
+		}
+	}
+	if n != 1 || len(res.Findings) != 1 {
+		t.Fatalf("got %d mismatch findings, %d total: %q", n, len(res.Findings), joinFindings(res.Findings))
+	}
+}

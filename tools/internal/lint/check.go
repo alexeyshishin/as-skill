@@ -64,7 +64,20 @@ func Check(harnessRoot string) (CheckResult, error) {
 
 	failures = append(failures, Harness(harnessRoot).Findings...)
 
-	return CheckResult{Domains: len(domainNames), Skills: len(skillMDs), Findings: failures}, nil
+	return CheckResult{Domains: len(domainNames), Skills: len(skillMDs), Findings: dedupe(failures)}, nil
+}
+
+func dedupe(in []Finding) []Finding {
+	seen := map[Finding]bool{}
+	var out []Finding
+	for _, f := range in {
+		if seen[f] {
+			continue
+		}
+		seen[f] = true
+		out = append(out, f)
+	}
+	return out
 }
 
 var skillNameRe = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)

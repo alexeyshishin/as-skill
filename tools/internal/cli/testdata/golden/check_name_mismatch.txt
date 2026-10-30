@@ -2,10 +2,8 @@
 == stdout ==
 == stderr ==
 as-skill: check: <H>/domains/beta/skills/beta-one/SKILL.md: frontmatter name "other-name" does not match directory name "beta-one"
-as-skill: check: <H>/domains/beta/skills/beta-one/SKILL.md: frontmatter name "other-name" does not match directory name "beta-one"
 == result ==
-check: 2 failure(s)
+check: 1 failure(s)
 == combined ==
-as-skill: check: <H>/domains/beta/skills/beta-one/SKILL.md: frontmatter name "other-name" does not match directory name "beta-one"
 as-skill: check: <H>/domains/beta/skills/beta-one/SKILL.md: frontmatter name "other-name" does not match directory name "beta-one"
 
