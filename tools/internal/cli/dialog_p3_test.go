@@ -102,7 +102,7 @@ func TestDialogCustomizeAskedAfterDomainsDefaultNo(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm")
 	if fp.confDef["customize"] {
 		t.Error("customize default must be No")
 	}
@@ -123,7 +123,7 @@ func TestDialogCustomizeIDsOrderAndPreselectionAllOn(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "platforms", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "platforms", "mode", "hooks", "confirm")
 	if got := fp.selected("skills:git"); !reflect.DeepEqual(got, allGit) {
 		t.Errorf("git preselected %v", got)
 	}
@@ -236,7 +236,7 @@ func TestDialogBackWithinSkillSteps(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "skills:git", "skills:core", "platforms", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "skills:git", "skills:core", "platforms", "mode", "hooks", "confirm")
 	if got := fp.history["skills:git"]; !reflect.DeepEqual(got, [][]string{allGit, noRelease}) {
 		t.Fatalf("git preselection %v", got)
 	}
@@ -255,7 +255,7 @@ func TestDialogBackFromFirstSkillStepReasksCustomize(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "skills:git", "customize", "platforms", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "skills:git", "customize", "platforms", "mode", "hooks", "confirm")
 	if !fp.confDef["customize"] {
 		t.Error("re-asked customize must default to the previous answer (Yes)")
 	}
@@ -291,7 +291,7 @@ func TestDialogBackFromPlatformsGoesToCustomizeKeepingAnswers(t *testing.T) {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "platforms",
-		"customize", "skills:git", "skills:core", "platforms", "mode", "confirm")
+		"customize", "skills:git", "skills:core", "platforms", "mode", "hooks", "confirm")
 	if got := fp.history["skills:git"]; !reflect.DeepEqual(got, [][]string{allGit, noRelease}) {
 		t.Fatalf("git preselection after back %v", got)
 	}
@@ -589,7 +589,7 @@ func TestDialogOverwriteYesWritesOnlyListedPaths(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "skills:core", "platforms", "mode", "overwrite", "confirm")
+	fp.wantAsked("project", "domains", "customize", "skills:core", "platforms", "mode", "overwrite", "hooks", "confirm")
 	if want := ".claude/skills/caveman\n.claude/skills/memory-bank"; fp.descs["overwrite"] != want {
 		t.Fatalf("listed paths %q, want %q", fp.descs["overwrite"], want)
 	}
@@ -653,7 +653,7 @@ func TestDialogBackFromOverwriteGoesToMode(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "overwrite", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "overwrite", "mode", "hooks", "confirm")
 	if isLink(filepath.Join(p, ".claude", "skills", "advanced-search")) {
 		t.Error("copy mode expected after going back")
 	}

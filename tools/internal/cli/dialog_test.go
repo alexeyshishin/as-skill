@@ -20,6 +20,7 @@ func fullAnswers(project string) map[string]any {
 		"customize": false,
 		"platforms": []string{"claude"},
 		"mode":      "copy",
+		"hooks":     []string{},
 		"confirm":   true,
 	}
 }
@@ -32,7 +33,7 @@ func TestDialogAddFullOrderAndMultiDomain(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "confirm")
+	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm")
 	for _, s := range []string{".claude/skills/git-conventional-commits", ".claude/skills/memory-bank", ".claude/skills-lock.json"} {
 		if !exists(filepath.Join(p, s)) {
 			t.Errorf("missing %s (out: %s)", s, out)
@@ -62,8 +63,9 @@ func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
 			p := t.TempDir()
 			ans := fullAnswers(p)
 			var want []string
-			for _, id := range []string{"project", "domains", "customize", "platforms", "mode", "confirm"} {
-				if id != c.skip {
+			for _, id := range []string{"project", "domains", "customize", "platforms", "mode", "hooks", "confirm"} {
+				// "names" selects git only, which has no registerable hooks
+				if id != c.skip && !(id == "hooks" && c.name == "names") {
 					want = append(want, id)
 				}
 			}
@@ -314,7 +316,7 @@ func TestDialogBackOnFirstStepStays(t *testing.T) {
 	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}
-	fp.wantAsked("project", "project", "domains", "customize", "platforms", "mode")
+	fp.wantAsked("project", "project", "domains", "customize", "platforms", "mode", "hooks")
 }
 
 func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
@@ -333,6 +335,7 @@ func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
 func TestDialogBackFromConfirmGoesToMode(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	ans := fullAnswers(p)
+	ans["domains"] = []string{"git"}
 	ans["mode"] = seq{"copy", "link"}
 	ans["confirm"] = seq{prompt.ErrBack, false}
 	fp := newFake(t, ans)

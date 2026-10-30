@@ -71,6 +71,9 @@ func runAdd(args []string) error {
 			return fmt.Errorf("saving lockfile: %w", err)
 		}
 	}
+	if runErr == nil {
+		runErr = registerSelected(in, pl)
+	}
 	if runErr != nil {
 		return runErr
 	}

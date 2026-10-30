@@ -260,6 +260,7 @@ type addPlan struct {
 	exclude          map[string]bool
 	overwrite        map[string]bool
 	adjust           []string
+	hooks            []string
 }
 
 func addDialog(opts addOpts) (*addPlan, error) {
@@ -275,6 +276,7 @@ func addDialog(opts addOpts) (*addPlan, error) {
 		rawMode   string
 		custom    customizeState
 		prevRes   = map[string]string{}
+		prevHooks []string
 	)
 	names := opts.names
 	err := runSteps([]func() (bool, error){
@@ -367,6 +369,19 @@ func addDialog(opts addOpts) (*addPlan, error) {
 			return resolveConflicts(p, opts, pl, prevRes)
 		},
 		func() (bool, error) {
+			pl.hooks = nil
+			hopts, err := hookOptions(pl, prevHooks)
+			if err != nil || len(hopts) == 0 {
+				return false, err
+			}
+			got, err := p.MultiSelectOptional("hooks", "Register hooks (default: none)", hopts)
+			if err != nil {
+				return true, abortErr(err)
+			}
+			prevHooks, pl.hooks = got, got
+			return true, nil
+		},
+		func() (bool, error) {
 			if opts.dryRun {
 				return false, nil
 			}
@@ -416,6 +431,14 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 	}
 	for _, d := range health.Duplicates(pl.project, pl.lock) {
 		fmt.Fprintf(&b, "warning:   %s\n", d)
+	}
+	if len(pl.hooks) == 0 {
+		fmt.Fprintf(&b, "hooks:     none\n")
+	} else {
+		fmt.Fprintf(&b, "hooks:     %s\n", strings.Join(pl.hooks, ", "))
+	}
+	if contains(pl.hooks, loggerHook) {
+		fmt.Fprintf(&b, "warning:   %s\n", loggerWarning)
 	}
 	mode := "symlink"
 	if pl.mode == "copy" {
@@ -529,4 +552,62 @@ func containsPlat(l []platform.ID, id platform.ID) bool {
 func removeSummary(project string, names []string, plats []platform.ID) string {
 	return fmt.Sprintf("project:   %s\nremove:    %s\nplatforms: %s", project,
 		strings.Join(names, ", "), strings.Join(platformDirNames(plats), ", "))
+}
+
+const (
+	loggerHook    = "memory-bank-logger.sh"
+	loggerWarning = "memory-bank-logger.sh sends the session transcript to the API and spawns a detached acceptEdits `claude -p` session"
+)
+
+// hookOptions lists the registerable hooks of the selected domains for the
+// final platforms, labelled with event and target platforms; none preselected
+// except prev. Empty when there is nothing to ask.
+func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
+	in := &installer.Installer{HarnessRoot: pl.harness}
+	infos, err := in.DomainHooks(pl.reg, pl.sel.domainNames())
+	if err != nil {
+		return nil, err
+	}
+	var opts []prompt.Option
+	for _, h := range infos {
+		var on []string
+		for _, id := range pl.plats {
+			if containsPlat(h.Platforms, id) {
+				on = append(on, string(id))
+			}
+		}
+		if len(on) == 0 {
+			continue
+		}
+		label := fmt.Sprintf("%s — %s (%s)", h.Name, h.Event, strings.Join(on, ", "))
+		if h.Name == loggerHook {
+			label += " — SECURITY: " + loggerWarning
+		}
+		opts = append(opts, prompt.Option{Value: h.Name, Label: label, Selected: contains(prev, h.Name)})
+	}
+	return opts, nil
+}
+
+// registerSelected registers the chosen hooks on every final platform that
+// supports them and allows each hook.
+func registerSelected(in *installer.Installer, pl *addPlan) error {
+	for _, id := range pl.plats {
+		names, err := in.DomainHookNames(pl.reg, pl.sel.domainNames(), id)
+		if err != nil {
+			return err
+		}
+		var chosen []string
+		for _, n := range names {
+			if contains(pl.hooks, n) {
+				chosen = append(chosen, n)
+			}
+		}
+		if len(chosen) == 0 {
+			continue
+		}
+		if err := in.RegisterHooks(pl.reg, pl.sel.domainNames(), id, chosen); err != nil {
+			return err
+		}
+	}
+	return nil
 }
