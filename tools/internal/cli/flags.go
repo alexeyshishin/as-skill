@@ -133,6 +133,17 @@ func parseAddArgs(verb string, args []string) (addOpts, error) {
 }
 
 func resolveProject(p string) (string, error) {
+	abs, err := resolveProjectDir(p)
+	if err != nil {
+		return "", err
+	}
+	if err := refuseHome(abs); err != nil {
+		return "", err
+	}
+	return abs, nil
+}
+
+func resolveProjectDir(p string) (string, error) {
 	if p == "~" || strings.HasPrefix(p, "~/") {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -150,9 +161,6 @@ func resolveProject(p string) (string, error) {
 	}
 	if !st.IsDir() {
 		return "", fmt.Errorf("project %s is not a directory", abs)
-	}
-	if err := refuseHome(abs); err != nil {
-		return "", err
 	}
 	return abs, nil
 }

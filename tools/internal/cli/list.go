@@ -49,7 +49,11 @@ func runList(args []string, d Deps) error {
 
 	var lock *lockfile.Lockfile
 	projectRoot := ""
-	if p, perr := resolveProject(project); perr != nil {
+	resolve := resolveProject
+	if project == "." {
+		resolve = resolveProjectDir
+	}
+	if p, perr := resolve(project); perr != nil {
 		return perr
 	} else if lk, lerr := lockfile.Load(p); lerr == nil {
 		lock, projectRoot = lk, p
