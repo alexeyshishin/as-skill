@@ -1,0 +1,21 @@
+syn:bad-line	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:block-list	{"Name":"x","Description":"","RequiresEnv":["A","B"],"RequiresBin":["git"],"Targets":{}}
+syn:block-scalar	{"Name":"x","Description":"\u003e","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:colon-desc	{"Name":"x","Description":"a: b","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:comments-only	ERR <path>: missing top-level "name:"
+syn:crlf	{"Name":"x","Description":"d","RequiresEnv":["A","B"],"RequiresBin":null,"Targets":{"rules":"${CLAUDE_HOME}/rules"}}
+syn:dup-key	{"Name":"y","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:empty	ERR <path>: missing top-level "name:"
+syn:empty-name	ERR <path>: missing top-level "name:"
+syn:indented-top	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:inline-list	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:list-no-dash	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:missing-name	ERR <path>: missing top-level "name:"
+syn:name-only	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:nested-target	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"deep":"v","rules":""}}
+syn:quoted	{"Name":"\"x\"","Description":"'it''s'","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"\"${CLAUDE_HOME}/rules\""}}
+syn:tab-targets	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r"}}
+syn:targets-blank	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r","skills":"s"}}
+syn:targets-nocolon	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r"}}
+syn:trailing-cmt	{"Name":"x # c","Description":"d # c","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:unknown-key	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}

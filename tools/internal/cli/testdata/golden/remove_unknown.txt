@@ -1,0 +1,44 @@
+### step 1: remove ghost -y -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+"ghost" is not installed in this project (see `as-skill doctor`)
+== combined ==
+
+### step 2: add alpha -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+
+### step 3: remove ghost -y -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+"ghost" is not installed in this project (see `as-skill doctor`)
+== combined ==
+
+### step 4: remove -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+remove needs names and -y (or --dry-run); the interactive dialog needs a terminal. Unanswered:
+  - what: no domain or skill names given (default: none)
+  - platforms (-a): default detected from the project, else claude
+  - confirmation: pass -y to accept defaults, or --dry-run to preview
+example: as-skill remove code core -p <path> -y
+== combined ==
+

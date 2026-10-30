@@ -1,0 +1,25 @@
+syn:bad-escape	{"body":"b\n","description":"","effort":"","model":"","name":"a\\qb"}
+syn:body-hr	{"body":"x\n---\ny\n","description":"","effort":"","model":"","name":"a"}
+syn:closing-eof	{"body":"","description":"","effort":"","model":"","name":"a"}
+syn:closing-nonl	{"body":"body-no-nl","description":"","effort":"","model":"","name":"a"}
+syn:colon-desc	{"body":"b\n","description":"x: y","effort":"","model":"","name":"a"}
+syn:comment	{"body":"b\n","description":"","effort":"","model":"","name":"a"}
+syn:crlf	{"body":"body\n","description":"d","effort":"high","model":"m","name":"a"}
+syn:dup-key	{"body":"b\n","description":"","effort":"","model":"","name":"b"}
+syn:empty	ERR no frontmatter
+syn:empty-fm	{"body":"body\n","description":"","effort":"","model":"","name":""}
+syn:empty-value	{"body":"b\n","description":"d","effort":"","model":"","name":""}
+syn:folded	{"body":"b\n","description":"one two","effort":"","model":"","name":"a"}
+syn:indented	{"body":"b\n","description":"d","effort":"","model":"","name":""}
+syn:inline-list	{"body":"b\n","description":"d","effort":"","model":"","name":"a"}
+syn:key-space	{"body":"b\n","description":"","effort":"","model":"","name":"a"}
+syn:list-block	{"body":"b\n","description":"d","effort":"","model":"","name":"a"}
+syn:literal	{"body":"b\n","description":"one\ntwo","effort":"","model":"","name":"a"}
+syn:no-colon	{"body":"b\n","description":"d","effort":"","model":"","name":"a"}
+syn:no-fm	ERR no frontmatter
+syn:quoted	{"body":"b\n","description":"it's","effort":"","model":"x\ty","name":"a b"}
+syn:trailing-cmt	{"body":"b\n","description":"d","effort":"","model":"","name":"a # c"}
+syn:trailing-ws-fm	ERR no frontmatter
+syn:unterm-quote	{"body":"b\n","description":"","effort":"","model":"","name":"\"a"}
+syn:unterminated	ERR unterminated frontmatter
+syn:value-colon-url	{"body":"b\n","description":"see http://x.y","effort":"","model":"","name":"a"}

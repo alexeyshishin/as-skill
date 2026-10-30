@@ -1,0 +1,1 @@
+../../../../rules/note-types-frontmatter.md

@@ -1,5 +1,5 @@
 ---
-name: sre
+name: devops-sre
 description: >
   Consilium role. Reviews SRE practices: SLO/SLA/error budgets, observability (metrics/logs/traces), alerting rules, runbooks, incident response, capacity planning, post-mortems. Does NOT write code.
 ---

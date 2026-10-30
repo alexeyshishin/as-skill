@@ -12,8 +12,8 @@ description: >
 Goal: take an idea or raw text and turn it into **one** Telegram post that people want to read to the end.
 
 Before starting, read:
-- `~/.claude/rules/content-voice.md` — authorial voice (informal "you," not Wikipedia)
-- `~/.claude/rules/content-formatting.md` — the Telegram section
+- `references/rules/content-voice.md` — authorial voice (informal "you," not Wikipedia)
+- `references/rules/content-formatting.md` — the Telegram section
 
 ## Step 1. Understand the material
 

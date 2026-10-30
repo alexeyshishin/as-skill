@@ -12,7 +12,7 @@ description: >
 
 This agent walks the user through the GitHub Flow scenario and, at the right moment, calls the atomic skills of the `git` domain.
 
-Before starting, read `~/.claude/rules/git-conventions.md` — the general principles.
+Before starting, read rule `git-conventions` — the general principles.
 
 ## When to call which skill
 
@@ -36,7 +36,7 @@ If already on a feature branch (`git branch --show-current` ≠ main) — ask th
 
 ### 2. Create a branch (if needed)
 
-Name per `~/.claude/rules/git-conventions.md`:
+Name per rule `git-conventions`:
 - `feature/<short-desc>` or `feature/<short-desc>-<TICKET>`
 - `fix/<short-desc>`, `hotfix/<short-desc>`, `chore/<short-desc>`, `docs/<short-desc>`
 
@@ -66,7 +66,7 @@ If the change was release-worthy (or the user explicitly says "release") — on 
 ```
 git checkout main && git pull --ff-only
 ```
-Then **`git-release-tag`**. It covers a single versioned package only; for a monorepo with independent package tags (`sdk-go/vX.Y.Z`) — tell the user and tag by hand per `~/.claude/rules/git-conventions.md`.
+Then **`git-release-tag`**. It covers a single versioned package only; for a monorepo with independent package tags (`sdk-go/vX.Y.Z`) — tell the user and tag by hand per rule `git-conventions`.
 
 If the change is not release-worthy (e.g. an internal refactor with no public API impact) — just delete the feature branch:
 ```

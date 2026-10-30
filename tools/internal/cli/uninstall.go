@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
+	"claude-harness/tools/internal/platform"
 )
 
-func runUninstall(args []string) error {
+func runUninstall(args []string, d Deps) error {
+	ios := d.IO
 	if len(args) == 0 {
 		return errors.New("uninstall needs a verb: domain|domains|all|skill")
 	}
@@ -21,15 +23,20 @@ func runUninstall(args []string) error {
 		return err
 	}
 
-	harnessRoot, err := registry.ResolveHarnessRoot(opts.harnessRoot)
+	plats, err := platform.ParsePlatforms(opts.platforms)
 	if err != nil {
 		return err
 	}
-	projectRoot, err := filepath.Abs(opts.project)
+
+	harnessRoot, err := harness.ResolveHarnessRoot(opts.harnessRoot)
 	if err != nil {
 		return err
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	projectRoot, err := resolveLegacyProject(opts.project)
+	if err != nil {
+		return err
+	}
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		return err
 	}
@@ -37,9 +44,9 @@ func runUninstall(args []string) error {
 	if err != nil {
 		return err
 	}
-	in := &installer.Installer{
+	in := &install.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
-		DryRun: opts.dryRun, Lock: lock,
+		DryRun: opts.dryRun, Lock: lock, Platforms: plats,
 	}
 
 	switch verb {
@@ -79,7 +86,7 @@ func runUninstall(args []string) error {
 		return fmt.Errorf("unknown uninstall verb %q (want domain|domains|all|skill)", verb)
 	}
 
-	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, ".claude"))
+	fmt.Fprintf(ios.Stdout(), "done -> %s\n", filepath.Join(projectRoot, platform.ClaudeHome))
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
 			return fmt.Errorf("saving lockfile: %w", err)

@@ -1,4 +1,9 @@
 /as-skill
 /tools/as-skill
 .claude
+!tools/**/testdata/**
 swarm-report/
+/.agents
+/.codex
+/.cursor
+/.opencode

@@ -1,12 +1,12 @@
 ---
 name: code-init
 description: >
-  Generate a project CLAUDE.md for Claude Code — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (always use /caveman, no code comments, answer in Russian, report only hash and subject after commit/push). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With the user's consent it also registers the installed code hooks (`test-gate`, `prettier-format`, `memory-bank-load`) in the project's `.claude/settings.json` via `scripts/register-hooks.sh` (never the global `~/.claude/settings.json`). With the user's consent it also sets up project-local ast-index (structural code search): project-scope plugin, `Bash(ast-index *)` permission, initial index. Use when the user wants to "create a CLAUDE.md", "init CLAUDE.md", "set up project rules for Claude", "/code-init".
+  Generate a project AGENTS.md (canonical) and, when a claude install exists, a CLAUDE.md containing only `@AGENTS.md` — detects build/test/lint commands and the directory layout, then writes a concise rules-and-commands reference. Always embeds four fixed house rules (always use /caveman, no code comments, answer in Russian, report only hash and subject after commit/push). With the code harness installed it also records which executing agents (backend / frontend / devops) /code-build must call for which files, and when agents update the Memory Bank. With consent it registers the installed code hooks via `scripts/register-hooks.sh` (Claude-only) and sets up project-local ast-index (Claude-only). Use when the user wants to "create an AGENTS.md", "create a CLAUDE.md", "init project rules", "code-init".
 ---
 
-# Skill: /code-init — generate a project CLAUDE.md
+# Skill: code-init — generate project AGENTS.md (+ CLAUDE.md = `@AGENTS.md`)
 
-Goal: write a `CLAUDE.md` at the project root that is a **reference of commands and
+Goal: write an `AGENTS.md` at the project root that is a **reference of commands and
 processes**, not a wall of prohibitions. Best-practice backbone (ранжировано по тому, что
 реально встречается в успешных проектах): commands → checks → architecture → git →
 pitfalls. Keep the core ~90–120 lines (~6 KB); the code-harness block (loop, executors,
@@ -16,15 +16,24 @@ reason in a clause. Instructions for agents follow the same discipline: one trig
 definition of done, one owner per action.
 
 ## Invocation
-`/code-init`
+run the code-init skill
 
 ## Step 1. Guard against clobbering
 
-Check for an existing `CLAUDE.md` at the project root.
-- If it exists, **read it**, show the user a one-line summary of what's there, and ask:
-  overwrite, merge the four house rules into it, or cancel. Do not overwrite silently.
-- If `AGENTS.md` exists, plan to reference it with a leading `@AGENTS.md` import instead of
-  duplicating its content — put only Claude-Code-specific guidance in `CLAUDE.md`.
+Platforms: read `.claude/skills-lock.json`; each entry's `platforms` lists where it was
+installed, an entry without `platforms` means `claude`. A **claude install exists** when
+any entry has `claude`, or no lock file / no `platforms` info exists.
+
+Check for existing `AGENTS.md` and `CLAUDE.md` at the project root.
+- `AGENTS.md` exists: **read it**, show the user a one-line summary, and ask: overwrite,
+  merge the four house rules into it, or cancel. Do not overwrite silently.
+- Only `CLAUDE.md` exists with content (migration): **read it**, show what would move into
+  `AGENTS.md`, and ask. Do not move silently.
+- Both exist: **read both**. `AGENTS.md` handling is as above. Also read `CLAUDE.md`, show the
+  user what non-import content (anything besides the `@AGENTS.md` line) would be merged into
+  `AGENTS.md`, and ask. Never replace `CLAUDE.md` silently.
+- `CLAUDE.md` is already only `@AGENTS.md`: leave it.
+- Neither exists: write fresh.
 
 ## Step 2. Detect the project (cheap, a few reads)
 
@@ -35,9 +44,11 @@ Gather only what you can observe — never invent commands:
 - **Architecture**: top-level directories and what each holds (one line each). Don't map
   every file — just the map a newcomer needs.
 - **Git**: `git log --oneline -5` for commit-message language/style; note the default branch.
-- **Executors** (only when the code harness is present — `.claude/skills/code-plan` or the
-  `code` domain): which of `.claude/agents/{backend,frontend,devops}.md` are installed, and
-  which real paths in the repo fall into each agent's scope. Confirm every path with
+- **Executors** (only when the code harness is present — a `code-plan` skill under
+  `.claude/skills`, `.agents/skills`, `.cursor/skills` or `.opencode/skills`, or the `code`
+  domain): which of `backend`, `frontend`, `devops` have an agent file present under
+  `.codex/agents`, `.cursor/agents`, `.opencode/agents` or (Claude) `.claude/agents` <!-- claude-path-ok -->
+  and which real paths in the repo fall into each agent's scope. Confirm every path with
   `ls`/Glob; write globs only for what exists.
 
   | Agent | Look for |
@@ -48,19 +59,22 @@ Gather only what you can observe — never invent commands:
 
   Layers with no installed agent (e.g. `ios/`, `android/`, `pubspec.yaml` — there is no
   `mobile` agent) are recorded as "no executor", not assigned to the nearest agent.
-- **Memory Bank**: whether `.memory-bank/index.md` and `.claude/skills/memory-bank` exist.
-- **Hooks** (only when the code harness is present): from the project root run
-  `bash .claude/skills/code-init/scripts/register-hooks.sh --dry-run`. It writes nothing and
+- **Memory Bank**: whether `.memory-bank/index.md` and a `memory-bank` skill directory
+  (under any skills dir above) exist.
+- **Hooks** (Claude-only; only when the code harness is present and a claude install
+  exists): from the project root run
+  `bash <skill-dir>/scripts/register-hooks.sh --dry-run`, where `<skill-dir>` is the
+  directory containing this SKILL.md. It writes nothing and
   prints one line per installed hook, `present` or `would-add`, then hook name and event
   (`present` also covers an entry in `.claude/settings.local.json`). No output → no hooks
   installed, nothing to register. Any `would-add` → ask the user once, before composing:
   register those hooks in the project's `.claude/settings.json`? Claude Code runs a hook
-  only when a `settings.json` lists it — the installer just places the files. The answer
+  only when a `settings.json` lists it — the installer places the hook files, and registration is opt-in (the `as-skill add` dialog can register chosen hooks; otherwise this skill or `as-skill hooks enable`). The answer
   drives Step 3 and Step 4. Exit 1 (no `jq`, `settings.json` unparseable) → relay the
   stderr message, treat as declined.
 
-- **ast-index**: from the project root run
-  `bash .claude/skills/code-init/scripts/setup-ast-index.sh --dry-run`. It writes nothing and
+- **ast-index** (Claude-only; skip without a claude install): from the project root run
+  `bash <skill-dir>/scripts/setup-ast-index.sh --dry-run`. It writes nothing and
   prints one line per step (`marketplace`, `plugin`, `permission`, `index`), `present` or
   `would-add` / `would-build`. Any non-`present` line → ask the user once, together with the
   hook question: set up ast-index for this project (project-scope plugin, permission, index —
@@ -69,16 +83,15 @@ Gather only what you can observe — never invent commands:
 
 If a category yields nothing, omit that section rather than writing a placeholder.
 
-## Step 3. Compose CLAUDE.md
+## Step 3. Compose AGENTS.md
 
 Fill this skeleton. Russian prose (per house rule 3); keep command names, paths, and tool
 names verbatim. Order sections as below.
 
 ```markdown
-# CLAUDE.md
+# AGENTS.md
 
 <одна строка: что это за проект>.
-<если есть AGENTS.md:> @AGENTS.md — общие правила ниже только дополняют его.
 
 ## Обязательные правила
 
@@ -107,7 +120,7 @@ names verbatim. Order sections as below.
 ## Рабочий цикл (agent loop)
 
 Разработка идёт через четыре скилл-оркестратора. Каждый сам не правит код в основном
-цикле — он порождает субагентов (`Task`) и сводит их вывод. Артефакты между этапами —
+цикле — он порождает субагентов и сводит их вывод. Артефакты между этапами —
 в `swarm-report/<slug>-*.md`.
 
     /code-plan "<фича>"
@@ -130,7 +143,7 @@ names verbatim. Order sections as below.
 ## Исполнители для /code-build
 
 `/code-build` сам код не пишет: берёт `affected_files` из плана, сопоставляет их с
-таблицей и зовёт по одному агенту на зону. Файл, которого в таблице нет, — не гадать, а
+таблицей и зовёт по одному агенту на зону. Таблица — в `AGENTS.md`. Файл, которого в таблице нет, — не гадать, а
 спросить пользователя, кто им владеет.
 
 | Агент | Зона | Файлы проекта |
@@ -220,20 +233,22 @@ names verbatim. Order sections as below.
   this is the whole point of the skill. Keep them first.
 - **Рабочий цикл**, **Исполнители для /code-build**, **Memory Bank** and **Модели**
   describe the installed `code` dev-loop harness — include them when
-  `.claude/skills/code-plan` (or the `code` domain) is present in the target project; drop
+  the `code-plan` skill (or the `code` domain) is present in the target project; drop
   all four if the project doesn't use the code harness. Keep the model ids exact
   (`claude-opus-4-8`, `claude-sonnet-5`, `claude-haiku-4-5`).
 - **Рабочий цикл**, **Memory Bank**, **Модели** go in verbatim, except the `test-gate`
   sentence in **Рабочий цикл**: keep it only if the hook is registered (already, or by
   Step 4); hook missing or user declined → drop it, the gate would be a false promise.
   **Исполнители для /code-build** is the one project-specific block: fill the table from
-  the Step 2 executor detection, one row per installed agent that owns at least one real
-  path. Agent not installed or no matching files → no row. Keep the three bullets under
+  the Step 2 executor detection, one row per agent whose file is present under `.codex/agents`, `.cursor/agents`,
+  `.opencode/agents` or (Claude) `.claude/agents` <!-- claude-path-ok -->
+  and that owns at least one real path. Agent not
+  installed on any platform or no matching files → no row. Keep the three bullets under
   the table as written.
 - **Поиск по коду** goes in verbatim, only when the Step 2 dry-run printed all `present` or
   the user agreed to the Step 4 setup; otherwise drop it.
-- **Поиск информации** goes in verbatim, only when `.claude/skills/advanced-search/` exists
-  in the target project (the `core` domain provides it); otherwise drop it.
+- **Поиск информации** goes in verbatim, only when an `advanced-search` skill directory
+  exists in the target project (the `core` domain provides it); otherwise drop it.
 - If `.memory-bank/` or the `memory-bank` skill is missing, still write the Memory Bank
   section (the agents' first write bootstraps the directory) and say in the Step 5 report
   that the `core` domain is what provides the skill.
@@ -242,15 +257,26 @@ names verbatim. Order sections as below.
 - Note the latent tension between rules 1 and 3 in passing only if the user asks — the
   intent is caveman-style brevity expressed in Russian; don't bloat the file explaining it.
 
-## Step 4. Write CLAUDE.md, register hooks, set up ast-index
+## Step 4. Write AGENTS.md and CLAUDE.md, register hooks, set up ast-index
 
-Write `CLAUDE.md` to the project root.
+Write `AGENTS.md` to the project root.
 
-Then, only if Step 2 printed a `would-add` line and the user said yes, from the project
-root:
+All project instructions go only into `AGENTS.md`. Claude-only instruction content (ast-index
+notes, hook notes) goes into `AGENTS.md` under a clearly marked "Claude Code only" section, or is
+dropped if it is not instruction content.
+
+`CLAUDE.md`, only when a claude install exists (Step 1): its entire content is the single line
+`@AGENTS.md` — no other lines, never a copy of `AGENTS.md`. Migration (only `CLAUDE.md` existed)
+and both-exist case: after the user approves what was shown, merge the non-import content of
+`CLAUDE.md` into `AGENTS.md` (dedupe), then replace `CLAUDE.md` by `@AGENTS.md`; no approval →
+leave `CLAUDE.md` as is. Already only `@AGENTS.md` → leave it. No claude install → write no
+`CLAUDE.md`, leave an existing one alone.
+
+Then, Claude-only, only if Step 2 printed a `would-add` line and the user said yes, from
+the project root:
 
 ```bash
-bash .claude/skills/code-init/scripts/register-hooks.sh
+bash <skill-dir>/scripts/register-hooks.sh
 ```
 
 The script does the whole job — no hand edits to `settings.json`, no re-reading it
@@ -264,11 +290,11 @@ leaves every other key and entry alone. Re-running is safe. A new hook dropped i
 Its stdout (`added` / `present` per hook) is the registration result for Step 5. Exit 1 →
 nothing was written; relay the stderr message.
 
-Then, only if the Step 2 ast-index dry-run had a non-`present` line and the user said yes,
-from the project root:
+Then, Claude-only (the `.claude/settings.json` permission step), only if the Step 2
+ast-index dry-run had a non-`present` line and the user said yes, from the project root:
 
 ```bash
-bash .claude/skills/code-init/scripts/setup-ast-index.sh
+bash <skill-dir>/scripts/setup-ast-index.sh
 ```
 
 The script does the whole job, each step idempotent: `claude plugin marketplace add` +
@@ -284,7 +310,7 @@ applied, re-running is safe.
 
 ## Step 5. Report
 
-3–5 lines: path written, which sections were populated from detection, which executors
+3–5 lines: paths written (`AGENTS.md`, `CLAUDE.md` or why none), which sections were populated from detection, which executors
 `/code-build` will call and for which paths, which hooks the script reported (`added` /
 `present`) or why none (declined / not installed / script error) — `test-gate` by name,
 since it decides the **Рабочий цикл** sentence — the ast-index script's step lines and file /
@@ -294,15 +320,15 @@ in). Don't re-print the whole file.
 
 ## What not to do
 
-- Don't run `git commit` or `git add` — this skill writes `CLAUDE.md` and, with consent,
+- Don't run `git commit` or `git add` — this skill writes `AGENTS.md`, `CLAUDE.md` and, with consent,
   hook and ast-index entries in the project's `.claude/settings.json` through the scripts;
   nothing else.
 - Don't register hooks or set up ast-index without the user's yes, don't edit `settings.json`
   by hand (both scripts are idempotent and validate it), and never write to the global
   `~/.claude/settings.json`.
-- Don't overwrite an existing `CLAUDE.md` without confirmation (Step 1).
+- Don't overwrite or move an existing `AGENTS.md` / `CLAUDE.md` without confirmation (Step 1).
 - Don't fabricate build/test commands you didn't find in the repo.
-- Don't list an executor whose `.claude/agents/<name>.md` isn't installed, and don't
+- Don't list an executor whose agent file isn't installed on any platform, and don't
   assign a layer with no agent (mobile, data, ML) to the nearest one.
 - Don't pad with generic advice ("write clean code") — every line should be project-true.
 - Don't drop or reword the four house rules.

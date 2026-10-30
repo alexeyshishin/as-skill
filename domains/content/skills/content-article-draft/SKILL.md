@@ -14,8 +14,8 @@ Goal: turn material into a **first working draft** of a 3-10k character article.
 
 Before starting, read:
 
-- `~/.claude/rules/content-voice.md`
-- `~/.claude/rules/content-formatting.md` — the articles section
+- `references/rules/content-voice.md`
+- `references/rules/content-formatting.md` — the articles section
 
 ## Step 1. Context
 

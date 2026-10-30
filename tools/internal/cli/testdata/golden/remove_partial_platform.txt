@@ -1,0 +1,158 @@
+### step 1: add alpha -y -a claude,codex --copy -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+done -> <P>/.claude
+done -> <P>/.codex
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+== combined ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+done -> <P>/.claude
+done -> <P>/.codex
+
+### step 2: remove alpha -y -a codex -p <P> --harness-root <H>
+== stdout ==
+platforms: .codex
+uninstalled    <P>/.agents/rules/alpha-rule.md
+uninstalled    <P>/.agents/skills/alpha-one
+uninstalled    <P>/.agents/skills/alpha-two
+uninstalled    <P>/.codex/agents/alpha-agent.toml
+uninstalled    <P>/.codex/agents/plain.toml
+uninstalled    <P>/.codex/hooks/gate.sh
+done -> <P>/.codex
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .codex
+uninstalled    <P>/.agents/rules/alpha-rule.md
+uninstalled    <P>/.agents/skills/alpha-one
+uninstalled    <P>/.agents/skills/alpha-two
+uninstalled    <P>/.codex/agents/alpha-agent.toml
+uninstalled    <P>/.codex/agents/plain.toml
+uninstalled    <P>/.codex/hooks/gate.sh
+done -> <P>/.codex
+
+### tree
+.claude/agents/alpha-agent.md
+.claude/agents/plain.md
+.claude/hooks/claude-only.sh
+.claude/hooks/gate.sh
+.claude/rules/alpha-rule.md
+.claude/skills/alpha-one/README.md
+.claude/skills/alpha-one/SKILL.md
+.claude/skills/alpha-two/README.md
+.claude/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/rules",
+      "source": "<H>/domains/alpha/rules",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-rule.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/skills",
+      "source": "<H>/domains/alpha/skills",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-one",
+        "alpha-two"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/agents",
+      "source": "<H>/domains/alpha/agents",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-agent.md",
+        "plain.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/hooks",
+      "source": "<H>/domains/alpha/hooks",
+      "sha256": "<SHA256>",
+      "items": [
+        "claude-only.sh",
+        "gate.sh"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
+### step 3: remove alpha -y -a claude -p <P> --harness-root <H>
+== stdout ==
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
+
+### tree
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": []
+}
+

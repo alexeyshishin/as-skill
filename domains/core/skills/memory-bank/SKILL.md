@@ -5,13 +5,13 @@ description: >
   `.memory-bank/` — capturing architecture, stack, conventions, key entities,
   and active tasks. After each meaningful change, the AI suggests concise
   updates or explicitly confirms no update is needed.
-when_to_use: >
-  After every chat interaction that may alter stable project knowledge:
+  Use after every chat interaction that may alter stable project knowledge:
   architecture decisions, API contracts, conventions, stack changes, new tasks.
   Skip for local implementation details, temporary experiments, minor refactors,
   and style-only changes.
-applies_to: Claude Code, Cursor, Codex
-language: en
+metadata:
+  applies_to: "Claude Code, Cursor, Codex"
+  language: en
 ---
 
 # Memory Bank Steward — A Skill for Keeping Project Knowledge Current

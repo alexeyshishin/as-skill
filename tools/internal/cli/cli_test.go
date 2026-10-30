@@ -22,14 +22,28 @@ func fakeHarnessWithSkill(t *testing.T) (harnessRoot, skillDir string) {
 	if err := os.WriteFile(filepath.Join(harnessRoot, "domains", "testdomain", "manifest.yaml"), []byte("name: testdomain\ndescription: test domain\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	markHarness(t, harnessRoot)
 	return harnessRoot, skillDir
+}
+
+func markHarness(t *testing.T, root string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module claude-harness\n\ngo 1.21\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "tools", "main.go"), []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRunInstallDefaultsToSymlink(t *testing.T) {
 	harnessRoot, _ := fakeHarnessWithSkill(t)
 	projectRoot := t.TempDir()
 
-	if err := Run([]string{"install", "skill", "myskill", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"install", "skill", "myskill", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run install: %v", err)
 	}
 
@@ -47,7 +61,7 @@ func TestRunInstallCopyFlagProducesRealFiles(t *testing.T) {
 	harnessRoot, _ := fakeHarnessWithSkill(t)
 	projectRoot := t.TempDir()
 
-	if err := Run([]string{"install", "skill", "myskill", "--copy", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"install", "skill", "myskill", "--copy", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run install --copy: %v", err)
 	}
 
@@ -72,7 +86,7 @@ func TestRunUninstallCopyModeRemovesRealFiles(t *testing.T) {
 	harnessRoot, _ := fakeHarnessWithSkill(t)
 	projectRoot := t.TempDir()
 
-	if err := Run([]string{"install", "skill", "myskill", "--copy", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"install", "skill", "myskill", "--copy", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run install --copy: %v", err)
 	}
 	dst := filepath.Join(projectRoot, ".claude", "skills", "myskill")
@@ -80,7 +94,7 @@ func TestRunUninstallCopyModeRemovesRealFiles(t *testing.T) {
 		t.Fatalf("precondition: copied dir should exist: %v", err)
 	}
 
-	if err := Run([]string{"uninstall", "skill", "myskill", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"uninstall", "skill", "myskill", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run uninstall: %v", err)
 	}
 
@@ -128,7 +142,7 @@ func TestCoreLockfileMigrationInstallThenUninstall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := Run([]string{"install", "domain", "core", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"install", "domain", "core", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run install domain core: %v", err)
 	}
 
@@ -149,7 +163,7 @@ func TestCoreLockfileMigrationInstallThenUninstall(t *testing.T) {
 		t.Fatalf("expected migrated row to carry kind %q, got %q", "skills", caveman[0].Kind)
 	}
 
-	if err := Run([]string{"uninstall", "domain", "core", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
+	if err := runCLI([]string{"uninstall", "domain", "core", "--harness-root", harnessRoot, "--project", projectRoot}); err != nil {
 		t.Fatalf("Run uninstall domain core: %v", err)
 	}
 

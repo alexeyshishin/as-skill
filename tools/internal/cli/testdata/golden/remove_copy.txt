@@ -1,0 +1,91 @@
+### step 1: add alpha beta -y --copy -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+
+### step 2: remove alpha -y -p <P> --harness-root <H>
+== stdout ==
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .claude
+uninstalled    <P>/.claude/rules/alpha-rule.md
+uninstalled    <P>/.claude/skills/alpha-one
+uninstalled    <P>/.claude/skills/alpha-two
+uninstalled    <P>/.claude/agents/alpha-agent.md
+uninstalled    <P>/.claude/agents/plain.md
+uninstalled    <P>/.claude/hooks/claude-only.sh
+uninstalled    <P>/.claude/hooks/gate.sh
+done -> <P>/.claude
+
+### step 3: remove beta-one -y -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+skill "beta-one" installed as part of domain beta (copy); remove the domain
+== combined ==
+
+### tree
+.claude/agents/beta-agent.md
+.claude/skills/beta-one/SKILL.md
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "beta",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/skills",
+      "source": "<H>/domains/beta/skills",
+      "sha256": "<SHA256>",
+      "items": [
+        "beta-one"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "beta",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/agents",
+      "source": "<H>/domains/beta/agents",
+      "sha256": "<SHA256>",
+      "items": [
+        "beta-agent.md"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
