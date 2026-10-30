@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
@@ -32,7 +33,7 @@ func (in *Installer) sourceHooks(reg *harness.Registry, domains []string) ([]src
 		if _, ok := reg.Domains[d]; !ok {
 			return nil, fmt.Errorf("unknown domain %q", d)
 		}
-		dir := filepath.Join(in.HarnessRoot, "domains", d, "hooks")
+		dir := harness.KindDir(in.HarnessRoot, d, lockfile.KindHooks)
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			if os.IsNotExist(err) {

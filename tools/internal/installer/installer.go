@@ -178,7 +178,7 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 		return err
 	}
 	for _, kind := range harness.DomainKinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
+		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
 		if !fsutil.DirExists(srcDir) {
 			continue
 		}
@@ -234,7 +234,7 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 		}
 		return fmt.Errorf("skill %q belongs to domain %q, which requires the %q binary (not found on $PATH)", name, owner, miss.Name)
 	}
-	src := filepath.Join(in.HarnessRoot, "domains", owner, "skills", name)
+	src := harness.SkillDir(in.HarnessRoot, owner, name)
 	if err := in.preflightRoots(map[lockfile.Kind]bool{lockfile.KindSkills: true}); err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
 
 func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) error {
 	for _, kind := range harness.DomainKinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
+		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
 		if !fsutil.DirExists(srcDir) {
 			continue
 		}

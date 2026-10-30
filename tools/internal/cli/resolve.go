@@ -203,7 +203,7 @@ func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 	}
 	total := 0
 	for _, kind := range harness.DomainKinds {
-		names, err := transfer.TopNames(filepath.Join(harnessRoot, "domains", domain, string(kind)), kind)
+		names, err := transfer.TopNames(harness.KindDir(harnessRoot, domain, kind), kind)
 		if err != nil {
 			continue
 		}

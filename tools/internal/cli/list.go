@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -92,7 +91,7 @@ func runList(args []string) error {
 	if what == "all" || what == "skills" {
 		fmt.Println("skills:")
 		for _, name := range reg.DomainNames() {
-			skillsDir := filepath.Join(harnessRoot, "domains", name, "skills")
+			skillsDir := harness.KindDir(harnessRoot, name, lockfile.KindSkills)
 			entries, err := os.ReadDir(skillsDir)
 			if err != nil {
 				continue

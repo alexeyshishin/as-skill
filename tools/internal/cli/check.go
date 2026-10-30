@@ -24,7 +24,7 @@ func runCheck(args []string) error {
 
 	var failures []string
 
-	domainsDir := filepath.Join(harnessRoot, "domains")
+	domainsDir := harness.DomainsDir(harnessRoot)
 	domainEntries, err := os.ReadDir(domainsDir)
 	if err != nil {
 		return fmt.Errorf("reading %s: %w", domainsDir, err)

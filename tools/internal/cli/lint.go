@@ -127,7 +127,7 @@ type lintResult struct {
 }
 
 func lintHarness(harnessRoot string) lintResult {
-	domainsDir := filepath.Join(harnessRoot, "domains")
+	domainsDir := harness.DomainsDir(harnessRoot)
 	var findings []string
 	checked := 0
 

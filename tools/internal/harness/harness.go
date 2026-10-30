@@ -135,7 +135,7 @@ func (r *Registry) DomainNames() []string { return r.Order }
 func LoadRegistry(harnessRoot string) (*Registry, error) {
 	reg := &Registry{Domains: map[string]*Manifest{}}
 
-	domainsDir := filepath.Join(harnessRoot, "domains")
+	domainsDir := DomainsDir(harnessRoot)
 	entries, err := os.ReadDir(domainsDir)
 	if err != nil {
 		return nil, fmt.Errorf("reading %s: %w", domainsDir, err)
@@ -170,7 +170,7 @@ func ResolveHarnessRoot(start string) (string, error) {
 	}
 	dir := abs
 	for {
-		if dirExists(filepath.Join(dir, "domains")) {
+		if dirExists(DomainsDir(dir)) {
 			return dir, nil
 		}
 		parent := filepath.Dir(dir)
@@ -189,7 +189,7 @@ type SkillInfo struct {
 }
 
 func Skills(harnessRoot, domain string) ([]SkillInfo, error) {
-	dir := filepath.Join(harnessRoot, "domains", domain, "skills")
+	dir := KindDir(harnessRoot, domain, lockfile.KindSkills)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -232,7 +232,7 @@ func validHarnessRoot(dir string) bool {
 	if !isHarness || !fileExists(filepath.Join(dir, "tools", "main.go")) {
 		return false
 	}
-	manifests, _ := filepath.Glob(filepath.Join(dir, "domains", "*", "manifest.yaml"))
+	manifests, _ := filepath.Glob(filepath.Join(DomainDir(dir, "*"), "manifest.yaml"))
 	return len(manifests) > 0
 }
 
@@ -300,9 +300,27 @@ func ExecutableHarnessRoot() (string, bool) {
 // SkillOwner returns the first domain (in registry order) that ships the skill, or "".
 func (r *Registry) SkillOwner(harnessRoot, name string) string {
 	for _, d := range r.DomainNames() {
-		if fsutil.DirExists(filepath.Join(harnessRoot, "domains", d, "skills", name)) {
+		if fsutil.DirExists(SkillDir(harnessRoot, d, name)) {
 			return d
 		}
 	}
 	return ""
+}
+
+// DomainsDir is <harnessRoot>/domains.
+func DomainsDir(harnessRoot string) string { return filepath.Join(harnessRoot, "domains") }
+
+// DomainDir is <harnessRoot>/domains/<domain>.
+func DomainDir(harnessRoot, domain string) string {
+	return filepath.Join(DomainsDir(harnessRoot), domain)
+}
+
+// KindDir is <harnessRoot>/domains/<domain>/<kind>.
+func KindDir(harnessRoot, domain string, kind lockfile.Kind) string {
+	return filepath.Join(DomainDir(harnessRoot, domain), string(kind))
+}
+
+// SkillDir is <harnessRoot>/domains/<domain>/skills/<skill>.
+func SkillDir(harnessRoot, domain, skill string) string {
+	return filepath.Join(KindDir(harnessRoot, domain, lockfile.KindSkills), skill)
 }

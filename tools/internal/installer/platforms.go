@@ -327,12 +327,12 @@ func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 		}
 		kinds := map[lockfile.Kind]bool{}
 		for _, kind := range harness.DomainKinds {
-			if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", name, string(kind))) {
+			if fsutil.DirExists(harness.KindDir(in.HarnessRoot, name, kind)) {
 				kinds[kind] = true
 			}
 		}
 		if kinds[lockfile.KindAgents] {
-			if err := in.checkReserved(filepath.Join(in.HarnessRoot, "domains", name, "agents")); err != nil {
+			if err := in.checkReserved(harness.KindDir(in.HarnessRoot, name, lockfile.KindAgents)); err != nil {
 				return fmt.Errorf("domain %q: %w", name, err)
 			}
 		}
@@ -361,7 +361,7 @@ func (in *Installer) preflightForeign(name string, kinds map[lockfile.Kind]bool)
 		}
 	}
 	for kind := range kinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
+		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
 		if kind == lockfile.KindSkills {
 			locs, _ := platform.SkillLocations(in.plats())
 			for loc, plats := range locs {

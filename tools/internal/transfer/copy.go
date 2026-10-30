@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 )
 
@@ -21,7 +22,7 @@ func findHarnessRoot(src string) string {
 		return src
 	}
 	for dir := abs; ; dir = filepath.Dir(dir) {
-		if info, err := os.Stat(filepath.Join(dir, "domains")); err == nil && info.IsDir() {
+		if info, err := os.Stat(harness.DomainsDir(dir)); err == nil && info.IsDir() {
 			return dir
 		}
 		if filepath.Dir(dir) == dir {

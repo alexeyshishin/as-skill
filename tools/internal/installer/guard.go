@@ -137,7 +137,7 @@ func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill str
 					check(filepath.Join(destPath, skill))
 					continue
 				}
-				entries, err := os.ReadDir(filepath.Join(in.HarnessRoot, "domains", domain, string(kind)))
+				entries, err := os.ReadDir(harness.KindDir(in.HarnessRoot, domain, kind))
 				if err != nil {
 					continue
 				}
