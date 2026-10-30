@@ -151,10 +151,28 @@ func resolveProject(p string) (string, error) {
 	if !st.IsDir() {
 		return "", fmt.Errorf("project %s is not a directory", abs)
 	}
-	if home, err := os.UserHomeDir(); err == nil && sameDir(abs, home) {
-		return "", fmt.Errorf("project %s is $HOME; global scope is not supported — pass a project directory with -p", abs)
+	if err := refuseHome(abs); err != nil {
+		return "", err
 	}
 	return abs, nil
+}
+
+func resolveLegacyProject(p string) (string, error) {
+	abs, err := filepath.Abs(p)
+	if err != nil {
+		return "", err
+	}
+	if err := refuseHome(abs); err != nil {
+		return "", err
+	}
+	return abs, nil
+}
+
+func refuseHome(abs string) error {
+	if home, err := os.UserHomeDir(); err == nil && sameDir(abs, home) {
+		return fmt.Errorf("project %s is $HOME; global scope is not supported — pass a project directory with -p", abs)
+	}
+	return nil
 }
 
 func sameDir(a, b string) bool {

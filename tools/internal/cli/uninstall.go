@@ -32,7 +32,7 @@ func runUninstall(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	projectRoot, err := resolveProject(opts.project)
+	projectRoot, err := resolveLegacyProject(opts.project)
 	if err != nil {
 		return err
 	}

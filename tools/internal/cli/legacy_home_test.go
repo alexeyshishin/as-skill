@@ -47,6 +47,15 @@ func TestLegacyWriteVerbsRefuseHome(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+	t.Run("nonexistent project not refused", func(t *testing.T) {
+		missing := filepath.Join(t.TempDir(), "nope")
+		if _, err := run(t, "install", "domain", "git", "-p", missing, "--dry-run", "--harness-root", h); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Lstat(missing); err == nil {
+			t.Fatal("dry run created project")
+		}
+	})
 	t.Run("status unrestricted", func(t *testing.T) {
 		if _, err := run(t, "status", "-p", home); err != nil {
 			t.Fatal(err)
