@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 )
 
@@ -398,8 +398,9 @@ func TestRemoveSkillCountsClaudeCopyCoveredByDomainRow(t *testing.T) {
 	if err := os.RemoveAll(h); err != nil {
 		t.Fatal(err)
 	}
+	th := tempHarness(t)
 	d := noHarness(t)
-	if _, err := runD(t, d, "add", "caveman", "--copy", "-y", "-a", "codex", "-p", p, "--harness-root", tempHarness(t)); err != nil {
+	if _, err := runD(t, d, "add", "caveman", "--copy", "-y", "-a", "codex", "-p", p, "--harness-root", th); err != nil {
 		t.Fatal(err)
 	}
 	_, err := runD(t, d, "remove", "caveman", "-y", "-p", p)

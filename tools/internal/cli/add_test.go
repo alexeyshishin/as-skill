@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -335,9 +334,7 @@ func TestDoctorWithoutHarness(t *testing.T) {
 	if _, err := run(t, "add", "git", "-y", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	d := testDeps()
-	t.Chdir(t.TempDir())
-	d.Locator = harness.Locator{Executable: func() (string, error) { return filepath.Join(t.TempDir(), "as-skill"), nil }}
+	d := noHarness(t)
 	out, err := runD(t, d, "doctor", "-p", p)
 	if err != nil {
 		t.Fatalf("doctor must not error without harness: %v\n%s", err, out)
