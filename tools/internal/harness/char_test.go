@@ -37,7 +37,7 @@ var manifestSynthetic = map[string]string{
 	"nested-target":   "name: x\ntargets:\n  rules:\n    deep: v\n",
 }
 
-func charManifestResult(data []byte, path string) string {
+func charManifestResult(data []byte) string {
 	f := filepath.Join(os.TempDir(), fmt.Sprintf("char-%d-manifest.yaml", os.Getpid()))
 	defer os.Remove(f)
 	if err := os.WriteFile(f, data, 0o644); err != nil {
@@ -51,21 +51,30 @@ func charManifestResult(data []byte, path string) string {
 	return string(b)
 }
 
-func TestCharacterizeParseManifest(t *testing.T) {
-	got := map[string]string{}
+func TestParseManifestRealFiles(t *testing.T) {
 	real, _ := filepath.Glob("../../../domains/*/manifest.yaml")
 	if len(real) == 0 {
 		t.Fatal("no real manifests found")
 	}
 	for _, p := range real {
-		data, err := os.ReadFile(p)
+		m, err := ParseManifest(p)
 		if err != nil {
-			t.Fatal(err)
+			t.Errorf("%s: %v", p, err)
+			continue
 		}
-		got["real:"+filepath.ToSlash(strings.TrimPrefix(p, "../../../"))] = charManifestResult(data, p)
+		if dir := filepath.Base(filepath.Dir(p)); m.Name != dir {
+			t.Errorf("%s: name %q != %q", p, m.Name, dir)
+		}
+		if len(m.Targets) == 0 {
+			t.Errorf("%s: no targets", p)
+		}
 	}
+}
+
+func TestCharacterizeParseManifest(t *testing.T) {
+	got := map[string]string{}
 	for k, v := range manifestSynthetic {
-		got["syn:"+k] = charManifestResult([]byte(v), k)
+		got["syn:"+k] = charManifestResult([]byte(v))
 	}
 	keys := make([]string, 0, len(got))
 	for k := range got {
