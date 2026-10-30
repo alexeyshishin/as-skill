@@ -2,12 +2,11 @@ package installer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -126,15 +125,6 @@ func (in *Installer) dupPlatforms(locs map[string][]platform.ID) []platform.ID {
 	return dup
 }
 
-func (in *Installer) warnDup(locs map[string][]platform.ID) {
-	dup := in.dupPlatforms(locs)
-	if len(dup) == 0 || in.dupWarned {
-		return
-	}
-	in.dupWarned = true
-	fmt.Fprintf(os.Stderr, "as-skill: warning: skills land in both .claude/skills and .agents/skills; %s will see each skill twice (doctor reports DUPLICATE-SKILL)\n", strings.Join(strs(dup), ", "))
-}
-
 func (in *Installer) snapshotPlatforms(domain string, kind lockfile.Kind, dest string) map[string][]string {
 	out := map[string][]string{}
 	var all []string
@@ -221,15 +211,7 @@ func gitIgnored(project, root string) bool {
 }
 
 func (in *Installer) noteGaps() {
-	if in.gapsDone {
-		return
-	}
-	in.gapsDone = true
-	for _, id := range in.plats() {
-		if g := platform.CapGap(id); g != "" {
-			fmt.Fprintf(os.Stderr, "as-skill: note: %s: %s\n", id, g)
-		}
-	}
+	_ = in.Apply(in.planGaps())
 }
 
 func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
@@ -423,65 +405,48 @@ func (in *Installer) checkReserved(srcDir string) error {
 }
 
 func (in *Installer) installKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) error {
-	switch kind {
-	case lockfile.KindSkills:
-		locs, _ := platform.SkillLocations(in.plats())
-		in.warnDup(locs)
-		for _, loc := range slices.Sorted(maps.Keys(locs)) {
-			if loc == platform.ClaudeSkillsLoc {
-				if err := in.claudeKind(m, name, kind, srcDir, locs[loc]); err != nil {
-					return err
-				}
-				continue
-			}
-			if err := in.placeItems(name, kind, srcDir, filepath.Join(in.ProjectRoot, loc), locs[loc]); err != nil {
-				return fmt.Errorf("domain %q: %s: %w", name, kind, err)
-			}
-		}
-		return nil
+	plan, perr := in.planKind(m, name, kind, srcDir)
+	if err := in.Apply(plan); err != nil {
+		return kindApplyErr(name, kind, err)
 	}
-	if in.hasClaude() {
-		if err := in.claudeKind(m, name, kind, srcDir, []platform.ID{platform.Claude}); err != nil {
-			return err
-		}
+	return perr
+}
+
+// kindApplyErr keeps the per-platform error wording of the pre-plan installer.
+func kindApplyErr(name string, kind lockfile.Kind, err error) error {
+	var oe *OpError
+	if !errors.As(err, &oe) {
+		return err
 	}
-	for _, id := range in.plats() {
-		if id == platform.Claude {
-			continue
-		}
-		p, _ := platform.Get(id)
-		var err error
-		switch kind {
-		case lockfile.KindAgents:
-			err = in.placeAgents(name, srcDir, p)
-		case lockfile.KindRules:
-			err = in.placeRules(name, srcDir, p)
-		case lockfile.KindHooks:
-			err = in.placeHooks(name, srcDir, p)
-		}
-		if err != nil {
-			return fmt.Errorf("domain %q: %s on %s: %w", name, kind, id, err)
-		}
+	op := oe.Op
+	claude := !op.Item && (op.Type == OpLink || op.Type == OpCopy)
+	switch {
+	case claude && oe.Stage == stageChmod:
+		return fmt.Errorf("domain %q: chmod hooks: %w", name, oe.Err)
+	case claude:
+		return fmt.Errorf("domain %q: copying %s: %w", name, kind, oe.Err)
+	case kind == lockfile.KindSkills:
+		return fmt.Errorf("domain %q: %s: %w", name, kind, oe.Err)
 	}
-	return nil
+	return fmt.Errorf("domain %q: %s on %s: %w", name, kind, op.Platforms[0], oe.Err)
+}
+
+func skipItem(in *Installer, domain string, kind lockfile.Kind, srcDir, name string, plats []platform.ID) bool {
+	return fsys.SkipTop(kind.SkipsReadme(), name) || in.excluded(domain, kind, name) || !hookWanted(kind, filepath.Join(srcDir, name), plats)
 }
 
 func (in *Installer) placeItems(domain string, kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) error {
-	entries, err := os.ReadDir(srcDir)
+	plan, err := in.planItems(domain, kind, srcDir, dstDir, plats)
 	if err != nil {
 		return err
 	}
-	n := 0
-	for _, e := range entries {
-		if fsys.SkipTop(kind.SkipsReadme(), e.Name()) || in.excluded(domain, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
-			continue
+	if err := in.Apply(plan); err != nil {
+		var oe *OpError
+		if errors.As(err, &oe) {
+			return oe.Err
 		}
-		if err := in.placeOne(domain, kind, e.Name(), filepath.Join(srcDir, e.Name()), filepath.Join(dstDir, e.Name()), plats); err != nil {
-			return err
-		}
-		n++
+		return err
 	}
-	in.report(domain, string(kind), dstDir, n)
 	return nil
 }
 
@@ -606,44 +571,6 @@ func (in *Installer) mdItems(srcDir string) ([]os.DirEntry, error) {
 	return out, nil
 }
 
-func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) error {
-	entries, err := in.mdItems(srcDir)
-	if err != nil {
-		return err
-	}
-	n := 0
-	for _, e := range entries {
-		stem := strings.TrimSuffix(e.Name(), ".md")
-		src := filepath.Join(srcDir, e.Name())
-		data, err := os.ReadFile(src)
-		if err != nil {
-			return err
-		}
-		agentName := agentNameOf(data, stem)
-		if err := reservedErr(p, agentName, e.Name()); err != nil {
-			return err
-		}
-		promptRel := ""
-		if in.Mode == lockfile.ModeLink {
-			promptRel = platform.PromptsDir + "/" + e.Name()
-			if err := in.placeOne(domain, lockfile.KindPrompts, e.Name(), src, filepath.Join(in.ProjectRoot, promptRel), []platform.ID{p.ID}); err != nil {
-				return err
-			}
-		}
-		out, err := render.RenderAgent(data, filepath.ToSlash(relToHarness(in.HarnessRoot, src)), stem, p.Agents.Format, in.Mode, promptRel)
-		if err != nil {
-			return err
-		}
-		dst := filepath.Join(in.ProjectRoot, p.Agents.Dir, agentName+p.Agents.Ext)
-		if err := in.writeRendered(domain, lockfile.KindAgents, e.Name(), src, dst, data, out, p.ID); err != nil {
-			return err
-		}
-		n++
-	}
-	in.report(domain, string(lockfile.KindAgents), filepath.Join(in.ProjectRoot, p.Agents.Dir), n)
-	return nil
-}
-
 func agentNameOf(data []byte, stem string) string {
 	if doc, err := frontmatter.Parse(data); err == nil {
 		if v, ok := doc.String("name"); ok && v != "" {
@@ -668,68 +595,6 @@ func relToHarness(root, p string) string {
 		return p
 	}
 	return r
-}
-
-func (in *Installer) placeRules(domain, srcDir string, p platform.Platform) error {
-	entries, err := in.mdItems(srcDir)
-	if err != nil {
-		return err
-	}
-	n := 0
-	for _, e := range entries {
-		stem := strings.TrimSuffix(e.Name(), ".md")
-		src := filepath.Join(srcDir, e.Name())
-		switch p.Rules.Mode {
-		case platform.RulesDirMDC:
-			data, err := os.ReadFile(src)
-			if err != nil {
-				return err
-			}
-			rel := platform.AgentsRulesDir + "/" + e.Name()
-			if in.Mode == lockfile.ModeLink {
-				if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, rel), []platform.ID{p.ID}); err != nil {
-					return err
-				}
-			}
-			out := render.MDCStub(stem, rel, string(data), in.Mode)
-			dst := filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc")
-			if err := in.writeRendered(domain, lockfile.KindRules, e.Name(), src, dst, data, out, p.ID); err != nil {
-				return err
-			}
-		default:
-			if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()), []platform.ID{p.ID}); err != nil {
-				return err
-			}
-		}
-		n++
-	}
-	in.report(domain, string(lockfile.KindRules), filepath.Join(in.ProjectRoot, p.Rules.Dir), n)
-	if p.Rules.Mode == platform.RulesAgentsMDBlock {
-		return in.syncAgentsMD()
-	}
-	return nil
-}
-
-func (in *Installer) placeHooks(domain, srcDir string, p platform.Platform) error {
-	if p.Hooks.Schema == platform.HooksNone {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: hooks unsupported on %s\n", p.ID)
-		return nil
-	}
-	dst := filepath.Join(in.ProjectRoot, p.Hooks.Dir)
-	if err := in.placeItems(domain, lockfile.KindHooks, srcDir, dst, []platform.ID{p.ID}); err != nil {
-		return err
-	}
-	if !in.DryRun {
-		if in.Mode == lockfile.ModeCopy {
-			if err := fsys.MakeShellScriptsExecutable(dst); err != nil {
-				return err
-			}
-		} else {
-			warnHooksNotExecutable(srcDir)
-		}
-	}
-	fmt.Fprintf(os.Stderr, "as-skill: warning: hooks on %s: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)\n", p.ID)
-	return nil
 }
 
 func (in *Installer) syncAgentsMD() error {

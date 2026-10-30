@@ -34,6 +34,8 @@ type Op struct {
 	Name      string
 	Platforms []platform.ID
 	Exclude   []string
+	// Item: placed through placeOne (lockfile entry carries Platforms), not place().
+	Item bool
 }
 
 // Warning is printed before Ops[Before] (Before == len(Ops): after the last op).

@@ -3,9 +3,13 @@ package installer
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
+	"claude-harness/tools/internal/render"
 )
 
 const (
@@ -50,6 +54,30 @@ func (in *Installer) emitWarnings(p *Plan, before int) {
 }
 
 func (in *Installer) applyOp(op Op) error {
+	switch {
+	case op.Item:
+		if err := in.placeOne(op.Domain, op.Kind, op.Name, op.Src, op.Dst, op.Platforms); err != nil {
+			return &OpError{op, stagePlace, err}
+		}
+		return nil
+	case op.Type == OpRender:
+		if err := in.applyRender(op); err != nil {
+			return &OpError{op, stagePlace, err}
+		}
+		return nil
+	case op.Type == OpBlock:
+		if err := in.syncAgentsMD(); err != nil {
+			return &OpError{op, stagePlace, err}
+		}
+		return nil
+	case op.Type == OpHook:
+		if !in.DryRun && op.Mode == lockfile.ModeCopy {
+			if err := fsys.MakeShellScriptsExecutable(op.Dst); err != nil {
+				return &OpError{op, stageChmod, err}
+			}
+		}
+		return nil
+	}
 	prior := in.snapshotPlatforms(op.Domain, op.Kind, op.Dst)
 	if op.Kind != lockfile.KindSkill {
 		defer in.applyPlatforms(op.Domain, op.Kind, op.Dst, op.Platforms, prior)
@@ -77,4 +105,27 @@ func (in *Installer) applyOp(op Op) error {
 		}
 	}
 	return nil
+}
+
+func (in *Installer) applyRender(op Op) error {
+	data, err := os.ReadFile(op.Src)
+	if err != nil {
+		return err
+	}
+	pf, _ := platform.Get(op.Platforms[0])
+	stem := strings.TrimSuffix(op.Name, ".md")
+	var out []byte
+	if op.Kind == lockfile.KindAgents {
+		promptRel := ""
+		if in.Mode == lockfile.ModeLink {
+			promptRel = platform.PromptsDir + "/" + op.Name
+		}
+		out, err = render.RenderAgent(data, filepath.ToSlash(relToHarness(in.HarnessRoot, op.Src)), stem, pf.Agents.Format, in.Mode, promptRel)
+		if err != nil {
+			return err
+		}
+	} else {
+		out = render.MDCStub(stem, platform.AgentsRulesDir+"/"+op.Name, string(data), in.Mode)
+	}
+	return in.writeRendered(op.Domain, op.Kind, op.Name, op.Src, op.Dst, data, out, pf.ID)
 }

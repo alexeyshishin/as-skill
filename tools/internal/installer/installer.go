@@ -3,10 +3,8 @@ package installer
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -199,25 +197,6 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 	return nil
 }
 
-func (in *Installer) claudeKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string, plats []platform.ID) error {
-	plan, err := in.planClaudeKind(m, name, kind, srcDir, plats)
-	if err != nil {
-		return err
-	}
-	if err := in.Apply(plan); err != nil {
-		var oe *OpError
-		if errors.As(err, &oe) && oe.Stage == stageChmod {
-			return fmt.Errorf("domain %q: chmod hooks: %w", name, oe.Err)
-		}
-		var cause error = err
-		if oe != nil {
-			cause = oe.Err
-		}
-		return fmt.Errorf("domain %q: copying %s: %w", name, kind, cause)
-	}
-	return nil
-}
-
 func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	owner := reg.SkillOwner(in.HarnessRoot, name)
 	if owner == "" {
@@ -234,26 +213,15 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	if err := in.preflightRoots(map[lockfile.Kind]bool{lockfile.KindSkills: true}); err != nil {
 		return err
 	}
-	locs, _ := platform.SkillLocations(in.plats())
-	in.warnDup(locs)
-	for _, loc := range slices.Sorted(maps.Keys(locs)) {
-		if loc == platform.ClaudeSkillsLoc {
-			plan, err := in.planClaudeSkill(m, owner, name, src, locs[loc])
-			if err != nil {
-				return err
-			}
-			if err := in.Apply(plan); err != nil {
-				return fmt.Errorf("skill %q: %w", name, err)
-			}
-			continue
+	plan, perr := in.planSkill(m, owner, name, src)
+	if err := in.Apply(plan); err != nil {
+		var oe *OpError
+		if errors.As(err, &oe) {
+			err = oe.Err
 		}
-		dest := filepath.Join(in.ProjectRoot, loc, name)
-		if err := in.placeOne(owner, lockfile.KindSkill, name, src, dest, locs[loc]); err != nil {
-			return fmt.Errorf("skill %q: %w", name, err)
-		}
-		in.report(owner, string(lockfile.KindSkill), dest, 1)
+		return fmt.Errorf("skill %q: %w", name, err)
 	}
-	return nil
+	return perr
 }
 
 func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
@@ -413,6 +381,10 @@ func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst s
 }
 
 func (in *Installer) report(scope, kind, dest string, n int) {
+	fmt.Println(in.reportText(scope, kind, dest, n))
+}
+
+func (in *Installer) reportText(scope, kind, dest string, n int) string {
 	verb := "installed"
 	if in.DryRun {
 		verb = "would install"
@@ -421,7 +393,7 @@ func (in *Installer) report(scope, kind, dest string, n int) {
 	if n == 1 {
 		plural = ""
 	}
-	fmt.Printf("%-13s %-8s %-7s -> %s (%d file%s)\n", verb, scope, kind, dest, n, plural)
+	return fmt.Sprintf("%-13s %-8s %-7s -> %s (%d file%s)", verb, scope, kind, dest, n, plural)
 }
 
 func warnHooksNotExecutable(srcDir string) {
