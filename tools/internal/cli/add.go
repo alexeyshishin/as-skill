@@ -38,10 +38,10 @@ func runAdd(args []string) error {
 	detected := pl.detected || pl.dialog
 	in := pl.newInstaller(opts)
 
-	if detected && mode == "link" {
-		kinds := []string{"skills", "agents", "rules", "hooks"}
+	if detected && mode == lockfile.ModeLink {
+		kinds := []lockfile.Kind{lockfile.KindSkills, lockfile.KindAgents, lockfile.KindRules, lockfile.KindHooks}
 		if len(sel.Domains) == 0 {
-			kinds = []string{"skills"}
+			kinds = []lockfile.Kind{lockfile.KindSkills}
 		}
 		if gerr := in.GuardRoots(kinds...); gerr != nil {
 			return fmt.Errorf("%w\n(platforms: %s) pass -a claude to install for claude only, or --copy to install a snapshot",
@@ -84,7 +84,7 @@ func runAdd(args []string) error {
 }
 
 func planNonInteractive(opts addOpts) (*addPlan, error) {
-	pl := &addPlan{mode: "link"}
+	pl := &addPlan{mode: lockfile.ModeLink}
 	var err error
 	if pl.project, err = resolveProject(opts.project); err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func planNonInteractive(opts addOpts) (*addPlan, error) {
 		}
 	}
 	if opts.copy {
-		pl.mode = "copy"
+		pl.mode = lockfile.ModeCopy
 	}
 	return pl, nil
 }

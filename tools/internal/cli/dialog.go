@@ -170,8 +170,10 @@ func unignoredRoots(project string, copyMode, force bool) map[platform.ID]string
 		return out
 	}
 	for _, id := range platform.IDs() {
-		in := &installer.Installer{ProjectRoot: project, Mode: "link", Platforms: []platform.ID{id}}
-		cs, _ := in.Collect(func() error { return in.GuardRoots("skills", "agents", "rules", "hooks") })
+		in := &installer.Installer{ProjectRoot: project, Mode: lockfile.ModeLink, Platforms: []platform.ID{id}}
+		cs, _ := in.Collect(func() error {
+			return in.GuardRoots(lockfile.KindSkills, lockfile.KindAgents, lockfile.KindRules, lockfile.KindHooks)
+		})
 		var roots []string
 		for _, c := range cs {
 			if c.Reason == installer.ReasonNotIgnored {
@@ -215,18 +217,18 @@ func askPlatforms(p prompt.Prompter, project string, copyMode, force bool, detec
 	return platform.ParsePlatforms(got)
 }
 
-func askMode(p prompt.Prompter, prev string) (string, error) {
+func askMode(p prompt.Prompter, prev lockfile.Mode) (lockfile.Mode, error) {
 	if prev == "" {
-		prev = "link"
+		prev = lockfile.ModeLink
 	}
 	v, err := p.Select("mode", "Install mode", []prompt.Option{
-		{Value: "link", Label: "symlink — edits in the checkout show up immediately", Selected: prev == "link"},
-		{Value: "copy", Label: "copy — static snapshot, independent of the checkout", Selected: prev == "copy"},
-	}, prev)
+		{Value: string(lockfile.ModeLink), Label: "symlink — edits in the checkout show up immediately", Selected: prev == lockfile.ModeLink},
+		{Value: string(lockfile.ModeCopy), Label: "copy — static snapshot, independent of the checkout", Selected: prev == lockfile.ModeCopy},
+	}, string(prev))
 	if err != nil {
 		return "", abortErr(err)
 	}
-	return v, nil
+	return lockfile.Mode(v), nil
 }
 
 func confirm(p prompt.Prompter, title, summary string) error {
@@ -248,7 +250,7 @@ type addPlan struct {
 	plats            []platform.ID
 	detected         bool
 	dialog           bool
-	mode             string
+	mode             lockfile.Mode
 	exclude          map[string]bool
 	overwrite        map[string]bool
 	adjust           []string
@@ -262,10 +264,10 @@ func addDialog(opts addOpts) (*addPlan, error) {
 		projRaw   string
 		prevDoms  []string
 		prevPlats []platform.ID
-		prevMode  string
+		prevMode  lockfile.Mode
 		platSrc   string
 		rawPlats  []platform.ID
-		rawMode   string
+		rawMode   lockfile.Mode
 		custom    customizeState
 		prevRes   = map[string]string{}
 		prevHooks []string
@@ -342,9 +344,9 @@ func addDialog(opts addOpts) (*addPlan, error) {
 			return true, nil
 		},
 		func() (bool, error) {
-			pl.mode = "link"
+			pl.mode = lockfile.ModeLink
 			if opts.copy {
-				pl.mode = "copy"
+				pl.mode = lockfile.ModeCopy
 				rawMode = pl.mode
 				return false, nil
 			}
@@ -433,7 +435,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 		fmt.Fprintf(&b, "warning:   %s\n", loggerWarning)
 	}
 	mode := "symlink"
-	if pl.mode == "copy" {
+	if pl.mode == lockfile.ModeCopy {
 		mode = "copy"
 	}
 	fmt.Fprintf(&b, "mode:      %s", mode)
@@ -450,15 +452,15 @@ func removeChoices(lock *lockfile.Lockfile) []prompt.Option {
 	// "skills") is offered as standalone skills.
 	whole := map[string]bool{}
 	for _, e := range lock.Entries {
-		if e.Domain == "as-skill" || e.Kind == "instructions" {
+		if e.Domain == "as-skill" || e.Kind == lockfile.KindInstructions {
 			continue
 		}
-		if !((e.Kind == "skill" || e.Kind == "skills") && e.Name != "") {
+		if !((e.Kind == lockfile.KindSkill || e.Kind == lockfile.KindSkills) && e.Name != "") {
 			whole[e.Domain] = true
 		}
 	}
 	for _, e := range lock.Entries {
-		if e.Domain == "as-skill" || e.Kind == "instructions" {
+		if e.Domain == "as-skill" || e.Kind == lockfile.KindInstructions {
 			continue
 		}
 		if whole[e.Domain] {

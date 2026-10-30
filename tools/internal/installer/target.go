@@ -7,17 +7,18 @@ import (
 	"regexp"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/lockfile"
 )
 
 const claudeHomeVar = "CLAUDE_HOME"
 
 var varPattern = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)\}`)
 
-func (in *Installer) resolveTarget(m *harness.Manifest, kind string) (string, error) {
-	if raw, ok := m.Targets[kind]; ok {
+func (in *Installer) resolveTarget(m *harness.Manifest, kind lockfile.Kind) (string, error) {
+	if raw, ok := m.Targets[string(kind)]; ok {
 		return expandTarget(raw, in.ProjectRoot)
 	}
-	return filepath.Join(in.ProjectRoot, ".claude", kind), nil
+	return filepath.Join(in.ProjectRoot, ".claude", string(kind)), nil
 }
 
 func expandTarget(raw, projectRoot string) (string, error) {

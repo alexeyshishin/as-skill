@@ -32,7 +32,7 @@ func EntryHealth(e lockfile.Entry) string {
 	if err != nil {
 		return HealthMissing
 	}
-	if e.Mode == "link" {
+	if e.Mode == lockfile.ModeLink {
 		if fi.Mode()&os.ModeSymlink == 0 {
 			return HealthBroken
 		}
@@ -127,7 +127,7 @@ func platformDirs(plats []platform.ID) []string {
 		}
 	}
 	for _, kind := range harness.DomainKinds {
-		add(".claude/" + kind)
+		add(".claude/" + string(kind))
 	}
 	for _, id := range plats {
 		p, ok := platform.Get(id)

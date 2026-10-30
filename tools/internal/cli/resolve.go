@@ -182,7 +182,7 @@ func skillInstalled(lock *lockfile.Lockfile, projectRoot, name string) bool {
 		return false
 	}
 	for _, e := range lock.Entries {
-		if e.Domain != "as-skill" && e.Name == name && (e.Kind == "skill" || e.Kind == "skills") {
+		if e.Domain != "as-skill" && e.Name == name && (e.Kind == lockfile.KindSkill || e.Kind == lockfile.KindSkills) {
 			return true
 		}
 	}
@@ -215,7 +215,7 @@ func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 	}
 	total := 0
 	for _, kind := range harness.DomainKinds {
-		names, err := transfer.TopNames(filepath.Join(harnessRoot, "domains", domain, kind), kind)
+		names, err := transfer.TopNames(filepath.Join(harnessRoot, "domains", domain, string(kind)), kind)
 		if err != nil {
 			continue
 		}
@@ -223,7 +223,7 @@ func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 			total++
 			covered := false
 			for _, e := range rows {
-				k := e.Kind == kind || (kind == "skills" && e.Kind == "skill")
+				k := e.Kind == kind || (kind == lockfile.KindSkills && e.Kind == lockfile.KindSkill)
 				if k && (e.Name == n || e.Name == strings.TrimSuffix(n, filepath.Ext(n))) {
 					covered = true
 					break

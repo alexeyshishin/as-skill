@@ -103,9 +103,9 @@ func runInstall(args []string) error {
 	if err != nil {
 		return err
 	}
-	mode := "link"
+	mode := lockfile.ModeLink
 	if opts.copy {
-		mode = "copy"
+		mode = lockfile.ModeCopy
 	}
 
 	harnessRoot, err := harness.ResolveHarnessRoot(opts.harnessRoot)

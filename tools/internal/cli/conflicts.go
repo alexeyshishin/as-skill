@@ -8,6 +8,7 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
 )
@@ -200,7 +201,7 @@ func resolveGuard(p prompt.Prompter, pl *addPlan, roots []string, prev map[strin
 	prev[string(target)] = choice
 	switch choice {
 	case "copy":
-		pl.mode = "copy"
+		pl.mode = lockfile.ModeCopy
 		pl.adjust = append(pl.adjust, fmt.Sprintf("mode switched to copy for all platforms (%s not git-ignored)", strings.Join(mine, ", ")))
 	case "drop":
 		var left []platform.ID

@@ -25,7 +25,7 @@ func snapshotInstall(t *testing.T, mode string) string {
 	}
 	project := t.TempDir()
 	lock := &lockfile.Lockfile{}
-	in := &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: mode, Lock: lock}
+	in := &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: lockfile.Mode(mode), Lock: lock}
 	for _, d := range []string{"code", "git", "core"} {
 		if err := in.InstallDomain(reg, d, true); err != nil {
 			t.Fatal(err)
@@ -91,7 +91,7 @@ func snapshotInstall(t *testing.T, mode string) string {
 	}
 	var entries []normEntry
 	for _, e := range lf.Entries {
-		entries = append(entries, normEntry{e.Domain, e.Kind, e.Name, e.Mode, rel(e.Path, project), rel(e.Source, hRoot), e.SHA256 != "", e.Platforms, e.SrcSHA256})
+		entries = append(entries, normEntry{e.Domain, string(e.Kind), e.Name, string(e.Mode), rel(e.Path, project), rel(e.Source, hRoot), e.SHA256 != "", e.Platforms, e.SrcSHA256})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Path < entries[j].Path })
 	lockJSON, err := json.MarshalIndent(entries, "", "  ")

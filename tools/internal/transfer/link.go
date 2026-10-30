@@ -23,7 +23,7 @@ func LinkOne(src, dst string, dryRun, force bool, lock *lockfile.Lockfile) error
 		if !tracked && !force {
 			return &ForeignError{Path: dst}
 		}
-		if tracked && entry.Mode != "link" {
+		if tracked && entry.Mode != lockfile.ModeLink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, entry.Mode)
 		}
 		if !dryRun {
@@ -44,7 +44,7 @@ func LinkOne(src, dst string, dryRun, force bool, lock *lockfile.Lockfile) error
 	return nil
 }
 
-func LinkTreeWith(domain, kind, src, dstDir string, dryRun bool, lock *lockfile.Lockfile, skip func(name string) bool, link func(src, dst string) error) (int, error) {
+func LinkTreeWith(domain string, kind lockfile.Kind, src, dstDir string, dryRun bool, lock *lockfile.Lockfile, skip func(name string) bool, link func(src, dst string) error) (int, error) {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return 0, err
@@ -71,7 +71,7 @@ func LinkTreeWith(domain, kind, src, dstDir string, dryRun bool, lock *lockfile.
 				Domain:      domain,
 				Kind:        kind,
 				Name:        name,
-				Mode:        "link",
+				Mode:        lockfile.ModeLink,
 				Path:        dstPath,
 				Source:      srcPath,
 				InstalledAt: time.Now(),

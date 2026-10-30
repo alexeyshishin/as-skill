@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -93,8 +94,8 @@ func (in *Installer) linkOne(src, dst string) error {
 	return err
 }
 
-func (in *Installer) excluded(domain, kind, name string) bool {
-	return kind == "skills" && in.ExcludeSkills[domain+"/"+name]
+func (in *Installer) excluded(domain string, kind lockfile.Kind, name string) bool {
+	return kind == lockfile.KindSkills && in.ExcludeSkills[domain+"/"+name]
 }
 
 func (in *Installer) hasExclusions(domain string) bool {

@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/frontmatter"
+	"claude-harness/tools/internal/lockfile"
 )
 
-var DomainKinds = []string{"rules", "skills", "agents", "hooks"}
+var DomainKinds = []lockfile.Kind{lockfile.KindRules, lockfile.KindSkills, lockfile.KindAgents, lockfile.KindHooks}
 
 func dirExists(p string) bool {
 	info, err := os.Stat(p)

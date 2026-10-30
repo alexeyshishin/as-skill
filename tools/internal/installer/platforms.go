@@ -26,7 +26,6 @@ const (
 	promptsDir      = ".agents/prompts"
 	agentsRulesDir  = ".agents/rules"
 	agentsMD        = "AGENTS.md"
-	ModeBlock       = "block"
 )
 
 func (in *Installer) plats() []platform.ID {
@@ -101,7 +100,7 @@ func (in *Installer) dupPlatforms(locs map[string][]platform.ID) []platform.ID {
 		for _, pl := range e.Platforms {
 			known[pl] = true
 		}
-		if e.Kind != "skills" && e.Kind != "skill" {
+		if e.Kind != lockfile.KindSkills && e.Kind != lockfile.KindSkill {
 			continue
 		}
 		for _, loc := range []string{".claude/skills", ".agents/skills", ".cursor/skills", ".opencode/skills", ".codex/skills"} {
@@ -146,7 +145,7 @@ func under(root, p string) bool {
 	return err == nil && !strings.HasPrefix(rel, "..")
 }
 
-func (in *Installer) snapshotPlatforms(domain, kind, dest string) map[string][]string {
+func (in *Installer) snapshotPlatforms(domain string, kind lockfile.Kind, dest string) map[string][]string {
 	out := map[string][]string{}
 	var all []string
 	for _, e := range in.Lock.Entries {
@@ -159,7 +158,7 @@ func (in *Installer) snapshotPlatforms(domain, kind, dest string) map[string][]s
 	return out
 }
 
-func (in *Installer) applyPlatforms(domain, kind, dest string, plats []platform.ID, prior map[string][]string) {
+func (in *Installer) applyPlatforms(domain string, kind lockfile.Kind, dest string, plats []platform.ID, prior map[string][]string) {
 	if in.DryRun {
 		return
 	}
@@ -185,7 +184,7 @@ func (in *Installer) setEntryPlatforms(e lockfile.Entry, plats []string) {
 var nonClaudeRoots = map[string]bool{".agents": true, ".codex": true, ".cursor": true, ".opencode": true}
 
 func (in *Installer) guard(dst string) error {
-	if in.Mode != "link" || in.Force {
+	if in.Mode != lockfile.ModeLink || in.Force {
 		return nil
 	}
 	rel, err := filepath.Rel(in.ProjectRoot, dst)
@@ -196,7 +195,7 @@ func (in *Installer) guard(dst string) error {
 }
 
 func (in *Installer) guardRoot(root string) error {
-	if in.Mode != "link" || in.Force || !nonClaudeRoots[root] {
+	if in.Mode != lockfile.ModeLink || in.Force || !nonClaudeRoots[root] {
 		return nil
 	}
 	if ok, done := in.gitChecked[root]; done {
@@ -258,9 +257,9 @@ func rootOf(rel string) string {
 	return strings.Split(filepath.ToSlash(rel), "/")[0]
 }
 
-func (in *Installer) touchedRoots(kinds map[string]bool) []string {
+func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
 	roots := map[string]bool{}
-	if kinds["skills"] {
+	if kinds[lockfile.KindSkills] {
 		locs, _ := platform.SkillLocations(in.plats())
 		for loc := range locs {
 			roots[rootOf(loc)] = true
@@ -271,16 +270,16 @@ func (in *Installer) touchedRoots(kinds map[string]bool) []string {
 			continue
 		}
 		p, _ := platform.Get(id)
-		if kinds["agents"] {
+		if kinds[lockfile.KindAgents] {
 			roots[rootOf(p.Agents.Dir)] = true
-			if in.Mode == "link" {
+			if in.Mode == lockfile.ModeLink {
 				roots[rootOf(promptsDir)] = true
 			}
 		}
-		if kinds["rules"] {
+		if kinds[lockfile.KindRules] {
 			roots[rootOf(p.Rules.Dir)] = true
 		}
-		if kinds["hooks"] && p.Hooks.Schema != platform.HooksNone {
+		if kinds[lockfile.KindHooks] && p.Hooks.Schema != platform.HooksNone {
 			roots[rootOf(p.Hooks.Dir)] = true
 		}
 	}
@@ -292,7 +291,7 @@ func (in *Installer) touchedRoots(kinds map[string]bool) []string {
 	return out
 }
 
-func (in *Installer) preflightRoots(kinds map[string]bool) error {
+func (in *Installer) preflightRoots(kinds map[lockfile.Kind]bool) error {
 	in.noteGaps()
 	for _, r := range in.touchedRoots(kinds) {
 		if err := in.guardRoot(r); err != nil {
@@ -302,8 +301,8 @@ func (in *Installer) preflightRoots(kinds map[string]bool) error {
 	return nil
 }
 
-func (in *Installer) GuardRoots(kinds ...string) error {
-	set := map[string]bool{}
+func (in *Installer) GuardRoots(kinds ...lockfile.Kind) error {
+	set := map[lockfile.Kind]bool{}
 	for _, k := range kinds {
 		set[k] = true
 	}
@@ -335,13 +334,13 @@ func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 		if !ok || !in.runnable(m) {
 			continue
 		}
-		kinds := map[string]bool{}
+		kinds := map[lockfile.Kind]bool{}
 		for _, kind := range harness.DomainKinds {
-			if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", name, kind)) {
+			if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", name, string(kind))) {
 				kinds[kind] = true
 			}
 		}
-		if kinds["agents"] {
+		if kinds[lockfile.KindAgents] {
 			if err := in.checkReserved(filepath.Join(in.HarnessRoot, "domains", name, "agents")); err != nil {
 				return fmt.Errorf("domain %q: %w", name, err)
 			}
@@ -356,9 +355,9 @@ func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 	return nil
 }
 
-func (in *Installer) preflightForeign(name string, kinds map[string]bool) error {
+func (in *Installer) preflightForeign(name string, kinds map[lockfile.Kind]bool) error {
 	var paths []string
-	itemPaths := func(kind, srcDir, dstDir string, plats []platform.ID) {
+	itemPaths := func(kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) {
 		entries, err := os.ReadDir(srcDir)
 		if err != nil {
 			return
@@ -371,11 +370,11 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 		}
 	}
 	for kind := range kinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
-		if kind == "skills" {
+		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
+		if kind == lockfile.KindSkills {
 			locs, _ := platform.SkillLocations(in.plats())
 			for loc, plats := range locs {
-				if (loc != claudeSkillsLoc || in.hasExclusions(name)) && in.Mode != "link" {
+				if (loc != claudeSkillsLoc || in.hasExclusions(name)) && in.Mode != lockfile.ModeLink {
 					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, loc), plats)
 				}
 			}
@@ -387,11 +386,11 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 			}
 			p, _ := platform.Get(id)
 			switch kind {
-			case "hooks":
-				if p.Hooks.Schema != platform.HooksNone && in.Mode != "link" {
+			case lockfile.KindHooks:
+				if p.Hooks.Schema != platform.HooksNone && in.Mode != lockfile.ModeLink {
 					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, p.Hooks.Dir), []platform.ID{id})
 				}
-			case "agents", "rules":
+			case lockfile.KindAgents, lockfile.KindRules:
 				entries, err := in.mdItems(srcDir)
 				if err != nil {
 					return err
@@ -399,7 +398,7 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 				for _, e := range entries {
 					stem := strings.TrimSuffix(e.Name(), ".md")
 					switch {
-					case kind == "agents":
+					case kind == lockfile.KindAgents:
 						data, err := os.ReadFile(filepath.Join(srcDir, e.Name()))
 						if err != nil {
 							return err
@@ -407,7 +406,7 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 						paths = append(paths, filepath.Join(in.ProjectRoot, p.Agents.Dir, agentNameOf(data, stem)+p.Agents.Ext))
 					case p.Rules.Mode == platform.RulesDirMDC:
 						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc"))
-					case in.Mode != "link":
+					case in.Mode != lockfile.ModeLink:
 						paths = append(paths, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()))
 					}
 				}
@@ -422,8 +421,8 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 	return nil
 }
 
-func hookWanted(kind, path string, plats []platform.ID) bool {
-	if kind != "hooks" {
+func hookWanted(kind lockfile.Kind, path string, plats []platform.ID) bool {
+	if kind != lockfile.KindHooks {
 		return true
 	}
 	for _, id := range plats {
@@ -457,9 +456,9 @@ func (in *Installer) checkReserved(srcDir string) error {
 	return nil
 }
 
-func (in *Installer) installKind(m *harness.Manifest, name, kind, srcDir string) error {
+func (in *Installer) installKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) error {
 	switch kind {
-	case "skills":
+	case lockfile.KindSkills:
 		locs, _ := platform.SkillLocations(in.plats())
 		in.warnDup(locs)
 		for _, loc := range slices.Sorted(maps.Keys(locs)) {
@@ -487,11 +486,11 @@ func (in *Installer) installKind(m *harness.Manifest, name, kind, srcDir string)
 		p, _ := platform.Get(id)
 		var err error
 		switch kind {
-		case "agents":
+		case lockfile.KindAgents:
 			err = in.placeAgents(name, srcDir, p)
-		case "rules":
+		case lockfile.KindRules:
 			err = in.placeRules(name, srcDir, p)
-		case "hooks":
+		case lockfile.KindHooks:
 			err = in.placeHooks(name, srcDir, p)
 		}
 		if err != nil {
@@ -501,7 +500,7 @@ func (in *Installer) installKind(m *harness.Manifest, name, kind, srcDir string)
 	return nil
 }
 
-func (in *Installer) placeItems(domain, kind, srcDir, dstDir string, plats []platform.ID) error {
+func (in *Installer) placeItems(domain string, kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) error {
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return err
@@ -516,11 +515,11 @@ func (in *Installer) placeItems(domain, kind, srcDir, dstDir string, plats []pla
 		}
 		n++
 	}
-	in.report(domain, kind, dstDir, n)
+	in.report(domain, string(kind), dstDir, n)
 	return nil
 }
 
-func (in *Installer) placeOne(domain, kind, name, src, dst string, plats []platform.ID) error {
+func (in *Installer) placeOne(domain string, kind lockfile.Kind, name, src, dst string, plats []platform.ID) error {
 	if err := in.guard(dst); err != nil {
 		return err
 	}
@@ -533,7 +532,7 @@ func (in *Installer) placeOne(domain, kind, name, src, dst string, plats []platf
 			return err
 		}
 	}
-	if in.Mode == "link" {
+	if in.Mode == lockfile.ModeLink {
 		if err := in.linkOne(src, dst); err != nil {
 			return err
 		}
@@ -594,7 +593,7 @@ func (in *Installer) refuseForeign(dst string) error {
 	return in.conflict(dst, ReasonForeign)
 }
 
-func (in *Installer) writeRendered(domain, kind, name, src, dst string, srcData, out []byte, p platform.ID) error {
+func (in *Installer) writeRendered(domain string, kind lockfile.Kind, name, src, dst string, srcData, out []byte, p platform.ID) error {
 	if err := in.guard(dst); err != nil {
 		return err
 	}
@@ -647,7 +646,7 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 		return err
 	}
 	mode := render.Copy
-	if in.Mode == "link" {
+	if in.Mode == lockfile.ModeLink {
 		mode = render.Link
 	}
 	n := 0
@@ -665,7 +664,7 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 		promptRel := ""
 		if mode == render.Link {
 			promptRel = promptsDir + "/" + e.Name()
-			if err := in.placeOne(domain, "prompts", e.Name(), src, filepath.Join(in.ProjectRoot, promptRel), []platform.ID{p.ID}); err != nil {
+			if err := in.placeOne(domain, lockfile.KindPrompts, e.Name(), src, filepath.Join(in.ProjectRoot, promptRel), []platform.ID{p.ID}); err != nil {
 				return err
 			}
 		}
@@ -674,12 +673,12 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 			return err
 		}
 		dst := filepath.Join(in.ProjectRoot, p.Agents.Dir, agentName+p.Agents.Ext)
-		if err := in.writeRendered(domain, "agents", e.Name(), src, dst, data, out, p.ID); err != nil {
+		if err := in.writeRendered(domain, lockfile.KindAgents, e.Name(), src, dst, data, out, p.ID); err != nil {
 			return err
 		}
 		n++
 	}
-	in.report(domain, "agents", filepath.Join(in.ProjectRoot, p.Agents.Dir), n)
+	in.report(domain, string(lockfile.KindAgents), filepath.Join(in.ProjectRoot, p.Agents.Dir), n)
 	return nil
 }
 
@@ -726,8 +725,8 @@ func (in *Installer) placeRules(domain, srcDir string, p platform.Platform) erro
 			}
 			rel := agentsRulesDir + "/" + e.Name()
 			body := string(data)
-			if in.Mode == "link" {
-				if err := in.placeOne(domain, "rules", e.Name(), src, filepath.Join(in.ProjectRoot, rel), []platform.ID{p.ID}); err != nil {
+			if in.Mode == lockfile.ModeLink {
+				if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, rel), []platform.ID{p.ID}); err != nil {
 					return err
 				}
 				body = "Follow the rule in `" + rel + "`.\n"
@@ -736,17 +735,17 @@ func (in *Installer) placeRules(domain, srcDir string, p platform.Platform) erro
 			}
 			out := []byte("---\ndescription: " + stem + " rule\nalwaysApply: true\n---\n" + body)
 			dst := filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc")
-			if err := in.writeRendered(domain, "rules", e.Name(), src, dst, data, out, p.ID); err != nil {
+			if err := in.writeRendered(domain, lockfile.KindRules, e.Name(), src, dst, data, out, p.ID); err != nil {
 				return err
 			}
 		default:
-			if err := in.placeOne(domain, "rules", e.Name(), src, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()), []platform.ID{p.ID}); err != nil {
+			if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, p.Rules.Dir, e.Name()), []platform.ID{p.ID}); err != nil {
 				return err
 			}
 		}
 		n++
 	}
-	in.report(domain, "rules", filepath.Join(in.ProjectRoot, p.Rules.Dir), n)
+	in.report(domain, string(lockfile.KindRules), filepath.Join(in.ProjectRoot, p.Rules.Dir), n)
 	if p.Rules.Mode == platform.RulesAgentsMDBlock {
 		return in.syncAgentsMD()
 	}
@@ -759,11 +758,11 @@ func (in *Installer) placeHooks(domain, srcDir string, p platform.Platform) erro
 		return nil
 	}
 	dst := filepath.Join(in.ProjectRoot, p.Hooks.Dir)
-	if err := in.placeItems(domain, "hooks", srcDir, dst, []platform.ID{p.ID}); err != nil {
+	if err := in.placeItems(domain, lockfile.KindHooks, srcDir, dst, []platform.ID{p.ID}); err != nil {
 		return err
 	}
 	if !in.DryRun {
-		if in.Mode == "copy" {
+		if in.Mode == lockfile.ModeCopy {
 			if err := transfer.MakeShellScriptsExecutable(dst); err != nil {
 				return err
 			}
@@ -781,7 +780,7 @@ func (in *Installer) syncAgentsMD() error {
 	var files []string
 	var plats []string
 	for _, e := range in.Lock.Entries {
-		if e.Kind != "rules" || (e.Mode != lockfile.ModeLink && e.Mode != lockfile.ModeCopy) || !under(rulesRoot, e.Path) {
+		if e.Kind != lockfile.KindRules || (e.Mode != lockfile.ModeLink && e.Mode != lockfile.ModeCopy) || !under(rulesRoot, e.Path) {
 			continue
 		}
 		var hit []string
@@ -799,7 +798,7 @@ func (in *Installer) syncAgentsMD() error {
 	sort.Strings(files)
 	existing, rerr := os.ReadFile(path)
 	exists := rerr == nil
-	prior, tracked := in.Lock.FindAt("as-skill", "instructions", agentsMD, path)
+	prior, tracked := in.Lock.FindAt("as-skill", lockfile.KindInstructions, agentsMD, path)
 	if len(files) == 0 {
 		if !tracked {
 			return nil
@@ -820,7 +819,7 @@ func (in *Installer) syncAgentsMD() error {
 				}
 			}
 		}
-		in.Lock.RemoveAt("as-skill", "instructions", agentsMD, path)
+		in.Lock.RemoveAt("as-skill", lockfile.KindInstructions, agentsMD, path)
 		return nil
 	}
 	var b strings.Builder
@@ -845,14 +844,14 @@ func (in *Installer) syncAgentsMD() error {
 		src = "existing"
 	}
 	in.Lock.Record(lockfile.Entry{
-		Domain: "as-skill", Kind: "instructions", Name: agentsMD, Mode: ModeBlock,
+		Domain: "as-skill", Kind: lockfile.KindInstructions, Name: agentsMD, Mode: lockfile.ModeBlock,
 		Path: path, Source: src, Platforms: plats, InstalledAt: time.Now(),
 	})
 	return nil
 }
 
 func (in *Installer) uninstallNonClaude(domain, skill string) {
-	kinds := map[string]bool{"rules": true, "skills": true, "skill": true, "agents": true, "hooks": true, "prompts": true}
+	kinds := map[lockfile.Kind]bool{lockfile.KindRules: true, lockfile.KindSkills: true, lockfile.KindSkill: true, lockfile.KindAgents: true, lockfile.KindHooks: true, lockfile.KindPrompts: true}
 	plats := in.plats()
 	gone := map[platform.ID][]string{}
 	snapshot := append([]lockfile.Entry(nil), in.Lock.Entries...)
@@ -860,7 +859,7 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 		if e.Domain != domain || !kinds[e.Kind] {
 			continue
 		}
-		if skill != "" && (e.Name != skill || (e.Kind != "skill" && e.Kind != "skills")) {
+		if skill != "" && (e.Name != skill || (e.Kind != lockfile.KindSkill && e.Kind != lockfile.KindSkills)) {
 			continue
 		}
 		if in.hasClaude() && under(filepath.Join(in.ProjectRoot, ".claude"), e.Path) {
@@ -879,7 +878,7 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 			fmt.Printf("kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 			continue
 		}
-		if e.Name != "" && in.removeEntry(e) && e.Kind == "hooks" {
+		if e.Name != "" && in.removeEntry(e) && e.Kind == lockfile.KindHooks {
 			for _, id := range plats {
 				gone[id] = append(gone[id], e.Name)
 			}

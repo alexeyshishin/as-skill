@@ -23,7 +23,7 @@ func rerunSetup(t *testing.T, mode string) (*Installer, *harness.Registry, strin
 		t.Fatal(err)
 	}
 	project := t.TempDir()
-	return &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: mode, Lock: &lockfile.Lockfile{}}, reg, project
+	return &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: lockfile.Mode(mode), Lock: &lockfile.Lockfile{}}, reg, project
 }
 
 func TestRerunWithoutForce(t *testing.T) {
@@ -37,7 +37,7 @@ func TestRerunWithoutForce(t *testing.T) {
 			if err := in.InstallDomain(reg, "git", true); err != nil {
 				t.Fatal(err)
 			}
-			in.Mode = tc.second
+			in.Mode = lockfile.Mode(tc.second)
 			if err := in.InstallDomain(reg, "git", true); err != nil {
 				t.Fatalf("rerun: %v", err)
 			}
@@ -50,7 +50,7 @@ func TestRerunWithoutForce(t *testing.T) {
 				t.Fatalf("symlink=%v after %s", isLink, tc.second)
 			}
 			for _, e := range in.Lock.Entries {
-				if e.Mode != tc.second {
+				if string(e.Mode) != tc.second {
 					t.Fatalf("stale row %+v", e)
 				}
 			}

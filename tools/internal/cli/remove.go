@@ -57,7 +57,7 @@ func removeTargets(lock *lockfile.Lockfile, projectRoot string, names []string) 
 			if e.Domain == n && e.Domain != "as-skill" {
 				dRows = append(dRows, e)
 			}
-			if e.Name == n && e.Domain != "as-skill" && (e.Kind == "skill" || e.Kind == "skills") {
+			if e.Name == n && e.Domain != "as-skill" && (e.Kind == lockfile.KindSkill || e.Kind == lockfile.KindSkills) {
 				sRows = append(sRows, e)
 			}
 		}
@@ -348,7 +348,7 @@ func (r *remover) sweep(rows []lockfile.Entry, afterHarness bool) {
 		if !ok {
 			continue
 		}
-		if afterHarness && r.dry && (e.Source == "" || e.Mode == "copy" || fsutil.PathExists(e.Source)) {
+		if afterHarness && r.dry && (e.Source == "" || e.Mode == lockfile.ModeCopy || fsutil.PathExists(e.Source)) {
 			continue
 		}
 		r.removeRow(e)
@@ -365,7 +365,7 @@ func (r *remover) removeRow(e lockfile.Entry) {
 	if !hit {
 		return
 	}
-	if e.Mode == "block" {
+	if e.Mode == lockfile.ModeBlock {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — managed block needs the harness checkout\n", e.Path)
 		return
 	}
@@ -404,7 +404,7 @@ func (r *remover) removeRow(e lockfile.Entry) {
 			continue
 		}
 		isLink := fi.Mode()&os.ModeSymlink != 0
-		if e.Mode == "link" && !isLink {
+		if e.Mode == lockfile.ModeLink && !isLink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", p)
 			clean = false
 			continue
@@ -441,9 +441,9 @@ func (r *remover) rowPaths(e lockfile.Entry) (paths []string, ok bool) {
 	switch {
 	case e.Name != "":
 		return []string{e.Path}, true
-	case e.Mode == "copy" && len(e.Items) > 0:
+	case e.Mode == lockfile.ModeCopy && len(e.Items) > 0:
 		return e.CoveredPaths(), true
-	case e.Mode == "copy":
+	case e.Mode == lockfile.ModeCopy:
 		names, err := transfer.TopNames(e.Source, e.Kind)
 		if err != nil {
 			return nil, false
@@ -469,7 +469,7 @@ func (r *remover) preflight(rows []lockfile.Entry) error {
 				hit = true
 			}
 		}
-		if !hit || e.Mode == "block" {
+		if !hit || e.Mode == lockfile.ModeBlock {
 			continue
 		}
 		paths, _ := r.rowPaths(e)

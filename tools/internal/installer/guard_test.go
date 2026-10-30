@@ -76,7 +76,7 @@ func TestUninstallRefusesOutsideRows(t *testing.T) {
 						if kind.kind != "skill" {
 							name = "git-conventions"
 						}
-						in.Lock.Record(lockfile.Entry{Domain: "git", Kind: kind.kind, Name: name, Mode: kind.mode, Path: path, Platforms: []string{string(plat)}})
+						in.Lock.Record(lockfile.Entry{Domain: "git", Kind: lockfile.Kind(kind.kind), Name: name, Mode: lockfile.Mode(kind.mode), Path: path, Platforms: []string{string(plat)}})
 						var err error
 						if viaSkill && kind.kind == "skill" {
 							err = in.UninstallSkill(reg, name)
@@ -89,7 +89,7 @@ func TestUninstallRefusesOutsideRows(t *testing.T) {
 						if _, serr := os.Stat(keep); serr != nil {
 							t.Fatalf("victim damaged: %v", serr)
 						}
-						if _, ok := in.Lock.FindAt("git", kind.kind, name, path); !ok {
+						if _, ok := in.Lock.FindAt("git", lockfile.Kind(kind.kind), name, path); !ok {
 							t.Fatal("row must be kept")
 						}
 					})

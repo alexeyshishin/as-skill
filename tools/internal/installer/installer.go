@@ -23,7 +23,7 @@ type Installer struct {
 	ProjectRoot string
 	DryRun      bool
 	Force       bool
-	Mode        string
+	Mode        lockfile.Mode
 	Lock        *lockfile.Lockfile
 	Platforms   []platform.ID
 
@@ -37,9 +37,9 @@ type Installer struct {
 	conflicts  []ConflictError
 }
 
-func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
-	if in.Mode == "link" {
-		if kind == "skill" {
+func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst string) (int, error) {
+	if in.Mode == lockfile.ModeLink {
+		if kind == lockfile.KindSkill {
 			if !in.DryRun {
 				if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 					return 0, err
@@ -51,14 +51,14 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 			if !in.DryRun {
 				in.Lock.Record(lockfile.Entry{
 					Domain: domain, Kind: kind, Name: name,
-					Mode: "link", Path: dst, Source: src,
+					Mode: lockfile.ModeLink, Path: dst, Source: src,
 					InstalledAt: time.Now(),
 				})
 			}
 			return 1, nil
 		}
 		var skip func(string) bool
-		if kind == "skills" && in.hasExclusions(domain) {
+		if kind == lockfile.KindSkills && in.hasExclusions(domain) {
 			skip = func(item string) bool { return in.excluded(domain, kind, item) }
 		}
 		n, err := transfer.LinkTreeWith(domain, kind, src, dst, in.DryRun, in.Lock, skip, in.linkOne)
@@ -72,7 +72,7 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 		return n, err
 	}
 
-	if entry, ok := in.Lock.Owns(dst); ok && entry.Mode != "copy" {
+	if entry, ok := in.Lock.Owns(dst); ok && entry.Mode != lockfile.ModeCopy {
 		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a copy — mixed channels may cause confusion\n", dst, entry.Mode)
 	}
 	if !in.DryRun && name == "" {
@@ -104,14 +104,14 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 		}
 		in.Lock.Record(lockfile.Entry{
 			Domain: domain, Kind: kind, Name: name,
-			Mode: "copy", Path: dst, Source: src, SHA256: hash, Items: items,
+			Mode: lockfile.ModeCopy, Path: dst, Source: src, SHA256: hash, Items: items,
 			InstalledAt: time.Now(),
 		})
 	}
 	return n, nil
 }
 
-func (in *Installer) keepExcluded(domain, kind, dst string, skip func(string) bool) {
+func (in *Installer) keepExcluded(domain string, kind lockfile.Kind, dst string, skip func(string) bool) {
 	parent, ok := in.Lock.FindAt(domain, kind, "", dst)
 	if !ok {
 		return
@@ -137,7 +137,7 @@ func (in *Installer) keepExcluded(domain, kind, dst string, skip func(string) bo
 	in.Lock.Record(parent)
 }
 
-func (in *Installer) dropLinksUnder(kind, src, dst string) {
+func (in *Installer) dropLinksUnder(kind lockfile.Kind, src, dst string) {
 	names, err := transfer.TopNames(src, kind)
 	if err != nil {
 		return
@@ -148,7 +148,7 @@ func (in *Installer) dropLinksUnder(kind, src, dst string) {
 		if err != nil || fi.Mode()&os.ModeSymlink == 0 {
 			continue
 		}
-		if e, ok := in.Lock.Owns(p); ok && e.Mode == "link" {
+		if e, ok := in.Lock.Owns(p); ok && e.Mode == lockfile.ModeLink {
 			if os.Remove(p) == nil {
 				in.Lock.RemoveAllAt(p)
 			}
@@ -187,7 +187,7 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 		return err
 	}
 	for _, kind := range harness.DomainKinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
+		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
 		if !fsutil.DirExists(srcDir) {
 			continue
 		}
@@ -198,14 +198,14 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 	return nil
 }
 
-func (in *Installer) claudeKind(m *harness.Manifest, name, kind, srcDir string, plats []platform.ID) error {
+func (in *Installer) claudeKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string, plats []platform.ID) error {
 	destPath, err := in.resolveTarget(m, kind)
 	if err != nil {
 		return fmt.Errorf("domain %q: %w", name, err)
 	}
 	prior := in.snapshotPlatforms(name, kind, destPath)
 	defer in.applyPlatforms(name, kind, destPath, plats, prior)
-	if kind == "skills" && in.Mode != "link" && in.hasExclusions(name) {
+	if kind == lockfile.KindSkills && in.Mode != lockfile.ModeLink && in.hasExclusions(name) {
 		if err := in.placeItems(name, kind, srcDir, destPath, plats); err != nil {
 			return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
 		}
@@ -218,9 +218,9 @@ func (in *Installer) claudeKind(m *harness.Manifest, name, kind, srcDir string, 
 	if err != nil {
 		return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
 	}
-	in.report(name, kind, destPath, n)
-	if kind == "hooks" && !in.DryRun {
-		if in.Mode == "copy" {
+	in.report(name, string(kind), destPath, n)
+	if kind == lockfile.KindHooks && !in.DryRun {
+		if in.Mode == lockfile.ModeCopy {
 			if err := transfer.MakeShellScriptsExecutable(destPath); err != nil {
 				return fmt.Errorf("domain %q: chmod hooks: %w", name, err)
 			}
@@ -254,7 +254,7 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 		}
 	}
 	src := filepath.Join(in.HarnessRoot, "domains", owner, "skills", name)
-	if err := in.preflightRoots(map[string]bool{"skills": true}); err != nil {
+	if err := in.preflightRoots(map[lockfile.Kind]bool{lockfile.KindSkills: true}); err != nil {
 		return err
 	}
 	locs, _ := platform.SkillLocations(in.plats())
@@ -262,25 +262,25 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	for _, loc := range slices.Sorted(maps.Keys(locs)) {
 		var dest string
 		if loc == claudeSkillsLoc {
-			destBase, err := in.resolveTarget(m, "skills")
+			destBase, err := in.resolveTarget(m, lockfile.KindSkills)
 			if err != nil {
 				return fmt.Errorf("skill %q: %w", name, err)
 			}
 			dest = filepath.Join(destBase, name)
-			prior := in.snapshotPlatforms(owner, "skill", dest)
-			n, err := in.place(owner, "skill", name, src, dest)
+			prior := in.snapshotPlatforms(owner, lockfile.KindSkill, dest)
+			n, err := in.place(owner, lockfile.KindSkill, name, src, dest)
 			if err != nil {
 				return fmt.Errorf("skill %q: %w", name, err)
 			}
-			in.applyPlatforms(owner, "skill", dest, locs[loc], prior)
-			in.report(owner, "skill", dest, n)
+			in.applyPlatforms(owner, lockfile.KindSkill, dest, locs[loc], prior)
+			in.report(owner, string(lockfile.KindSkill), dest, n)
 			continue
 		}
 		dest = filepath.Join(in.ProjectRoot, loc, name)
-		if err := in.placeOne(owner, "skill", name, src, dest, locs[loc]); err != nil {
+		if err := in.placeOne(owner, lockfile.KindSkill, name, src, dest, locs[loc]); err != nil {
 			return fmt.Errorf("skill %q: %w", name, err)
 		}
-		in.report(owner, "skill", dest, 1)
+		in.report(owner, string(lockfile.KindSkill), dest, 1)
 	}
 	return nil
 }
@@ -304,7 +304,7 @@ func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
 
 func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) error {
 	for _, kind := range harness.DomainKinds {
-		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
+		srcDir := filepath.Join(in.HarnessRoot, "domains", name, string(kind))
 		if !fsutil.DirExists(srcDir) {
 			continue
 		}
@@ -323,11 +323,11 @@ func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) err
 				continue
 			}
 			dst := filepath.Join(destPath, itemName)
-			if gone := in.uninstallOne(name, kind, itemName, dst); gone && kind == "hooks" {
+			if gone := in.uninstallOne(name, kind, itemName, dst); gone && kind == lockfile.KindHooks {
 				goneHooks = append(goneHooks, itemName)
 			}
 		}
-		if kind == "hooks" {
+		if kind == lockfile.KindHooks {
 			in.unregisterHooks(goneHooks)
 		}
 
@@ -341,7 +341,7 @@ func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) err
 type PartOfDomainError struct {
 	Skill  string
 	Domain string
-	Mode   string
+	Mode   lockfile.Mode
 }
 
 func (e *PartOfDomainError) Error() string {
@@ -364,7 +364,7 @@ func (in *Installer) UninstallSkill(reg *harness.Registry, name string) error {
 		return err
 	}
 	if in.hasClaude() {
-		destBase, err := in.resolveTarget(m, "skills")
+		destBase, err := in.resolveTarget(m, lockfile.KindSkills)
 		if err != nil {
 			return fmt.Errorf("skill %q: %w", name, err)
 		}
@@ -376,13 +376,13 @@ func (in *Installer) UninstallSkill(reg *harness.Registry, name string) error {
 				}
 			}
 		}
-		in.uninstallOne(owner, "skill", name, dst)
+		in.uninstallOne(owner, lockfile.KindSkill, name, dst)
 	}
 	in.uninstallNonClaude(owner, name)
 	return nil
 }
 
-func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
+func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst string) bool {
 	entry, tracked := in.Lock.Covering(dst)
 	if !tracked {
 		if parent, ok := in.Lock.Find(domain, kind, ""); ok {
@@ -414,12 +414,12 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 	}
 	isSymlink := fi.Mode()&os.ModeSymlink != 0
 	switch entry.Mode {
-	case "link":
+	case lockfile.ModeLink:
 		if !isSymlink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", dst)
 			return false
 		}
-	case "copy":
+	case lockfile.ModeCopy:
 		if isSymlink {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — tracked as a copy but is a symlink on disk\n", dst)
 			return false
@@ -433,7 +433,7 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		return true
 	}
 	var removeErr error
-	if entry.Mode == "link" {
+	if entry.Mode == lockfile.ModeLink {
 		removeErr = os.Remove(dst)
 	} else {
 		removeErr = os.RemoveAll(dst)

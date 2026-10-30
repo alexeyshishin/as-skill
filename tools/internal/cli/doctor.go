@@ -57,13 +57,13 @@ func runDoctor(args []string) error {
 		}
 
 		switch e.Mode {
-		case "link":
+		case lockfile.ModeLink:
 			if herr == nil && !fsutil.PathExists(e.Source) {
 				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — source %s no longer exists under harness root %s\n",
 					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
 				entryFailed = true
 			}
-		case "render":
+		case lockfile.ModeRender:
 			if h == health.HealthMissing {
 				break
 			}
@@ -78,7 +78,7 @@ func runDoctor(args []string) error {
 					health.HealthDrifted, e.Domain, e.Kind, e.Name, e.Path)
 				entryFailed = true
 			}
-		case "copy":
+		case lockfile.ModeCopy:
 			if h == health.HealthMissing {
 				break
 			}

@@ -194,7 +194,7 @@ func TestUninstallDomainUnregistersItsHooksFromSettings(t *testing.T) {
 			reg, harnessRoot := hooksHarness(t)
 			projectRoot := t.TempDir()
 			lock := &lockfile.Lockfile{}
-			in := &Installer{HarnessRoot: harnessRoot, ProjectRoot: projectRoot, Mode: mode, Lock: lock}
+			in := &Installer{HarnessRoot: harnessRoot, ProjectRoot: projectRoot, Mode: lockfile.Mode(mode), Lock: lock}
 			if err := in.InstallDomain(reg, "alpha", true); err != nil {
 				t.Fatalf("InstallDomain: %v", err)
 			}

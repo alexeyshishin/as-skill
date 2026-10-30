@@ -36,7 +36,7 @@ func exclusions() map[string]bool {
 
 func hasRow(lock *lockfile.Lockfile, domain, kind string) bool {
 	for _, e := range lock.Entries {
-		if e.Domain == domain && e.Kind == kind {
+		if e.Domain == domain && e.Kind == lockfile.Kind(kind) {
 			return true
 		}
 	}

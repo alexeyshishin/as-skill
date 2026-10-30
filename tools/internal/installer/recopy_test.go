@@ -31,7 +31,7 @@ func assertLockClean(t *testing.T, lock *lockfile.Lockfile) {
 			if prev, dup := covered[p]; dup {
 				t.Fatalf("%s covered twice: %s and %s/%s/%s", p, prev, e.Domain, e.Kind, e.Name)
 			}
-			covered[p] = e.Domain + "/" + e.Kind + "/" + e.Name
+			covered[p] = e.Domain + "/" + string(e.Kind) + "/" + e.Name
 		}
 	}
 }

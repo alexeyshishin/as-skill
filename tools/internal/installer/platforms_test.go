@@ -42,7 +42,7 @@ func platHarness(t *testing.T) (*harness.Registry, string) {
 }
 
 func newInst(root, project, mode string, lock *lockfile.Lockfile, plats ...platform.ID) *Installer {
-	return &Installer{HarnessRoot: root, ProjectRoot: project, Mode: mode, Lock: lock, Platforms: plats}
+	return &Installer{HarnessRoot: root, ProjectRoot: project, Mode: lockfile.Mode(mode), Lock: lock, Platforms: plats}
 }
 
 func exists(p string) bool {
@@ -119,7 +119,7 @@ func TestCodexInstallLinkMode(t *testing.T) {
 	if !ok || e.Mode != lockfile.ModeRender || e.SrcSHA256 == "" || e.SHA256 == "" || len(e.Platforms) != 1 || e.Platforms[0] != "codex" {
 		t.Fatalf("render entry: %+v ok=%v", e, ok)
 	}
-	if blk, ok := lock.FindAt("as-skill", "instructions", "AGENTS.md", filepath.Join(project, "AGENTS.md")); !ok || blk.Mode != ModeBlock || blk.Source != "created" {
+	if blk, ok := lock.FindAt("as-skill", "instructions", "AGENTS.md", filepath.Join(project, "AGENTS.md")); !ok || blk.Mode != lockfile.ModeBlock || blk.Source != "created" {
 		t.Fatalf("block entry: %+v", blk)
 	}
 }

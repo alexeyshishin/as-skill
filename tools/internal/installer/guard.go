@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/transfer"
 )
@@ -100,7 +101,7 @@ func InsideRoots(projectRoot, p string) error {
 // of domain (narrowed to skill when non-empty) or any computed claude target
 // lies outside the platform roots.
 func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill string) error {
-	kinds := map[string]bool{"rules": true, "skills": true, "skill": true, "agents": true, "hooks": true, "prompts": true}
+	kinds := map[lockfile.Kind]bool{lockfile.KindRules: true, lockfile.KindSkills: true, lockfile.KindSkill: true, lockfile.KindAgents: true, lockfile.KindHooks: true, lockfile.KindPrompts: true}
 	var bad []string
 	check := func(p string) {
 		if err := InsideRoots(in.ProjectRoot, p); err != nil {
@@ -108,10 +109,10 @@ func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill str
 		}
 	}
 	for _, e := range in.Lock.Entries {
-		if e.Domain != domain || !kinds[e.Kind] || e.Mode == ModeBlock {
+		if e.Domain != domain || !kinds[e.Kind] || e.Mode == lockfile.ModeBlock {
 			continue
 		}
-		if skill != "" && (e.Name != skill || (e.Kind != "skill" && e.Kind != "skills")) {
+		if skill != "" && (e.Name != skill || (e.Kind != lockfile.KindSkill && e.Kind != lockfile.KindSkills)) {
 			continue
 		}
 		check(e.Path)
@@ -125,7 +126,7 @@ func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill str
 		if m, ok := reg.Domains[domain]; ok {
 			kindList := harness.DomainKinds
 			if skill != "" {
-				kindList = []string{"skills"}
+				kindList = []lockfile.Kind{lockfile.KindSkills}
 			}
 			for _, kind := range kindList {
 				destPath, err := in.resolveTarget(m, kind)
@@ -136,7 +137,7 @@ func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill str
 					check(filepath.Join(destPath, skill))
 					continue
 				}
-				entries, err := os.ReadDir(filepath.Join(in.HarnessRoot, "domains", domain, kind))
+				entries, err := os.ReadDir(filepath.Join(in.HarnessRoot, "domains", domain, string(kind)))
 				if err != nil {
 					continue
 				}

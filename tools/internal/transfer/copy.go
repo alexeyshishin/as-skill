@@ -7,10 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"claude-harness/tools/internal/lockfile"
 )
 
-func SkipTop(kind, name string) bool {
-	return kind == "hooks" && name == "README.md"
+func SkipTop(kind lockfile.Kind, name string) bool {
+	return kind == lockfile.KindHooks && name == "README.md"
 }
 
 func findHarnessRoot(src string) string {
@@ -28,11 +30,11 @@ func findHarnessRoot(src string) string {
 	}
 }
 
-func CopyTree(kind, src, dst string, dryRun bool) (int, error) {
+func CopyTree(kind lockfile.Kind, src, dst string, dryRun bool) (int, error) {
 	return CopyTreeRoot(kind, src, dst, findHarnessRoot(src), dryRun)
 }
 
-func CopyTreeRoot(kind, src, dst, root string, dryRun bool) (int, error) {
+func CopyTreeRoot(kind lockfile.Kind, src, dst, root string, dryRun bool) (int, error) {
 	info, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -56,7 +58,7 @@ func inside(root, p string) bool {
 	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
-func copyDir(kind, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
+func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
 	if !dryRun {
 		if err := os.MkdirAll(dstDir, 0o755); err != nil {
 			return 0, err

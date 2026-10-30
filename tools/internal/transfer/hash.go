@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"claude-harness/tools/internal/lockfile"
 )
 
-func TopNames(src, kind string) ([]string, error) {
+func TopNames(src string, kind lockfile.Kind) ([]string, error) {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return nil, err
