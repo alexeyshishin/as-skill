@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/hookcfg"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -438,8 +439,8 @@ const foreignCodex = `{
 }`
 
 func TestAddRegistrationsCodexKeepsForeignAndOrder(t *testing.T) {
-	regs := []hookReg{{Name: "gate.sh", Event: "Stop"}, {Name: "load.sh", Event: "SessionStart", Matcher: "startup"}}
-	out, res, err := addRegistrations([]byte(foreignCodex), platform.Codex, regs, nil)
+	regs := []hookcfg.HookReg{{Name: "gate.sh", Event: "Stop"}, {Name: "load.sh", Event: "SessionStart", Matcher: "startup"}}
+	out, res, err := hookcfg.AddRegistrations([]byte(foreignCodex), platform.Codex, regs, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,11 +454,11 @@ func TestAddRegistrationsCodexKeepsForeignAndOrder(t *testing.T) {
 	if !strings.Contains(s, "/usr/bin/foreign") || !strings.Contains(s, `"A&B": "<x>"`) || !strings.Contains(s, "SessionStart") {
 		t.Fatalf("content lost:\n%s", s)
 	}
-	out2, res2, err := addRegistrations(out, platform.Codex, regs, nil)
+	out2, res2, err := hookcfg.AddRegistrations(out, platform.Codex, regs, nil)
 	if err != nil || !bytes.Equal(out, out2) || res2[0].Added {
 		t.Fatalf("not idempotent: %v", err)
 	}
-	back, removed, err := removeRegistrations(out, "/p", map[string]bool{"gate.sh": true, "load.sh": true}, platform.Codex)
+	back, removed, err := hookcfg.RemoveRegistrations(out, "/p", map[string]bool{"gate.sh": true, "load.sh": true}, platform.Codex)
 	if err != nil || len(removed) != 2 {
 		t.Fatalf("remove: %v %+v", err, removed)
 	}
@@ -468,8 +469,8 @@ func TestAddRegistrationsCodexKeepsForeignAndOrder(t *testing.T) {
 
 func TestAddRegistrationsCursorShape(t *testing.T) {
 	in := `{"hooks": {"stop": [{"command": "./mine.sh"}]}, "extra": true}`
-	regs := []hookReg{{Name: "fmt.sh", Event: "PostToolUse", Matcher: "Edit"}, {Name: "gate.sh", Event: "Stop"}}
-	out, _, err := addRegistrations([]byte(in), platform.Cursor, regs, nil)
+	regs := []hookcfg.HookReg{{Name: "fmt.sh", Event: "PostToolUse", Matcher: "Edit"}, {Name: "gate.sh", Event: "Stop"}}
+	out, _, err := hookcfg.AddRegistrations([]byte(in), platform.Cursor, regs, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -480,7 +481,7 @@ func TestAddRegistrationsCursorShape(t *testing.T) {
 	if strings.Count(s, "./.cursor/hooks/fmt.sh") != 2 || !strings.Contains(s, "./mine.sh") || !strings.Contains(s, "./.cursor/hooks/gate.sh") {
 		t.Fatalf("entries:\n%s", s)
 	}
-	back, removed, err := removeRegistrations(out, "/p", map[string]bool{"fmt.sh": true, "gate.sh": true}, platform.Cursor)
+	back, removed, err := hookcfg.RemoveRegistrations(out, "/p", map[string]bool{"fmt.sh": true, "gate.sh": true}, platform.Cursor)
 	if err != nil || len(removed) != 3 {
 		t.Fatalf("remove: %v %+v", err, removed)
 	}
@@ -684,11 +685,11 @@ func TestEnableHooksCodexCursorPublicAndPlatformsHeader(t *testing.T) {
 	}
 
 	dir := filepath.Join(root, "domains", "alpha", "hooks")
-	claudeRegs, err := hookFiles(dir, []string{"all"}, platform.Claude)
+	claudeRegs, err := hookcfg.HookFiles(dir, []string{"all"}, platform.Claude)
 	if err != nil {
 		t.Fatal(err)
 	}
-	codexRegs, err := hookFiles(dir, []string{"all"}, platform.Codex)
+	codexRegs, err := hookcfg.HookFiles(dir, []string{"all"}, platform.Codex)
 	if err != nil {
 		t.Fatal(err)
 	}

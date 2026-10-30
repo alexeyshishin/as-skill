@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/hookcfg"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -21,7 +22,7 @@ type HookInfo struct {
 
 type srcHook struct {
 	HookInfo
-	reg hookReg
+	reg hookcfg.HookReg
 }
 
 // sourceHooks lists hooks with a `# register:` header in the domains' source
@@ -50,15 +51,15 @@ func (in *Installer) sourceHooks(reg *harness.Registry, domains []string) ([]src
 		sort.Strings(names)
 		for _, n := range names {
 			path := filepath.Join(dir, n)
-			ev, m, ok := readRegisterHeader(path)
+			ev, m, ok := hookcfg.ReadRegisterHeader(path)
 			if !ok || seen[n] {
 				continue
 			}
 			seen[n] = true
-			h := srcHook{reg: hookReg{Name: n, Event: ev, Matcher: m}}
+			h := srcHook{reg: hookcfg.HookReg{Name: n, Event: ev, Matcher: m}}
 			h.Name, h.Event = n, ev
 			for _, id := range platform.IDs() {
-				if spec, _ := platform.Get(id); spec.Hooks.Schema != platform.HooksNone && hookTargets(path, id) {
+				if spec, _ := platform.Get(id); spec.Hooks.Schema != platform.HooksNone && hookcfg.HookTargets(path, id) {
 					h.Platforms = append(h.Platforms, id)
 				}
 			}
@@ -122,7 +123,7 @@ func (in *Installer) RegisterHooks(reg *harness.Registry, domains []string, p pl
 	if err != nil {
 		return err
 	}
-	var regs []hookReg
+	var regs []hookcfg.HookReg
 	for _, h := range hs {
 		for _, n := range names {
 			if n != h.Name {

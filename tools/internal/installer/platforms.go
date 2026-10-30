@@ -16,6 +16,7 @@ import (
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
+	"claude-harness/tools/internal/hookcfg"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/render"
@@ -393,7 +394,7 @@ func hookWanted(kind lockfile.Kind, path string, plats []platform.ID) bool {
 		return true
 	}
 	for _, id := range plats {
-		if hookTargets(path, id) {
+		if hookcfg.HookTargets(path, id) {
 			return true
 		}
 	}

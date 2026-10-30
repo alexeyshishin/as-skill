@@ -96,16 +96,16 @@ func rawSlices(a []json.RawMessage) [][]byte {
 	return out
 }
 
-type unregistered struct {
+type Unregistered struct {
 	Event string
 	Hook  string
 }
 
-func removeHookRegistrations(data []byte, projectRoot string, names map[string]bool) ([]byte, []unregistered, error) {
-	return removeRegistrations(data, projectRoot, names, platform.Claude)
+func removeHookRegistrations(data []byte, projectRoot string, names map[string]bool) ([]byte, []Unregistered, error) {
+	return RemoveRegistrations(data, projectRoot, names, platform.Claude)
 }
 
-func removeRegistrations(data []byte, projectRoot string, names map[string]bool, p platform.ID) ([]byte, []unregistered, error) {
+func RemoveRegistrations(data []byte, projectRoot string, names map[string]bool, p platform.ID) ([]byte, []Unregistered, error) {
 	dirRel, flat := hookDirRel(p), p == platform.Cursor
 	if !json.Valid(data) {
 		return nil, nil, errors.New("not valid JSON")
@@ -123,7 +123,7 @@ func removeRegistrations(data []byte, projectRoot string, names map[string]bool,
 		return data, nil, nil
 	}
 
-	var removed []unregistered
+	var removed []Unregistered
 	keptEvents := make(object, 0, len(events))
 	for _, ev := range events {
 		val, drop, r := filterEvent(ev.key, ev.val, projectRoot, names, dirRel, flat)
@@ -150,17 +150,17 @@ func removeRegistrations(data []byte, projectRoot string, names map[string]bool,
 	return out.Bytes(), removed, nil
 }
 
-func filterEvent(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string, flat bool) (json.RawMessage, bool, []unregistered) {
+func filterEvent(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string, flat bool) (json.RawMessage, bool, []Unregistered) {
 	entries, err := parseArray(raw)
 	if err != nil {
 		return raw, false, nil
 	}
-	var removed []unregistered
+	var removed []Unregistered
 	var kept []json.RawMessage
 	for _, entry := range entries {
 		var val json.RawMessage
 		var drop bool
-		var r []unregistered
+		var r []Unregistered
 		if flat {
 			val, drop, r = filterFlatEntry(event, entry, projectRoot, names, dirRel)
 		} else {
@@ -180,7 +180,7 @@ func filterEvent(event string, raw json.RawMessage, projectRoot string, names ma
 	return marshalArray(kept), false, removed
 }
 
-func filterEntry(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string) (json.RawMessage, bool, []unregistered) {
+func filterEntry(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string) (json.RawMessage, bool, []Unregistered) {
 	obj, err := parseObject(raw)
 	if err != nil {
 		return raw, false, nil
@@ -193,11 +193,11 @@ func filterEntry(event string, raw json.RawMessage, projectRoot string, names ma
 	if err != nil {
 		return raw, false, nil
 	}
-	var removed []unregistered
+	var removed []Unregistered
 	var kept []json.RawMessage
 	for _, h := range handlers {
 		if name, ok := ownedHookIn(h, projectRoot, names, dirRel); ok {
-			removed = append(removed, unregistered{Event: event, Hook: name})
+			removed = append(removed, Unregistered{Event: event, Hook: name})
 			continue
 		}
 		kept = append(kept, h)
@@ -212,9 +212,9 @@ func filterEntry(event string, raw json.RawMessage, projectRoot string, names ma
 	return obj.marshal(), false, removed
 }
 
-func filterFlatEntry(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string) (json.RawMessage, bool, []unregistered) {
+func filterFlatEntry(event string, raw json.RawMessage, projectRoot string, names map[string]bool, dirRel string) (json.RawMessage, bool, []Unregistered) {
 	if name, ok := ownedHookIn(raw, projectRoot, names, dirRel); ok {
-		return nil, true, []unregistered{{Event: event, Hook: name}}
+		return nil, true, []Unregistered{{Event: event, Hook: name}}
 	}
 	return raw, false, nil
 }
@@ -258,55 +258,11 @@ func ownedHookIn(handler json.RawMessage, projectRoot string, names map[string]b
 	return "", false
 }
 
-func (in *Installer) unregisterHooks(hookNames []string) {
-	in.unregisterHooksFor(platform.Claude, hookNames)
-}
-
-func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
-	spec, ok := platform.Get(p)
-	if !ok || len(hookNames) == 0 || spec.Hooks.ConfigFile == "" {
-		return
-	}
-	path := filepath.Join(in.ProjectRoot, spec.Hooks.ConfigFile)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — %v\n", path, err)
-		}
-		return
-	}
-	names := make(map[string]bool, len(hookNames))
-	for _, n := range hookNames {
-		names[n] = true
-	}
-	out, removed, err := removeRegistrations(data, in.ProjectRoot, names, p)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — %v, hook entries left in place\n", path, err)
-		return
-	}
-	if len(removed) == 0 {
-		return
-	}
-	verb := "unregistered  "
-	if in.DryRun {
-		verb = "would unregister"
-	}
-	for _, r := range removed {
-		fmt.Printf("%s %s (%s) in %s\n", verb, r.Hook, r.Event, path)
-	}
-	if in.DryRun {
-		return
-	}
-	if err := writeFileAtomic(path, out); err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: failed updating %s: %v\n", path, err)
-	}
-}
-
-type hookReg struct {
+type HookReg struct {
 	Name, Event, Matcher string
 }
 
-func hookTargets(path string, p platform.ID) bool {
+func HookTargets(path string, p platform.ID) bool {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return true
@@ -326,7 +282,7 @@ func hookTargets(path string, p platform.ID) bool {
 	return true
 }
 
-func readRegisterHeader(path string) (event, matcher string, ok bool) {
+func ReadRegisterHeader(path string) (event, matcher string, ok bool) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", "", false
@@ -390,12 +346,12 @@ func isRegistered(arr []json.RawMessage, dirRel, name string) bool {
 	return false
 }
 
-type regResult struct {
-	hookReg
+type RegResult struct {
+	HookReg
 	Added bool
 }
 
-func addRegistrations(data []byte, p platform.ID, regs []hookReg, also []byte) ([]byte, []regResult, error) {
+func AddRegistrations(data []byte, p platform.ID, regs []HookReg, also []byte) ([]byte, []RegResult, error) {
 	spec, ok := platform.Get(p)
 	if !ok || spec.Hooks.Schema == platform.HooksNone {
 		return nil, nil, fmt.Errorf("hooks unsupported on %s", p)
@@ -423,7 +379,7 @@ func addRegistrations(data []byte, p platform.ID, regs []hookReg, also []byte) (
 	if len(also) > 0 && json.Valid(also) {
 		alsoTop, _ = parseObject(also)
 	}
-	var results []regResult
+	var results []RegResult
 	changed := false
 	for _, r := range regs {
 		mapped := []string{r.Event}
@@ -478,7 +434,7 @@ func addRegistrations(data []byte, p platform.ID, regs []hookReg, also []byte) (
 			}
 			added, changed = true, true
 		}
-		results = append(results, regResult{hookReg: r, Added: added})
+		results = append(results, RegResult{HookReg: r, Added: added})
 	}
 	if !changed {
 		return data, results, nil
@@ -499,7 +455,7 @@ func addRegistrations(data []byte, p platform.ID, regs []hookReg, also []byte) (
 	return out.Bytes(), results, nil
 }
 
-func hookFiles(dir string, names []string, p platform.ID) ([]hookReg, error) {
+func HookFiles(dir string, names []string, p platform.ID) ([]HookReg, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("reading %s: %w", dir, err)
@@ -515,7 +471,7 @@ func hookFiles(dir string, names []string, p platform.ID) ([]hookReg, error) {
 		}
 		want[n] = true
 	}
-	var regs []hookReg
+	var regs []HookReg
 	found := map[string]bool{}
 	for _, e := range entries {
 		n := e.Name()
@@ -523,14 +479,14 @@ func hookFiles(dir string, names []string, p platform.ID) ([]hookReg, error) {
 			continue
 		}
 		found[n] = true
-		if !hookTargets(filepath.Join(dir, n), p) {
+		if !HookTargets(filepath.Join(dir, n), p) {
 			continue
 		}
-		ev, m, ok := readRegisterHeader(filepath.Join(dir, n))
+		ev, m, ok := ReadRegisterHeader(filepath.Join(dir, n))
 		if !ok {
 			continue
 		}
-		regs = append(regs, hookReg{Name: n, Event: ev, Matcher: m})
+		regs = append(regs, HookReg{Name: n, Event: ev, Matcher: m})
 	}
 	for n := range want {
 		if !found[n] {
@@ -540,124 +496,7 @@ func hookFiles(dir string, names []string, p platform.ID) ([]hookReg, error) {
 	return regs, nil
 }
 
-func (in *Installer) EnableHooks(p platform.ID, names []string) error {
-	spec, ok := platform.Get(p)
-	if !ok {
-		return fmt.Errorf("unknown platform %q", p)
-	}
-	switch spec.Hooks.Schema {
-	case platform.HooksNone:
-		fmt.Printf("hooks unsupported on %s\n", p)
-		return nil
-	}
-	if err := in.enableHooks(p, names); err != nil {
-		return err
-	}
-	switch p {
-	case platform.Codex:
-		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
-	case platform.Cursor:
-		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).")
-	}
-	return nil
-}
-
-func (in *Installer) enableHooks(p platform.ID, names []string) error {
-	spec, _ := platform.Get(p)
-	if err := in.refuseGlobalSettings(p); err != nil {
-		return err
-	}
-	regs, err := hookFiles(filepath.Join(in.ProjectRoot, spec.Hooks.Dir), names, p)
-	if err != nil {
-		return err
-	}
-	return in.applyRegs(p, regs)
-}
-
-func (in *Installer) refuseGlobalSettings(p platform.ID) error {
-	if p == platform.Claude {
-		if home, err := os.UserHomeDir(); err == nil && filepath.Clean(home) == filepath.Clean(in.ProjectRoot) {
-			return fmt.Errorf("refusing: %s/.claude/settings.json is the global settings file", in.ProjectRoot)
-		}
-	}
-	return nil
-}
-
-// applyRegs merges regs into the platform's hook config file (read-only in DryRun).
-func (in *Installer) applyRegs(p platform.ID, regs []hookReg) error {
-	spec, _ := platform.Get(p)
-	path := filepath.Join(in.ProjectRoot, spec.Hooks.ConfigFile)
-	data, err := os.ReadFile(path)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	var also []byte
-	if p == platform.Claude {
-		also, _ = os.ReadFile(filepath.Join(in.ProjectRoot, platform.ClaudeHome, "settings.local.json"))
-	}
-	out, results, err := addRegistrations(data, p, regs, also)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s: %v — left untouched\n", path, err)
-		return fmt.Errorf("%s: %w", path, err)
-	}
-	any := false
-	for _, r := range results {
-		verb := "present"
-		if r.Added {
-			any = true
-			verb = "registered"
-			if in.DryRun {
-				verb = "would register"
-			}
-		}
-		fmt.Printf("%-15s %s (%s) in %s\n", verb, r.Name, r.Event, path)
-	}
-	if !any || in.DryRun {
-		return nil
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	if _, serr := os.Stat(path); serr != nil {
-		return os.WriteFile(path, out, 0o644)
-	}
-	return writeFileAtomic(path, out)
-}
-
-func (in *Installer) DisableHooks(p platform.ID, names []string) error {
-	spec, ok := platform.Get(p)
-	if !ok {
-		return fmt.Errorf("unknown platform %q", p)
-	}
-	if spec.Hooks.Schema == platform.HooksNone {
-		fmt.Printf("hooks unsupported on %s\n", p)
-		return nil
-	}
-	var list []string
-	for _, n := range names {
-		if n == "all" {
-			list = nil
-			entries, err := os.ReadDir(filepath.Join(in.ProjectRoot, spec.Hooks.Dir))
-			if err != nil {
-				return fmt.Errorf("reading hooks dir: %w", err)
-			}
-			for _, e := range entries {
-				if strings.HasSuffix(e.Name(), ".sh") {
-					list = append(list, e.Name())
-				}
-			}
-			break
-		}
-		if !strings.HasSuffix(n, ".sh") {
-			n += ".sh"
-		}
-		list = append(list, n)
-	}
-	in.unregisterHooksFor(p, list)
-	return nil
-}
-
-func writeFileAtomic(path string, data []byte) error {
+func WriteFileAtomic(path string, data []byte) error {
 	target, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return err
