@@ -3,7 +3,6 @@ package install
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -44,20 +43,6 @@ type removeState struct {
 	cli     bool
 	refused []string
 	legacy  []string
-}
-
-func (in *Installer) stdout() io.Writer {
-	if in.Out != nil {
-		return in.Out
-	}
-	return os.Stdout
-}
-
-func (in *Installer) stderr() io.Writer {
-	if in.Err != nil {
-		return in.Err
-	}
-	return os.Stderr
 }
 
 func SkillLocPaths(projectRoot, name string) []string {
@@ -377,43 +362,43 @@ func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst s
 		if _, err := os.Lstat(dst); os.IsNotExist(err) {
 			return false
 		}
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — not tracked by as-skill\n", dst)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — not tracked by as-skill\n", dst)
 		return false
 	}
 	fi, err := os.Lstat(dst)
 	if err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked but nothing on disk\n", dst)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked but nothing on disk\n", dst)
 		return os.IsNotExist(err)
 	}
 	if remaining := minusPlats(entry.Platforms, in.plats()); len(entry.Platforms) > 0 && len(remaining) == len(entry.Platforms) {
 		return false
 	} else if len(remaining) > 0 {
 		if in.DryRun {
-			fmt.Fprintf(in.stdout(), "would keep     %s — still used by %s\n", dst, strings.Join(remaining, ","))
+			fmt.Fprintf(in.Stdout(), "would keep     %s — still used by %s\n", dst, strings.Join(remaining, ","))
 			return false
 		}
 		in.setEntryPlatforms(entry, remaining)
-		fmt.Fprintf(in.stdout(), "kept           %s — still used by %s\n", dst, strings.Join(remaining, ","))
+		fmt.Fprintf(in.Stdout(), "kept           %s — still used by %s\n", dst, strings.Join(remaining, ","))
 		return false
 	}
 	isSymlink := fi.Mode()&os.ModeSymlink != 0
 	switch entry.Mode {
 	case lockfile.ModeLink:
 		if !isSymlink {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", dst)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", dst)
 			return false
 		}
 	case lockfile.ModeCopy:
 		if isSymlink {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked as a copy but is a symlink on disk\n", dst)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as a copy but is a symlink on disk\n", dst)
 			return false
 		}
 	default:
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", dst, entry.Mode)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", dst, entry.Mode)
 		return false
 	}
 	if in.DryRun {
-		fmt.Fprintf(in.stdout(), "would remove   %s\n", dst)
+		fmt.Fprintf(in.Stdout(), "would remove   %s\n", dst)
 		return true
 	}
 	var removeErr error
@@ -423,11 +408,11 @@ func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst s
 		removeErr = os.RemoveAll(dst)
 	}
 	if removeErr != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
 		return false
 	}
 	in.Lock.RemoveAllAt(dst)
-	fmt.Fprintf(in.stdout(), "uninstalled    %s\n", dst)
+	fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", dst)
 	return true
 }
 
@@ -452,11 +437,11 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 		}
 		if len(remaining) > 0 {
 			if in.DryRun {
-				fmt.Fprintf(in.stdout(), "would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+				fmt.Fprintf(in.Stdout(), "would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 				continue
 			}
 			in.setEntryPlatforms(e, remaining)
-			fmt.Fprintf(in.stdout(), "kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+			fmt.Fprintf(in.Stdout(), "kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 			continue
 		}
 		if e.Name != "" && in.removeEntry(e) && e.Kind == lockfile.KindHooks {
@@ -473,38 +458,38 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 		}
 	}
 	if err := in.syncAgentsMD(); err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: updating %s: %v\n", agentsMD, err)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: updating %s: %v\n", agentsMD, err)
 	}
 }
 
 func (in *Installer) removeEntry(e lockfile.Entry) bool {
 	fi, err := os.Lstat(e.Path)
 	if err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked but nothing on disk\n", e.Path)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked but nothing on disk\n", e.Path)
 		return false
 	}
 	isLink := fi.Mode()&os.ModeSymlink != 0
 	switch e.Mode {
 	case lockfile.ModeLink:
 		if !isLink {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", e.Path)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", e.Path)
 			return false
 		}
 	case lockfile.ModeCopy, lockfile.ModeRender:
 		if isLink {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked as %s but is a symlink on disk\n", e.Path, e.Mode)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as %s but is a symlink on disk\n", e.Path, e.Mode)
 			return false
 		}
 	default:
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", e.Path, e.Mode)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — unrecognized tracked mode %q\n", e.Path, e.Mode)
 		return false
 	}
 	if err := InsideRoots(in.ProjectRoot, e.Path); err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: error: refusing %v\n", err)
+		fmt.Fprintf(in.Stderr(), "as-skill: error: refusing %v\n", err)
 		return false
 	}
 	if in.DryRun {
-		fmt.Fprintf(in.stdout(), "would remove   %s\n", e.Path)
+		fmt.Fprintf(in.Stdout(), "would remove   %s\n", e.Path)
 		return true
 	}
 	var rerr error
@@ -514,11 +499,11 @@ func (in *Installer) removeEntry(e lockfile.Entry) bool {
 		rerr = os.Remove(e.Path)
 	}
 	if rerr != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: failed removing %s: %v\n", e.Path, rerr)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: failed removing %s: %v\n", e.Path, rerr)
 		return false
 	}
 	in.Lock.RemoveAt(e.Domain, e.Kind, e.Name, e.Path)
-	fmt.Fprintf(in.stdout(), "uninstalled    %s\n", e.Path)
+	fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", e.Path)
 	return true
 }
 
@@ -546,7 +531,7 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 		return
 	}
 	if e.Mode == lockfile.ModeBlock {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — managed block needs the harness checkout\n", e.Path)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — managed block needs the harness checkout\n", e.Path)
 		return
 	}
 	var remaining []string
@@ -557,24 +542,24 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 	}
 	if len(remaining) > 0 {
 		if in.DryRun {
-			fmt.Fprintf(in.stdout(), "would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+			fmt.Fprintf(in.Stdout(), "would keep     %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 			return
 		}
 		e.Platforms = remaining
 		in.Lock.Record(e)
-		fmt.Fprintf(in.stdout(), "kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
+		fmt.Fprintf(in.Stdout(), "kept           %s — still used by %s\n", e.Path, strings.Join(remaining, ","))
 		return
 	}
 	paths, ok := in.rowPaths(e)
 	if !ok {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — legacy copy row has no item list and its source is gone\n", e.Path)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — legacy copy row has no item list and its source is gone\n", e.Path)
 		st.legacy = append(st.legacy, e.Path)
 		return
 	}
 	clean := true
 	for _, p := range paths {
 		if ierr := InsideRoots(in.ProjectRoot, p); ierr != nil {
-			fmt.Fprintf(in.stderr(), "as-skill: error: refusing %v\n", ierr)
+			fmt.Fprintf(in.Stderr(), "as-skill: error: refusing %v\n", ierr)
 			st.refused = append(st.refused, p)
 			clean = false
 			continue
@@ -585,12 +570,12 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 		}
 		isLink := fi.Mode()&os.ModeSymlink != 0
 		if e.Mode == lockfile.ModeLink && !isLink {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", p)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as a link but not a symlink on disk\n", p)
 			clean = false
 			continue
 		}
 		if in.DryRun {
-			fmt.Fprintf(in.stdout(), "would remove   %s\n", p)
+			fmt.Fprintf(in.Stdout(), "would remove   %s\n", p)
 			continue
 		}
 		var rerr error
@@ -600,11 +585,11 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 			rerr = os.RemoveAll(p)
 		}
 		if rerr != nil {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: failed removing %s: %v\n", p, rerr)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: failed removing %s: %v\n", p, rerr)
 			clean = false
 			continue
 		}
-		fmt.Fprintf(in.stdout(), "uninstalled    %s\n", p)
+		fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", p)
 	}
 	if clean && !in.DryRun {
 		if e.Name == "" {

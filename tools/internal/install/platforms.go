@@ -508,7 +508,7 @@ func (in *Installer) syncAgentsMD() error {
 			return nil
 		}
 		if in.DryRun {
-			fmt.Printf("would update   %s\n", path)
+			fmt.Fprintf(in.Stdout(), "would update   %s\n", path)
 			return nil
 		}
 		if exists {
@@ -527,7 +527,7 @@ func (in *Installer) syncAgentsMD() error {
 		return nil
 	}
 	if in.DryRun {
-		fmt.Printf("would update   %s\n", path)
+		fmt.Fprintf(in.Stdout(), "would update   %s\n", path)
 		return nil
 	}
 	out := render.UpsertBlock(existing, render.AgentsBlockBody(files))

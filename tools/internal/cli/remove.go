@@ -152,7 +152,7 @@ func runRemove(args []string, d Deps) error {
 	in := &install.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Lock: lock, Platforms: plats,
-		Out: ios.Stdout(), Err: ios.Stderr(),
+		Reporter: install.Reporter{IO: ios},
 	}
 	plan, err := in.RemovePlan(reg, targets)
 	if err != nil {

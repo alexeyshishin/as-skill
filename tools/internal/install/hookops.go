@@ -23,7 +23,7 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — %v\n", path, err)
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — %v\n", path, err)
 		}
 		return
 	}
@@ -33,7 +33,7 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 	}
 	out, removed, err := hookcfg.RemoveRegistrations(data, in.ProjectRoot, names, p)
 	if err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: skipping %s — %v, hook entries left in place\n", path, err)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — %v, hook entries left in place\n", path, err)
 		return
 	}
 	if len(removed) == 0 {
@@ -44,13 +44,13 @@ func (in *Installer) unregisterHooksFor(p platform.ID, hookNames []string) {
 		verb = "would unregister"
 	}
 	for _, r := range removed {
-		fmt.Fprintf(in.stdout(), "%s %s (%s) in %s\n", verb, r.Hook, r.Event, path)
+		fmt.Fprintf(in.Stdout(), "%s %s (%s) in %s\n", verb, r.Hook, r.Event, path)
 	}
 	if in.DryRun {
 		return
 	}
 	if err := hookcfg.WriteFileAtomic(path, out); err != nil {
-		fmt.Fprintf(in.stderr(), "as-skill: warning: failed updating %s: %v\n", path, err)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: failed updating %s: %v\n", path, err)
 	}
 }
 
@@ -61,7 +61,7 @@ func (in *Installer) EnableHooks(p platform.ID, names []string) error {
 	}
 	switch spec.Hooks.Schema {
 	case platform.HooksNone:
-		fmt.Printf("hooks unsupported on %s\n", p)
+		fmt.Fprintf(in.Stdout(), "hooks unsupported on %s\n", p)
 		return nil
 	}
 	if err := in.enableHooks(p, names); err != nil {
@@ -69,9 +69,9 @@ func (in *Installer) EnableHooks(p platform.ID, names []string) error {
 	}
 	switch p {
 	case platform.Codex:
-		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
+		fmt.Fprintln(in.Stdout(), "UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
 	case platform.Cursor:
-		fmt.Println("UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).")
+		fmt.Fprintln(in.Stdout(), "UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).")
 	}
 	return nil
 }
@@ -110,7 +110,7 @@ func (in *Installer) applyRegs(p platform.ID, regs []hookcfg.HookReg) error {
 	}
 	out, results, err := hookcfg.AddRegistrations(data, p, regs, also)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s: %v — left untouched\n", path, err)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: %s: %v — left untouched\n", path, err)
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	any := false
@@ -123,7 +123,7 @@ func (in *Installer) applyRegs(p platform.ID, regs []hookcfg.HookReg) error {
 				verb = "would register"
 			}
 		}
-		fmt.Printf("%-15s %s (%s) in %s\n", verb, r.Name, r.Event, path)
+		fmt.Fprintf(in.Stdout(), "%-15s %s (%s) in %s\n", verb, r.Name, r.Event, path)
 	}
 	if !any || in.DryRun {
 		return nil
@@ -143,7 +143,7 @@ func (in *Installer) DisableHooks(p platform.ID, names []string) error {
 		return fmt.Errorf("unknown platform %q", p)
 	}
 	if spec.Hooks.Schema == platform.HooksNone {
-		fmt.Printf("hooks unsupported on %s\n", p)
+		fmt.Fprintf(in.Stdout(), "hooks unsupported on %s\n", p)
 		return nil
 	}
 	var list []string

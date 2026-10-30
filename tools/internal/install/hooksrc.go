@@ -103,7 +103,7 @@ func (in *Installer) RegisterHooks(reg *harness.Registry, domains []string, p pl
 		return fmt.Errorf("unknown platform %q", p)
 	}
 	if spec.Hooks.Schema == platform.HooksNone {
-		fmt.Printf("hooks unsupported on %s\n", p)
+		fmt.Fprintf(in.Stdout(), "hooks unsupported on %s\n", p)
 		return nil
 	}
 	if err := in.refuseGlobalSettings(p); err != nil {

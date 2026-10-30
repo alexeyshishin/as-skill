@@ -2,7 +2,6 @@ package install
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,8 +21,7 @@ type Installer struct {
 	Mode        lockfile.Mode
 	Lock        *lockfile.Lockfile
 	Platforms   []platform.ID
-	Out         io.Writer
-	Err         io.Writer
+	Reporter
 
 	ExcludeSkills map[string]bool
 	Overwrite     map[string]bool
@@ -168,7 +166,7 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 }
 
 func (in *Installer) report(scope, kind, dest string, n int) {
-	fmt.Println(in.reportText(scope, kind, dest, n))
+	fmt.Fprintln(in.Stdout(), in.reportText(scope, kind, dest, n))
 }
 
 func (in *Installer) reportText(scope, kind, dest string, n int) string {
@@ -181,10 +179,4 @@ func (in *Installer) reportText(scope, kind, dest string, n int) string {
 		plural = ""
 	}
 	return fmt.Sprintf("%-13s %-8s %-7s -> %s (%d file%s)", verb, scope, kind, dest, n, plural)
-}
-
-func warnHooksNotExecutable(srcDir string) {
-	for _, t := range hookExecWarnings(srcDir) {
-		fmt.Fprintln(os.Stderr, t)
-	}
 }

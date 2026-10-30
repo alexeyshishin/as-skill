@@ -3,7 +3,6 @@ package install
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -40,7 +39,7 @@ func (in *Installer) tracked(p string) (string, bool) {
 func (in *Installer) linkOne(src, dst string) error {
 	prior, err := fsys.LinkOne(src, dst, in.DryRun, in.Force || in.overwrites(dst), in.tracked)
 	if prior.Tracked && lockfile.Mode(prior.Mode) != lockfile.ModeLink {
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, prior.Mode)
+		fmt.Fprintf(in.Stderr(), "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, prior.Mode)
 	}
 	var fe *fsys.ForeignError
 	if errors.As(err, &fe) {

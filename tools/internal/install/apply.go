@@ -52,9 +52,9 @@ func (in *Installer) emitWarnings(p *Plan, before int) {
 			continue
 		}
 		if w.Stream == Stdout {
-			fmt.Println(w.Text)
+			fmt.Fprintln(in.Stdout(), w.Text)
 		} else {
-			fmt.Fprintln(os.Stderr, w.Text)
+			fmt.Fprintln(in.Stderr(), w.Text)
 		}
 	}
 }
