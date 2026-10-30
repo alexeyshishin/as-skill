@@ -690,16 +690,12 @@ func (in *Installer) placeRules(domain, srcDir string, p platform.Platform) erro
 				return err
 			}
 			rel := platform.AgentsRulesDir + "/" + e.Name()
-			body := string(data)
 			if in.Mode == lockfile.ModeLink {
 				if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, rel), []platform.ID{p.ID}); err != nil {
 					return err
 				}
-				body = "Follow the rule in `" + rel + "`.\n"
-			} else if !strings.HasSuffix(body, "\n") {
-				body += "\n"
 			}
-			out := []byte("---\ndescription: " + stem + " rule\nalwaysApply: true\n---\n" + body)
+			out := render.MDCStub(stem, rel, string(data), in.Mode)
 			dst := filepath.Join(in.ProjectRoot, p.Rules.Dir, stem+".mdc")
 			if err := in.writeRendered(domain, lockfile.KindRules, e.Name(), src, dst, data, out, p.ID); err != nil {
 				return err
@@ -788,16 +784,11 @@ func (in *Installer) syncAgentsMD() error {
 		in.Lock.RemoveAt("as-skill", lockfile.KindInstructions, agentsMD, path)
 		return nil
 	}
-	var b strings.Builder
-	b.WriteString("Always follow these rules:\n")
-	for _, f := range files {
-		b.WriteString("- `" + f + "`\n")
-	}
 	if in.DryRun {
 		fmt.Printf("would update   %s\n", path)
 		return nil
 	}
-	out := render.UpsertBlock(existing, b.String())
+	out := render.UpsertBlock(existing, render.AgentsBlockBody(files))
 	if !exists || !bytes.Equal(out, existing) {
 		if err := os.WriteFile(path, out, 0o644); err != nil {
 			return err

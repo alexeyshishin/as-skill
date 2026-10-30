@@ -1,6 +1,9 @@
 package render
 
-import "bytes"
+import (
+	"bytes"
+	"strings"
+)
 
 const (
 	BlockBegin = "<!-- as-skill:rules:begin -->"
@@ -62,4 +65,13 @@ func trimAdded(pre []byte) []byte {
 		return pre[:len(pre)-1]
 	}
 	return pre
+}
+
+func AgentsBlockBody(files []string) string {
+	var b strings.Builder
+	b.WriteString("Always follow these rules:\n")
+	for _, f := range files {
+		b.WriteString("- `" + f + "`\n")
+	}
+	return b.String()
 }
