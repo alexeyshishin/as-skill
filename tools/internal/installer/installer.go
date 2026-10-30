@@ -223,13 +223,7 @@ func (in *Installer) claudeKind(m *harness.Manifest, name string, kind lockfile.
 }
 
 func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
-	owner := ""
-	for _, dname := range reg.DomainNames() {
-		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {
-			owner = dname
-			break
-		}
-	}
+	owner := reg.SkillOwner(in.HarnessRoot, name)
 	if owner == "" {
 		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
 	}
@@ -336,13 +330,7 @@ func (e *PartOfDomainError) Error() string {
 }
 
 func (in *Installer) UninstallSkill(reg *harness.Registry, name string) error {
-	owner := ""
-	for _, dname := range reg.DomainNames() {
-		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {
-			owner = dname
-			break
-		}
-	}
+	owner := reg.SkillOwner(in.HarnessRoot, name)
 	if owner == "" {
 		return fmt.Errorf("unknown skill %q (see `as-skill list skills`)", name)
 	}

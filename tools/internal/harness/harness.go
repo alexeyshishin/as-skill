@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/frontmatter"
+	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/lockfile"
 )
 
@@ -294,4 +295,14 @@ func ExecutableHarnessRoot() (string, bool) {
 		return "", false
 	}
 	return walkUpHarness(filepath.Dir(real))
+}
+
+// SkillOwner returns the first domain (in registry order) that ships the skill, or "".
+func (r *Registry) SkillOwner(harnessRoot, name string) string {
+	for _, d := range r.DomainNames() {
+		if fsutil.DirExists(filepath.Join(harnessRoot, "domains", d, "skills", name)) {
+			return d
+		}
+	}
+	return ""
 }

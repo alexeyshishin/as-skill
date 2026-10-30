@@ -1,6 +1,10 @@
 package harness
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestGateWith(t *testing.T) {
 	m := &Manifest{RequiresEnv: []string{"A", "B"}, RequiresBin: []string{"x", "y"}}
@@ -58,5 +62,20 @@ func TestGateDefaults(t *testing.T) {
 	t.Setenv("AS_SKILL_GATE_TEST", "1")
 	if _, ok := m.Gate(); ok {
 		t.Fatal("gated with env set")
+	}
+}
+
+func TestSkillOwner(t *testing.T) {
+	root := t.TempDir()
+	for _, p := range []string{"domains/a/skills/s1", "domains/b/skills/s1", "domains/b/skills/s2"} {
+		if err := os.MkdirAll(filepath.Join(root, p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	reg := &Registry{Order: []string{"a", "b"}}
+	for name, want := range map[string]string{"s1": "a", "s2": "b", "zz": ""} {
+		if got := reg.SkillOwner(root, name); got != want {
+			t.Errorf("SkillOwner(%s) = %q, want %q", name, got, want)
+		}
 	}
 }

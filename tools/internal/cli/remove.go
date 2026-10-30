@@ -295,7 +295,7 @@ func removeOne(in *installer.Installer, reg *harness.Registry, rm *remover, t re
 			if _, ok := reg.Domains[t.name]; ok {
 				handled, err = true, in.UninstallDomain(reg, t.name)
 			}
-		} else if skillOwner(in.HarnessRoot, reg, t.name) != "" {
+		} else if reg.SkillOwner(in.HarnessRoot, t.name) != "" {
 			handled = true
 			err = in.UninstallSkill(reg, t.name)
 			var pe *installer.PartOfDomainError

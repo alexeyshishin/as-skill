@@ -34,15 +34,6 @@ func gatedReason(m *harness.Manifest) string {
 	return fmt.Sprintf("the %q binary is not on $PATH", miss.Name)
 }
 
-func skillOwner(harnessRoot string, reg *harness.Registry, name string) string {
-	for _, d := range reg.DomainNames() {
-		if fsutil.DirExists(filepath.Join(harnessRoot, "domains", d, "skills", name)) {
-			return d
-		}
-	}
-	return ""
-}
-
 func resolveNames(harnessRoot string, reg *harness.Registry, names []string) (selection, error) {
 	var sel selection
 	explicit := map[string]bool{}
@@ -61,7 +52,7 @@ func resolveNames(harnessRoot string, reg *harness.Registry, names []string) (se
 			explicit[n] = true
 			continue
 		}
-		owner := skillOwner(harnessRoot, reg, n)
+		owner := reg.SkillOwner(harnessRoot, n)
 		if owner == "" {
 			return sel, fmt.Errorf("unknown name %q (domains: %s; see `as-skill list skills`)", n, strings.Join(reg.DomainNames(), ", "))
 		}
