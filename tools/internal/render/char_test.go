@@ -2,12 +2,15 @@ package render
 
 import (
 	"encoding/json"
+	"flag"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 )
+
+var updateChar = flag.Bool("update-char", false, "rewrite characterization golden")
 
 var sourceSynthetic = map[string]string{
 	"empty":           "",
@@ -37,8 +40,7 @@ var sourceSynthetic = map[string]string{
 	"value-colon-url": "---\nname: a\ndescription: see http://x.y\n---\nb\n",
 }
 
-func TestCharacterizeParseSource(t *testing.T) {
-	got := map[string]string{}
+func TestParseSourceRealFiles(t *testing.T) {
 	var files []string
 	for _, pat := range []string{"../../../domains/*/skills/*/SKILL.md", "../../../domains/*/agents/*.md"} {
 		m, _ := filepath.Glob(pat)
@@ -47,6 +49,34 @@ func TestCharacterizeParseSource(t *testing.T) {
 	if len(files) == 0 {
 		t.Fatal("no real sources found")
 	}
+	for _, p := range files {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s, err := parseSource(data)
+		if err != nil {
+			t.Errorf("%s: %v", p, err)
+			continue
+		}
+		stem := strings.TrimSuffix(filepath.Base(p), ".md")
+		if filepath.Base(p) == "SKILL.md" {
+			stem = filepath.Base(filepath.Dir(p))
+		}
+		if s.name != stem {
+			t.Errorf("%s: name %q != %q", p, s.name, stem)
+		}
+		if strings.TrimSpace(s.description) == "" {
+			t.Errorf("%s: empty description", p)
+		}
+		if strings.TrimSpace(s.body) == "" {
+			t.Errorf("%s: empty body", p)
+		}
+	}
+}
+
+func TestCharacterizeParseSource(t *testing.T) {
+	got := map[string]string{}
 	res := func(data []byte) string {
 		s, err := parseSource(data)
 		if err != nil {
@@ -54,13 +84,6 @@ func TestCharacterizeParseSource(t *testing.T) {
 		}
 		b, _ := json.Marshal(map[string]string{"name": s.name, "description": s.description, "model": s.model, "effort": s.effort, "body": s.body})
 		return string(b)
-	}
-	for _, p := range files {
-		data, err := os.ReadFile(p)
-		if err != nil {
-			t.Fatal(err)
-		}
-		got["real:"+strings.TrimPrefix(filepath.ToSlash(p), "../../../")] = res(data)
 	}
 	for k, v := range sourceSynthetic {
 		got["syn:"+k] = res([]byte(v))
@@ -75,7 +98,7 @@ func TestCharacterizeParseSource(t *testing.T) {
 		sb.WriteString(k + "\t" + got[k] + "\n")
 	}
 	golden := filepath.Join("testdata", "source_char.golden")
-	if *update {
+	if *updateChar {
 		if err := os.WriteFile(golden, []byte(sb.String()), 0o644); err != nil {
 			t.Fatal(err)
 		}
