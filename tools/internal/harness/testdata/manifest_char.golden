@@ -1,0 +1,27 @@
+real:domains/code/manifest.yaml	{"Name":"code","Description":"Code and plans - interrogate the plan to implementation, competitive review, line-by-line comments, last 20%.","RequiresEnv":null,"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+real:domains/content/manifest.yaml	{"Name":"content","Description":"Content — Telegram posts, articles, technical tutorials.","RequiresEnv":null,"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+real:domains/core/manifest.yaml	{"Name":"core","Description":"Core skills — domain-independent utilities always available: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search.","RequiresEnv":null,"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+real:domains/devops/manifest.yaml	{"Name":"devops","Description":"DevOps / infrastructure — Kubernetes, Helm, GitLab CI, ArgoCD: architecture, security, and SRE review, CI pipelines, Helm charts, K8s manifests, incident diagnostics.","RequiresEnv":null,"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+real:domains/git/manifest.yaml	{"Name":"git","Description":"Git workflow — Conventional Commits, PR descriptions, semver releases.","RequiresEnv":null,"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+real:domains/obsidian/manifest.yaml	{"Name":"obsidian","Description":"Obsidian PKB using PARA — ingest, inbox triage, hub untangling, daily journal.","RequiresEnv":["OBSIDIAN_VAULT"],"RequiresBin":null,"Targets":{"agents":"${CLAUDE_HOME}/agents","rules":"${CLAUDE_HOME}/rules","skills":"${CLAUDE_HOME}/skills"}}
+syn:bad-line	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:block-list	{"Name":"x","Description":"","RequiresEnv":["A","B"],"RequiresBin":["git"],"Targets":{}}
+syn:block-scalar	{"Name":"x","Description":"\u003e","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:colon-desc	{"Name":"x","Description":"a: b","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:comments-only	ERR <path>: missing top-level "name:"
+syn:crlf	{"Name":"x","Description":"d","RequiresEnv":["A","B"],"RequiresBin":null,"Targets":{"rules":"${CLAUDE_HOME}/rules"}}
+syn:dup-key	{"Name":"y","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:empty	ERR <path>: missing top-level "name:"
+syn:empty-name	ERR <path>: missing top-level "name:"
+syn:indented-top	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:inline-list	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:list-no-dash	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:missing-name	ERR <path>: missing top-level "name:"
+syn:name-only	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:nested-target	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"deep":"v","rules":""}}
+syn:quoted	{"Name":"\"x\"","Description":"'it''s'","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"\"${CLAUDE_HOME}/rules\""}}
+syn:tab-targets	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r"}}
+syn:targets-blank	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r","skills":"s"}}
+syn:targets-nocolon	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{"rules":"r"}}
+syn:trailing-cmt	{"Name":"x # c","Description":"d # c","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
+syn:unknown-key	{"Name":"x","Description":"","RequiresEnv":null,"RequiresBin":null,"Targets":{}}
