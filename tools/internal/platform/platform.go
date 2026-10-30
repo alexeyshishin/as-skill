@@ -78,7 +78,7 @@ var order = []ID{Claude, Codex, Cursor, OpenCode}
 var table = map[ID]Platform{
 	Claude: {
 		ID:            Claude,
-		SkillDirsRead: []string{".claude/skills"},
+		SkillDirsRead: []string{ClaudeSkillsLoc},
 		Agents:        AgentSpec{Dir: ".claude/agents", Ext: ".md", Format: AgentClaudeLink},
 		Rules:         RulesSpec{Mode: RulesDirMD, Dir: ".claude/rules"},
 		Hooks: HookSpec{
@@ -109,7 +109,7 @@ var table = map[ID]Platform{
 	},
 	Cursor: {
 		ID:            Cursor,
-		SkillDirsRead: []string{".agents/skills", ".cursor/skills", ".claude/skills", ".codex/skills"},
+		SkillDirsRead: []string{".agents/skills", ".cursor/skills", ClaudeSkillsLoc, ".codex/skills"},
 		Agents:        AgentSpec{Dir: ".cursor/agents", Ext: ".md", Format: AgentCursorMD},
 		Rules:         RulesSpec{Mode: RulesDirMDC, Dir: ".cursor/rules"},
 		Hooks: HookSpec{
@@ -128,7 +128,7 @@ var table = map[ID]Platform{
 	},
 	OpenCode: {
 		ID:            OpenCode,
-		SkillDirsRead: []string{".opencode/skills", ".claude/skills", ".agents/skills"},
+		SkillDirsRead: []string{".opencode/skills", ClaudeSkillsLoc, ".agents/skills"},
 		Agents:        AgentSpec{Dir: ".opencode/agents", Ext: ".md", Format: AgentOpenCodeMD},
 		Rules:         RulesSpec{Mode: RulesAgentsMDBlock, Dir: ".agents/rules"},
 		Hooks: HookSpec{
@@ -211,12 +211,12 @@ func SkillLocations(ids []ID) (map[string][]ID, []ID) {
 		}
 		switch id {
 		case Claude:
-			locs[".claude/skills"] = append(locs[".claude/skills"], id)
+			locs[ClaudeSkillsLoc] = append(locs[ClaudeSkillsLoc], id)
 		case Codex:
 			locs[".agents/skills"] = append(locs[".agents/skills"], id)
 		default:
 			if hasClaude {
-				locs[".claude/skills"] = append(locs[".claude/skills"], id)
+				locs[ClaudeSkillsLoc] = append(locs[ClaudeSkillsLoc], id)
 			} else {
 				locs[".agents/skills"] = append(locs[".agents/skills"], id)
 			}
