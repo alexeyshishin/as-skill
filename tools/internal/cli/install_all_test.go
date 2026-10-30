@@ -77,7 +77,7 @@ func TestInstallAllCopyAllPlatforms(t *testing.T) {
 			sameContent(t, f, filepath.Join(src, "agents", c.agent+".md"))
 		}
 	}
-	out, _ := doctor(t, harness, project)
+	out, _ := doctorCmd(t, harness, project)
 	for _, line := range strings.Split(out, "\n") {
 		if !strings.HasPrefix(line, "as-skill: doctor:") || strings.Contains(line, "warning:") {
 			continue

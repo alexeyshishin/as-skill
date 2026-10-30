@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-harness/tools/internal/health"
+	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -80,7 +80,7 @@ func runStatus(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	health.PrintEntryTable(ios.Stdout(), health.FilterEntries(health.SortedEntries(lock), filter), health.EntryHealth)
+	doctor.PrintEntryTable(ios.Stdout(), doctor.FilterEntries(doctor.SortedEntries(lock), filter), doctor.EntryHealth)
 	return nil
 }
 

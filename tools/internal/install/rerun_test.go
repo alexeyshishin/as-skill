@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 )
 
@@ -56,11 +56,11 @@ func TestRerunWithoutForce(t *testing.T) {
 			}
 			for _, e := range in.Lock.Entries {
 				if tc.second == "copy" {
-					if ok, err := health.CopyMatches(e); err != nil || !ok {
+					if ok, err := doctor.CopyMatches(e); err != nil || !ok {
 						t.Fatalf("copy row %s mismatch: %v", e.Path, err)
 					}
 				}
-				if h := health.EntryHealth(e); h != health.HealthOK {
+				if h := doctor.EntryHealth(e); h != doctor.HealthOK {
 					t.Fatalf("%s %s", e.Path, h)
 				}
 			}
@@ -155,14 +155,14 @@ func TestMultiDomainCopyHasNoDrift(t *testing.T) {
 		}
 	}
 	for _, e := range in.Lock.Entries {
-		if ok, err := health.CopyMatches(e); err != nil || !ok {
+		if ok, err := doctor.CopyMatches(e); err != nil || !ok {
 			t.Fatalf("%s/%s %s drifted: %v", e.Domain, e.Kind, e.Path, err)
 		}
 	}
 	if err := in.Lock.Save(project); err != nil {
 		t.Fatal(err)
 	}
-	untracked, err := health.FindUntracked(project, in.Lock)
+	untracked, err := doctor.FindUntracked(project, in.Lock)
 	if err != nil || len(untracked) != 0 {
 		t.Fatalf("untracked %v %v", untracked, err)
 	}
@@ -197,7 +197,7 @@ func TestLegacyWholeDirHashAcceptedSharedDir(t *testing.T) {
 		if e.Name != "" || e.Mode != "copy" {
 			continue
 		}
-		if ok, err := health.CopyMatchesIn(in.Lock, e); err != nil || !ok {
+		if ok, err := doctor.CopyMatchesIn(in.Lock, e); err != nil || !ok {
 			t.Fatalf("legacy row %s/%s rejected: %v", e.Domain, e.Kind, err)
 		}
 	}
@@ -206,7 +206,7 @@ func TestLegacyWholeDirHashAcceptedSharedDir(t *testing.T) {
 			continue
 		}
 		in.Lock.Entries[i].SHA256 = "bogus"
-		if ok, _ := health.CopyMatchesIn(in.Lock, in.Lock.Entries[i]); ok {
+		if ok, _ := doctor.CopyMatchesIn(in.Lock, in.Lock.Entries[i]); ok {
 			t.Fatal("bogus hash accepted")
 		}
 	}
@@ -231,7 +231,7 @@ func TestItemsRowSelfDescribingAfterSourceDeleted(t *testing.T) {
 		in.Lock.Entries[i].Source = filepath.Join(gone, filepath.Base(in.Lock.Entries[i].Source))
 	}
 	row.Source = filepath.Join(gone, "x")
-	if ok, err := health.CopyMatches(row); err != nil || !ok {
+	if ok, err := doctor.CopyMatches(row); err != nil || !ok {
 		t.Fatalf("items row not verified without source: %v", err)
 	}
 	for _, n := range row.Items {
@@ -248,7 +248,7 @@ func TestItemsRowSelfDescribingAfterSourceDeleted(t *testing.T) {
 	if err := in.Lock.Save(project); err != nil {
 		t.Fatal(err)
 	}
-	untracked, err := health.FindUntracked(project, in.Lock)
+	untracked, err := doctor.FindUntracked(project, in.Lock)
 	if err != nil || len(untracked) != 0 {
 		t.Fatalf("untracked %v %v", untracked, err)
 	}
@@ -266,7 +266,7 @@ func TestLegacyRowSourceGoneCannotVerify(t *testing.T) {
 		e.Items = nil
 		e.SHA256 = "bogus"
 		e.Source = filepath.Join(t.TempDir(), "gone")
-		if _, err := health.CopyMatches(e); !errors.Is(err, health.ErrCannotVerify) {
+		if _, err := doctor.CopyMatches(e); !errors.Is(err, doctor.ErrCannotVerify) {
 			t.Fatalf("err = %v", err)
 		}
 	}

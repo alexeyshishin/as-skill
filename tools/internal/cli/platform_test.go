@@ -107,7 +107,7 @@ func installPlatforms(t *testing.T, harness, project string, extra ...string) {
 	}
 }
 
-func doctor(t *testing.T, harness, project string, extra ...string) (string, error) {
+func doctorCmd(t *testing.T, harness, project string, extra ...string) (string, error) {
 	args := append([]string{"doctor", "--harness-root", harness, "--project", project}, extra...)
 	return capture(t, func() error { return runCLI(args) })
 }
@@ -116,14 +116,14 @@ func TestDoctorStaleAndDrifted(t *testing.T) {
 	harness, agentSrc := agentHarness(t)
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "codex", "--copy")
-	out, err := doctor(t, harness, project)
+	out, err := doctorCmd(t, harness, project)
 	if err != nil {
 		t.Fatalf("clean doctor failed: %v\n%s", err, out)
 	}
 	if err := os.WriteFile(agentSrc, []byte("---\nname: helper\ndescription: changed\n---\nbody\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	out, err = doctor(t, harness, project)
+	out, err = doctorCmd(t, harness, project)
 	if err == nil || !strings.Contains(out, "STALE") {
 		t.Fatalf("want STALE: %v\n%s", err, out)
 	}
@@ -132,7 +132,7 @@ func TestDoctorStaleAndDrifted(t *testing.T) {
 	if err := os.WriteFile(toml, append(data, []byte("# hand edit\n")...), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	out, err = doctor(t, harness, project)
+	out, err = doctorCmd(t, harness, project)
 	if err == nil || !strings.Contains(out, "DRIFTED") {
 		t.Fatalf("want DRIFTED: %v\n%s", err, out)
 	}
@@ -142,7 +142,7 @@ func TestDoctorDuplicateSkillIsWarningOnly(t *testing.T) {
 	harness, _ := agentHarness(t)
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "claude,codex,cursor", "--copy")
-	out, err := doctor(t, harness, project)
+	out, err := doctorCmd(t, harness, project)
 	if err != nil {
 		t.Fatalf("warnings must not fail doctor: %v\n%s", err, out)
 	}
@@ -204,7 +204,7 @@ func TestDoctorUnverifiedFiresForNonClaude(t *testing.T) {
 	harness, _ := agentHarness(t)
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "codex", "--copy")
-	out, err := doctor(t, harness, project)
+	out, err := doctorCmd(t, harness, project)
 	if err != nil {
 		t.Fatalf("warnings must not fail doctor: %v\n%s", err, out)
 	}
@@ -213,7 +213,7 @@ func TestDoctorUnverifiedFiresForNonClaude(t *testing.T) {
 	}
 	claude := t.TempDir()
 	installPlatforms(t, harness, claude, "--copy")
-	out, _ = doctor(t, harness, claude)
+	out, _ = doctorCmd(t, harness, claude)
 	if strings.Contains(out, "UNVERIFIED") {
 		t.Fatalf("claude must be verified:\n%s", out)
 	}
@@ -223,7 +223,7 @@ func TestDoctorCodexHooksTrustWarning(t *testing.T) {
 	harness, _ := agentHarness(t)
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "codex", "--copy")
-	out, _ := doctor(t, harness, project)
+	out, _ := doctorCmd(t, harness, project)
 	if strings.Contains(out, "need trust") {
 		t.Fatalf("unexpected trust warning:\n%s", out)
 	}
@@ -231,7 +231,7 @@ func TestDoctorCodexHooksTrustWarning(t *testing.T) {
 	if err := os.WriteFile(cfg, []byte(`{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"./.codex/hooks/gate.sh"}]}]}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := doctor(t, harness, project)
+	out, err := doctorCmd(t, harness, project)
 	if err != nil {
 		t.Fatalf("warning must not fail doctor: %v\n%s", err, out)
 	}

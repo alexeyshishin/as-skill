@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -405,7 +405,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string, loc harness.Locator) 
 			fmt.Fprintf(&b, "warning:   %s: %s\n", id, g)
 		}
 	}
-	for _, d := range health.Duplicates(pl.project, pl.lock) {
+	for _, d := range doctor.Duplicates(pl.project, pl.lock) {
 		fmt.Fprintf(&b, "warning:   %s\n", d)
 	}
 	if len(pl.hooks) == 0 {

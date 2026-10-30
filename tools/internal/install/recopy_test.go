@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -17,11 +17,11 @@ func assertLockClean(t *testing.T, lock *lockfile.Lockfile) {
 	t.Helper()
 	covered := map[string]string{}
 	for _, e := range lock.Entries {
-		if h := health.EntryHealth(e); h != health.HealthOK {
+		if h := doctor.EntryHealth(e); h != doctor.HealthOK {
 			t.Fatalf("%s: %s", e.Path, h)
 		}
 		if e.Mode == lockfile.ModeCopy {
-			ok, err := health.CopyMatchesIn(lock, e)
+			ok, err := doctor.CopyMatchesIn(lock, e)
 			if err != nil || !ok {
 				t.Fatalf("%s %s/%s/%s: DRIFTED (match=%v err=%v)", e.Path, e.Domain, e.Kind, e.Name, ok, err)
 			}

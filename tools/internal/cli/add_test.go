@@ -298,7 +298,7 @@ func TestDoctorShowsTableNoDriftAfterMultiDomainCopy(t *testing.T) {
 	if _, err := run(t, "add", "code", "git", "core", "--copy", "-y", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	out, err := doctor(t, h, p)
+	out, err := doctorCmd(t, h, p)
 	if err != nil {
 		t.Fatalf("doctor failed: %v\n%s", err, out)
 	}
@@ -312,7 +312,7 @@ func TestDoctorShowsTableNoDriftAfterMultiDomainCopy(t *testing.T) {
 	if err != nil || strings.Contains(st, "doctor:") || !strings.HasPrefix(st, "DOMAIN") {
 		t.Fatalf("status must be table only: %v\n%s", err, st)
 	}
-	if _, err := doctor(t, h, p, "-a", "claude"); err != nil {
+	if _, err := doctorCmd(t, h, p, "-a", "claude"); err != nil {
 		t.Fatalf("doctor -a: %v", err)
 	}
 }

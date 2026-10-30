@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/doctor"
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -146,7 +146,7 @@ func TestExcludeSkillsAbsentEverywhereOthersPlaced(t *testing.T) {
 					}
 				}
 				for _, e := range lock.Entries {
-					if h := health.EntryHealth(e); h != health.HealthOK {
+					if h := doctor.EntryHealth(e); h != doctor.HealthOK {
 						t.Fatalf("%s: %s", e.Path, h)
 					}
 				}
@@ -208,7 +208,7 @@ func TestExcludeSkillsPartialOverFullCopyKeepsExcludedTracked(t *testing.T) {
 		t.Fatalf("kind-level row not narrowed to the kept skill: %+v ok=%v", parent, ok)
 	}
 	for _, e := range lock.Entries {
-		if h := health.EntryHealth(e); h != health.HealthOK {
+		if h := doctor.EntryHealth(e); h != doctor.HealthOK {
 			t.Fatalf("%s: %s", e.Path, h)
 		}
 	}
