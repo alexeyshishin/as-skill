@@ -397,7 +397,6 @@ func sortConflicts(cs []Conflict) {
 	})
 }
 
-// wrapApplyErr keeps the error wording of the pre-plan installer.
 func wrapApplyErr(err error) error {
 	var oe *OpError
 	if !errors.As(err, &oe) {

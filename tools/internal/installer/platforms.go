@@ -289,7 +289,6 @@ func (in *Installer) checkReserved(srcDir string) error {
 	return nil
 }
 
-// kindApplyErr keeps the per-platform error wording of the pre-plan installer.
 func kindApplyErr(name string, kind lockfile.Kind, err error) error {
 	var oe *OpError
 	if !errors.As(err, &oe) {

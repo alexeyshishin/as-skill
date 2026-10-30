@@ -185,7 +185,7 @@ func (in *Installer) planHooks(domain, srcDir string, pf platform.Platform) (*Pl
 
 // planKind plans one domain kind across all selected platforms. On error the
 // returned Plan holds everything planned before the failure; the caller applies
-// it first so partial-progress output matches the old interleaved flow.
+// it first.
 func (pl *Planner) planKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) (*Plan, error) {
 	in := pl.in
 	p := &Plan{}
