@@ -158,6 +158,9 @@ func runRemove(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
+	if err := plan.Validate(); err != nil {
+		return err
+	}
 	runErr := in.Apply(plan)
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
