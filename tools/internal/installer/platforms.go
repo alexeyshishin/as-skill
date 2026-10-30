@@ -3,9 +3,11 @@ package installer
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -86,15 +88,6 @@ func minusPlats(a []string, ids []platform.ID) []string {
 			out = append(out, v)
 		}
 	}
-	return out
-}
-
-func sortedLocs(m map[string][]platform.ID) []string {
-	var out []string
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
 	return out
 }
 
@@ -469,7 +462,7 @@ func (in *Installer) installKind(m *registry.Manifest, name, kind, srcDir string
 	case "skills":
 		locs, _ := platform.SkillLocations(in.plats())
 		in.warnDup(locs)
-		for _, loc := range sortedLocs(locs) {
+		for _, loc := range slices.Sorted(maps.Keys(locs)) {
 			if loc == claudeSkillsLoc {
 				if err := in.claudeKind(m, name, kind, srcDir, locs[loc]); err != nil {
 					return err

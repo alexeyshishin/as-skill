@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -20,7 +21,7 @@ var (
 func without(l []string, drop ...string) []string {
 	var out []string
 	for _, s := range l {
-		if !contains(drop, s) {
+		if !slices.Contains(drop, s) {
 			out = append(out, s)
 		}
 	}
@@ -78,7 +79,7 @@ func assertNoRows(t *testing.T, p, skill string) {
 		t.Fatal(err)
 	}
 	for _, e := range lock.Entries {
-		if e.Name == skill || filepath.Base(e.Path) == skill || contains(e.Items, skill) {
+		if e.Name == skill || filepath.Base(e.Path) == skill || slices.Contains(e.Items, skill) {
 			t.Errorf("lockfile row for excluded skill %s: %+v", skill, e)
 		}
 	}

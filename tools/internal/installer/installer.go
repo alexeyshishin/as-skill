@@ -3,8 +3,10 @@ package installer
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -257,7 +259,7 @@ func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
 	}
 	locs, _ := platform.SkillLocations(in.plats())
 	in.warnDup(locs)
-	for _, loc := range sortedLocs(locs) {
+	for _, loc := range slices.Sorted(maps.Keys(locs)) {
 		var dest string
 		if loc == claudeSkillsLoc {
 			destBase, err := in.resolveTarget(m, "skills")

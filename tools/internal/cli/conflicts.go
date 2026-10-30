@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"claude-harness/tools/internal/installer"
@@ -90,7 +91,7 @@ func platformsTouching(root string, plats []platform.ID) []platform.ID {
 			root == rootOf(p.Agents.Dir) || root == rootOf(p.Rules.Dir) ||
 			(p.Hooks.Schema != platform.HooksNone && root == rootOf(p.Hooks.Dir))
 		for loc, ids := range locs {
-			if rootOf(loc) == root && containsPlat(ids, id) {
+			if rootOf(loc) == root && slices.Contains(ids, id) {
 				hit = true
 			}
 		}
@@ -167,7 +168,7 @@ func resolveGuard(p prompt.Prompter, pl *addPlan, roots []string, prev map[strin
 	for _, id := range pl.plats {
 		var hit []string
 		for _, r := range roots {
-			if containsPlat(platformsTouching(r, pl.plats), id) {
+			if slices.Contains(platformsTouching(r, pl.plats), id) {
 				hit = append(hit, r)
 			}
 		}

@@ -3,8 +3,9 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"claude-harness/tools/internal/health"
@@ -119,7 +120,7 @@ func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, l
 		if domainInstalled(lock, harnessRoot, n) {
 			label += " [installed]"
 		}
-		opts = append(opts, prompt.Option{Value: n, Label: label, Selected: contains(prev, n)})
+		opts = append(opts, prompt.Option{Value: n, Label: label, Selected: slices.Contains(prev, n)})
 	}
 	validate := func(sel []string) error {
 		if len(sel) == 0 {
@@ -142,15 +143,6 @@ func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, l
 		return nil, err
 	}
 	return got, nil
-}
-
-func contains(l []string, s string) bool {
-	for _, x := range l {
-		if x == s {
-			return true
-		}
-	}
-	return false
 }
 
 func allPlatformOptions(selected map[platform.ID]bool, note string, unignored map[platform.ID]string) []prompt.Option {
@@ -411,7 +403,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 	if len(pl.sel.Skills) > 0 {
 		fmt.Fprintf(&b, "skills:    %s\n", strings.Join(pl.sel.Skills, ", "))
 	}
-	if ex := sortedKeys(pl.exclude); len(ex) > 0 {
+	if ex := slices.Sorted(maps.Keys(pl.exclude)); len(ex) > 0 {
 		fmt.Fprintf(&b, "deselect:  %s\n", strings.Join(ex, ", "))
 		fmt.Fprintf(&b, "warning:   agents may reference deselected skills\n")
 		for _, k := range ex {
@@ -437,7 +429,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 	} else {
 		fmt.Fprintf(&b, "hooks:     %s\n", strings.Join(pl.hooks, ", "))
 	}
-	if contains(pl.hooks, loggerHook) {
+	if slices.Contains(pl.hooks, loggerHook) {
 		fmt.Fprintf(&b, "warning:   %s\n", loggerWarning)
 	}
 	mode := "symlink"
@@ -476,10 +468,10 @@ func removeChoices(lock *lockfile.Lockfile) []prompt.Option {
 		}
 	}
 	var opts []prompt.Option
-	for _, d := range sortedKeys(domains) {
+	for _, d := range slices.Sorted(maps.Keys(domains)) {
 		opts = append(opts, prompt.Option{Value: d, Label: d + " (domain)"})
 	}
-	for _, s := range sortedKeys(skills) {
+	for _, s := range slices.Sorted(maps.Keys(skills)) {
 		if domains[s] {
 			continue
 		}
@@ -488,19 +480,10 @@ func removeChoices(lock *lockfile.Lockfile) []prompt.Option {
 	return opts
 }
 
-func sortedKeys(m map[string]bool) []string {
-	var out []string
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
-
 func askRemoveNames(p prompt.Prompter, lock *lockfile.Lockfile, project string, prev []string) ([]string, error) {
 	opts := removeChoices(lock)
 	for i := range opts {
-		opts[i].Selected = contains(prev, opts[i].Value)
+		opts[i].Selected = slices.Contains(prev, opts[i].Value)
 	}
 	if len(opts) == 0 {
 		return nil, fmt.Errorf("nothing installed in %s (see `as-skill doctor`)", project)
@@ -523,7 +506,7 @@ func askRemoveNames(p prompt.Prompter, lock *lockfile.Lockfile, project string, 
 func askRemovePlatforms(p prompt.Prompter, recorded, prev []platform.ID) ([]platform.ID, error) {
 	var opts []prompt.Option
 	for _, id := range recorded {
-		opts = append(opts, prompt.Option{Value: string(id), Label: string(id), Selected: prev == nil || containsPlat(prev, id)})
+		opts = append(opts, prompt.Option{Value: string(id), Label: string(id), Selected: prev == nil || slices.Contains(prev, id)})
 	}
 	got, err := p.MultiSelect("platforms", "Platforms to remove from", opts, func(s []string) error {
 		if len(s) == 0 {
@@ -538,15 +521,6 @@ func askRemovePlatforms(p prompt.Prompter, recorded, prev []platform.ID) ([]plat
 		return nil, errors.New("no platform selected")
 	}
 	return platform.ParsePlatforms(got)
-}
-
-func containsPlat(l []platform.ID, id platform.ID) bool {
-	for _, x := range l {
-		if x == id {
-			return true
-		}
-	}
-	return false
 }
 
 func removeSummary(project string, names []string, plats []platform.ID) string {
@@ -572,7 +546,7 @@ func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 	for _, h := range infos {
 		var on []string
 		for _, id := range pl.plats {
-			if containsPlat(h.Platforms, id) {
+			if slices.Contains(h.Platforms, id) {
 				on = append(on, string(id))
 			}
 		}
@@ -583,7 +557,7 @@ func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 		if h.Name == loggerHook {
 			label += " — SECURITY: " + loggerWarning
 		}
-		opts = append(opts, prompt.Option{Value: h.Name, Label: label, Selected: contains(prev, h.Name)})
+		opts = append(opts, prompt.Option{Value: h.Name, Label: label, Selected: slices.Contains(prev, h.Name)})
 	}
 	return opts, nil
 }
@@ -601,7 +575,7 @@ func registerSelected(in *installer.Installer, pl *addPlan) error {
 		}
 		var chosen []string
 		for _, n := range names {
-			if contains(pl.hooks, n) {
+			if slices.Contains(pl.hooks, n) {
 				chosen = append(chosen, n)
 			}
 		}

@@ -2,6 +2,7 @@ package platform
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -198,23 +199,14 @@ func ParsePlatforms(vals []string) ([]ID, error) {
 	return out, nil
 }
 
-func has(ids []ID, id ID) bool {
-	for _, x := range ids {
-		if x == id {
-			return true
-		}
-	}
-	return false
-}
-
 func SkillLocations(ids []ID) (map[string][]ID, []ID) {
 	locs := map[string][]ID{}
 	if len(ids) == 0 {
 		return locs, nil
 	}
-	hasClaude := has(ids, Claude)
+	hasClaude := slices.Contains(ids, Claude)
 	for _, id := range order {
-		if !has(ids, id) {
+		if !slices.Contains(ids, id) {
 			continue
 		}
 		switch id {
@@ -232,7 +224,7 @@ func SkillLocations(ids []ID) (map[string][]ID, []ID) {
 	}
 	var dup []ID
 	for _, id := range []ID{Cursor, OpenCode} {
-		if !has(ids, id) {
+		if !slices.Contains(ids, id) {
 			continue
 		}
 		n := 0

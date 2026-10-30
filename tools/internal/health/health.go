@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -67,22 +68,13 @@ func FilterEntries(entries []lockfile.Entry, plats []string) []lockfile.Entry {
 	var out []lockfile.Entry
 	for _, e := range entries {
 		for _, p := range e.Platforms {
-			if contains(plats, p) {
+			if slices.Contains(plats, p) {
 				out = append(out, e)
 				break
 			}
 		}
 	}
 	return out
-}
-
-func contains(list []string, v string) bool {
-	for _, x := range list {
-		if x == v {
-			return true
-		}
-	}
-	return false
 }
 
 func PrintEntryTable(entries []lockfile.Entry, healthOf func(lockfile.Entry) string) {
