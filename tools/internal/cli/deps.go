@@ -11,7 +11,6 @@ type Deps struct {
 	Prompter    func() prompt.Prompter
 	Interactive func() bool
 	Locator     harness.Locator
-	Resolve     func(flag string) (string, error)
 }
 
 func (d Deps) newPrompter() prompt.Prompter {
@@ -26,11 +25,4 @@ func (d Deps) interactive() bool {
 		return prompt.IsInteractive()
 	}
 	return d.Interactive()
-}
-
-func (d Deps) resolveHarness(flag string) (string, error) {
-	if d.Resolve != nil {
-		return d.Resolve(flag)
-	}
-	return d.Locator.Locate(flag)
 }

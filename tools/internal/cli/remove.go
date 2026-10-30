@@ -97,7 +97,7 @@ func runRemove(args []string, d Deps) error {
 				return false, err
 			}
 			var herr error
-			harnessRoot, herr = d.resolveHarness(opts.harnessRoot)
+			harnessRoot, herr = d.Locator.Locate(opts.harnessRoot)
 			reg = nil
 			if herr == nil {
 				r, rerr := harness.LoadRegistry(harnessRoot)

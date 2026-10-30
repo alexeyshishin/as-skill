@@ -27,6 +27,39 @@ func (e ConflictError) Error() string {
 	return (&fsys.ForeignError{Path: e.Path}).Error()
 }
 
+func (in *Installer) rootConflict(c gitCache, root string) *Conflict {
+	if in.unignored(c, root) {
+		return &Conflict{Path: root, Reason: ReasonNotIgnored}
+	}
+	return nil
+}
+
+func (in *Installer) guardConflict(c gitCache, dst string) *Conflict {
+	if in.Mode != lockfile.ModeLink || in.Force {
+		return nil
+	}
+	root, ok := in.dstRoot(dst)
+	if !ok {
+		return nil
+	}
+	return in.rootConflict(c, root)
+}
+
+func (in *Installer) foreignConflict(dst string) *Conflict {
+	if in.isForeign(dst) {
+		return &Conflict{Path: dst, Reason: ReasonForeign}
+	}
+	return nil
+}
+
+func linkConflict(err error) *Conflict {
+	var fe *fsys.ForeignError
+	if errors.As(err, &fe) {
+		return &Conflict{Path: fe.Path, Reason: ReasonForeign}
+	}
+	return nil
+}
+
 func (in *Installer) overwrites(dst string) bool {
 	return in.Overwrite[filepath.Clean(dst)]
 }
@@ -41,9 +74,8 @@ func (in *Installer) linkOne(src, dst string) error {
 	if prior.Tracked && lockfile.Mode(prior.Mode) != lockfile.ModeLink {
 		fmt.Fprintf(in.Stderr(), "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, prior.Mode)
 	}
-	var fe *fsys.ForeignError
-	if errors.As(err, &fe) {
-		return &ConflictError{Path: fe.Path, Reason: ReasonForeign}
+	if c := linkConflict(err); c != nil {
+		return c
 	}
 	return err
 }

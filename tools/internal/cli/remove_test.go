@@ -470,7 +470,8 @@ func TestDoctorListRejectHomeProject(t *testing.T) {
 func noHarness(t *testing.T) Deps {
 	t.Helper()
 	d := testDeps()
-	d.Resolve = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
+	t.Chdir(t.TempDir())
+	d.Locator = harness.Locator{Executable: func() (string, error) { return filepath.Join(t.TempDir(), "as-skill"), nil }}
 	return d
 }
 

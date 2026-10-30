@@ -15,7 +15,7 @@ func runDoctor(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	harnessRoot, herr := d.resolveHarness(opts.harnessRoot)
+	harnessRoot, herr := d.Locator.Locate(opts.harnessRoot)
 	if herr != nil && opts.harnessRoot != "" {
 		return fmt.Errorf("doctor: --harness-root rejected: %w", herr)
 	}

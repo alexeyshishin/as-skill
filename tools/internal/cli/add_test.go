@@ -336,7 +336,8 @@ func TestDoctorWithoutHarness(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := testDeps()
-	d.Resolve = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
+	t.Chdir(t.TempDir())
+	d.Locator = harness.Locator{Executable: func() (string, error) { return filepath.Join(t.TempDir(), "as-skill"), nil }}
 	out, err := runD(t, d, "doctor", "-p", p)
 	if err != nil {
 		t.Fatalf("doctor must not error without harness: %v\n%s", err, out)

@@ -366,7 +366,7 @@ func TestGoldenCLI(t *testing.T) {
 	goldenCase(t, "remove_no_harness", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y")...)
 		c.run("remove", "alpha", "-y", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
-		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
+		c.deps = noHarness(t)
 		c.run("remove", "alpha", "-y", "-p", c.p)
 		c.tree()
 	})
@@ -423,7 +423,7 @@ func TestGoldenCLI(t *testing.T) {
 	goldenCase(t, "doctor_no_harness", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y", "--copy")...)
 		c.run("doctor", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
-		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
+		c.deps = noHarness(t)
 		c.run("doctor", "-p", c.p)
 	})
 
@@ -499,10 +499,10 @@ func TestGoldenCLI(t *testing.T) {
 		lockPath := filepath.Join(c.p, ".claude", "skills-lock.json")
 		lock := `{"entries":[{"domain":"beta","kind":"skills","name":"","mode":"copy","path":"` + filepath.Join(c.p, ".claude", "skills") + `","source":"` + filepath.Join(c.h, "domains", "beta", "gone-skills") + `","installed_at":"2026-01-01T00:00:00Z"}]}`
 		gWrite(t, lockPath, lock, 0o644)
-		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
+		c.deps = noHarness(t)
 		c.run("remove", "beta", "-y", "-p", c.p)
 		c.tree()
-		c.deps.Resolve = nil
+		c.deps = testDeps()
 		c.run(c.std("remove", "beta", "-y")...)
 		c.tree()
 	})

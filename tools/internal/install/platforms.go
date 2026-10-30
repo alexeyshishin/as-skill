@@ -175,8 +175,8 @@ func (in *Installer) unignored(c gitCache, root string) bool {
 }
 
 func (in *Installer) guardRootErr(c gitCache, root string) error {
-	if in.unignored(c, root) {
-		return &ConflictError{Path: root, Reason: ReasonNotIgnored}
+	if cf := in.rootConflict(c, root); cf != nil {
+		return cf
 	}
 	return nil
 }
@@ -190,14 +190,10 @@ func (in *Installer) dstRoot(dst string) (string, bool) {
 }
 
 func (in *Installer) guard(c gitCache, dst string) error {
-	if in.Mode != lockfile.ModeLink || in.Force {
-		return nil
+	if cf := in.guardConflict(c, dst); cf != nil {
+		return cf
 	}
-	root, ok := in.dstRoot(dst)
-	if !ok {
-		return nil
-	}
-	return in.guardRootErr(c, root)
+	return nil
 }
 
 func gitIgnored(project, root string) bool {
@@ -399,8 +395,8 @@ func (in *Installer) isForeign(dst string) bool {
 }
 
 func (in *Installer) refuseForeign(dst string) error {
-	if in.isForeign(dst) {
-		return &ConflictError{Path: dst, Reason: ReasonForeign}
+	if cf := in.foreignConflict(dst); cf != nil {
+		return cf
 	}
 	return nil
 }

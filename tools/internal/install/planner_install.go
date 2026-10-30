@@ -47,27 +47,22 @@ func (pl *Planner) add(c Conflict) error {
 }
 
 func (pl *Planner) guardRoot(root string) error {
-	if pl.in.unignored(pl.git, root) {
-		return pl.add(Conflict{Path: root, Reason: ReasonNotIgnored})
+	if c := pl.in.rootConflict(pl.git, root); c != nil {
+		return pl.add(*c)
 	}
 	return nil
 }
 
 func (pl *Planner) guard(dst string) error {
-	in := pl.in
-	if in.Mode != lockfile.ModeLink || in.Force {
-		return nil
+	if c := pl.in.guardConflict(pl.git, dst); c != nil {
+		return pl.add(*c)
 	}
-	root, ok := in.dstRoot(dst)
-	if !ok {
-		return nil
-	}
-	return pl.guardRoot(root)
+	return nil
 }
 
 func (pl *Planner) foreign(dst string) error {
-	if pl.in.isForeign(dst) {
-		return pl.add(Conflict{Path: dst, Reason: ReasonForeign})
+	if c := pl.in.foreignConflict(dst); c != nil {
+		return pl.add(*c)
 	}
 	return nil
 }
@@ -347,9 +342,8 @@ func (pl *Planner) checkOp(op Op) error {
 func (pl *Planner) checkLink(src, dst string) error {
 	in := pl.in
 	_, err := fsys.LinkOne(src, dst, true, in.Force || in.overwrites(dst), in.tracked)
-	var fe *fsys.ForeignError
-	if errors.As(err, &fe) {
-		return pl.add(Conflict{Path: fe.Path, Reason: ReasonForeign})
+	if c := linkConflict(err); c != nil {
+		return pl.add(*c)
 	}
 	return err
 }
