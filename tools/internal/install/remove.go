@@ -212,17 +212,23 @@ func (st *removeState) validate(p *Plan) error {
 	return nil
 }
 
+func (st *removeState) rowHit(e lockfile.Entry) bool {
+	if len(e.Platforms) == 0 {
+		return true
+	}
+	for _, p := range e.Platforms {
+		if st.want[p] {
+			return true
+		}
+	}
+	return false
+}
+
 func (st *removeState) preflight(rows []lockfile.Entry) error {
 	in := st.in
 	var bad []string
 	for _, e := range rows {
-		hit := false
-		for _, p := range e.Platforms {
-			if st.want[p] {
-				hit = true
-			}
-		}
-		if !hit || e.Mode == lockfile.ModeBlock {
+		if !st.rowHit(e) || e.Mode == lockfile.ModeBlock {
 			continue
 		}
 		paths, _ := in.rowPaths(e)
@@ -521,13 +527,7 @@ func (in *Installer) sweep(st *removeState, rows []lockfile.Entry, afterHarness 
 }
 
 func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
-	hit := len(e.Platforms) == 0
-	for _, p := range e.Platforms {
-		if st.want[p] {
-			hit = true
-		}
-	}
-	if !hit {
+	if !st.rowHit(e) {
 		return
 	}
 	if e.Mode == lockfile.ModeBlock {
@@ -557,6 +557,7 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 		return
 	}
 	clean := true
+	var goneHooks []string
 	for _, p := range paths {
 		if ierr := InsideRoots(in.ProjectRoot, p); ierr != nil {
 			fmt.Fprintf(in.Stderr(), "as-skill: error: refusing %v\n", ierr)
@@ -574,8 +575,16 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 			clean = false
 			continue
 		}
+		if (e.Mode == lockfile.ModeCopy || e.Mode == lockfile.ModeRender) && isLink {
+			fmt.Fprintf(in.Stderr(), "as-skill: warning: skipping %s — tracked as %s but is a symlink on disk\n", p, e.Mode)
+			clean = false
+			continue
+		}
 		if in.DryRun {
 			fmt.Fprintf(in.Stdout(), "would remove   %s\n", p)
+			if e.Kind == lockfile.KindHooks {
+				goneHooks = append(goneHooks, filepath.Base(p))
+			}
 			continue
 		}
 		var rerr error
@@ -590,6 +599,14 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 			continue
 		}
 		fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", p)
+		if e.Kind == lockfile.KindHooks {
+			goneHooks = append(goneHooks, filepath.Base(p))
+		}
+	}
+	if len(goneHooks) > 0 {
+		for _, id := range in.rowPlats(st, e) {
+			in.unregisterHooksFor(id, goneHooks)
+		}
 	}
 	if clean && !in.DryRun {
 		if e.Name == "" {
@@ -598,6 +615,21 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 			in.Lock.RemoveAllAt(e.Path)
 		}
 	}
+}
+
+func (in *Installer) rowPlats(st *removeState, e lockfile.Entry) []platform.ID {
+	if len(e.Platforms) == 0 {
+		return in.plats()
+	}
+	var out []platform.ID
+	for _, id := range platform.IDs() {
+		for _, p := range e.Platforms {
+			if p == string(id) && st.want[p] {
+				out = append(out, id)
+			}
+		}
+	}
+	return out
 }
 
 func (in *Installer) rowPaths(e lockfile.Entry) (paths []string, ok bool) {
