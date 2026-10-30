@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"claude-harness/tools/internal/lockfile"
 )
 
 func TestLinkOneCreatesAbsoluteTargetSymlink(t *testing.T) {
@@ -16,9 +14,7 @@ func TestLinkOneCreatesAbsoluteTargetSymlink(t *testing.T) {
 		t.Fatal(err)
 	}
 	dst := filepath.Join(dir, "dst")
-	lock := &lockfile.Lockfile{}
-
-	if err := LinkOne(src, dst, false, false, lock); err != nil {
+	if _, err := LinkOne(src, dst, false, false, untracked); err != nil {
 		t.Fatalf("LinkOne: %v", err)
 	}
 
@@ -86,9 +82,7 @@ func TestLinkOneReplacesPreExistingContent(t *testing.T) {
 			dst := filepath.Join(dir, "dst")
 			tc.setup(t, dst)
 
-			lock := &lockfile.Lockfile{}
-
-			if err := LinkOne(src, dst, false, true, lock); err != nil {
+			if _, err := LinkOne(src, dst, false, true, untracked); err != nil {
 				t.Fatalf("LinkOne with force: %v", err)
 			}
 
@@ -117,9 +111,7 @@ func TestLinkOneDryRunLeavesNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 	dst := filepath.Join(dir, "dst")
-	lock := &lockfile.Lockfile{}
-
-	if err := LinkOne(src, dst, true, false, lock); err != nil {
+	if _, err := LinkOne(src, dst, true, false, untracked); err != nil {
 		t.Fatalf("LinkOne dry-run: %v", err)
 	}
 	if _, err := os.Lstat(dst); !os.IsNotExist(err) {
@@ -137,9 +129,7 @@ func TestLinkOneRefusesUntrackedExistingContentWithoutForce(t *testing.T) {
 	if err := os.WriteFile(dst, []byte("pre-existing, not tracked"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	lock := &lockfile.Lockfile{}
-
-	err := LinkOne(src, dst, false, false, lock)
+	_, err := LinkOne(src, dst, false, false, untracked)
 	if err == nil {
 		t.Fatal("expected error refusing untracked existing content without --force")
 	}
@@ -164,27 +154,33 @@ func linkTreeSrc(t *testing.T) string {
 	return src
 }
 
-func linkOneWith(lock *lockfile.Lockfile) func(src, dst string) error {
-	return func(s, d string) error { return LinkOne(s, d, false, false, lock) }
+func untracked(string) (string, bool) { return "", false }
+
+func linkOneWith() func(src, dst string) error {
+	return func(s, d string) error {
+		_, err := LinkOne(s, d, false, false, untracked)
+		return err
+	}
 }
 
 func TestLinkTreeWithSkipLeavesNamesOutAndUnrecorded(t *testing.T) {
 	src := linkTreeSrc(t)
 	dst := filepath.Join(t.TempDir(), "out")
-	lock := &lockfile.Lockfile{}
-
-	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, func(name string) bool { return name == "b" }, linkOneWith(lock))
-	if err != nil || n != 2 {
-		t.Fatalf("LinkTreeWith = %d, %v; want 2, nil", n, err)
+	done, err := LinkTreeWith(false, src, dst, false, func(name string) bool { return name == "b" }, linkOneWith())
+	if err != nil || len(done) != 2 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 2, nil", len(done), err)
 	}
 	for name, want := range map[string]bool{"a": true, "b": false, "c": true} {
 		_, err := os.Lstat(filepath.Join(dst, name))
 		if (err == nil) != want {
 			t.Fatalf("%s present = %v, want %v", name, err == nil, want)
 		}
-		_, owned := lock.Owns(filepath.Join(dst, name))
-		if owned != want {
-			t.Fatalf("%s row = %v, want %v", name, owned, want)
+		listed := false
+		for _, d := range done {
+			listed = listed || d.Name == name
+		}
+		if listed != want {
+			t.Fatalf("%s returned = %v, want %v", name, listed, want)
 		}
 	}
 }
@@ -192,10 +188,9 @@ func TestLinkTreeWithSkipLeavesNamesOutAndUnrecorded(t *testing.T) {
 func TestLinkTreeWithNilSkipLinksEverything(t *testing.T) {
 	src := linkTreeSrc(t)
 	dst := filepath.Join(t.TempDir(), "out")
-	lock := &lockfile.Lockfile{}
-	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, linkOneWith(lock))
-	if err != nil || n != 3 {
-		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", n, err)
+	done, err := LinkTreeWith(false, src, dst, false, nil, linkOneWith())
+	if err != nil || len(done) != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", len(done), err)
 	}
 	for _, name := range []string{"a", "b", "c"} {
 		target, err := os.Readlink(filepath.Join(dst, name))
@@ -214,7 +209,7 @@ func TestLinkOneForeignErrorTypedWithUnchangedText(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	err := LinkOne(src, dst, false, false, &lockfile.Lockfile{})
+	_, err := LinkOne(src, dst, false, false, untracked)
 	var fe *ForeignError
 	if !errors.As(err, &fe) || fe.Path != dst {
 		t.Fatalf("want *ForeignError for %s, got %v", dst, err)
@@ -228,12 +223,12 @@ func TestLinkTreeWithCustomLinkerCanSwallowRefusal(t *testing.T) {
 	src := linkTreeSrc(t)
 	dst := filepath.Join(t.TempDir(), "out")
 	var seen []string
-	n, err := LinkTreeWith("d", "skills", src, dst, true, &lockfile.Lockfile{}, nil, func(s, d string) error {
+	done, err := LinkTreeWith(false, src, dst, true, nil, func(s, d string) error {
 		seen = append(seen, filepath.Base(d))
 		return nil
 	})
-	if err != nil || n != 3 || len(seen) != 3 {
-		t.Fatalf("LinkTreeWith = %d, %v, seen %v", n, err, seen)
+	if err != nil || len(done) != 3 || len(seen) != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v, seen %v", len(done), err, seen)
 	}
 	if _, err := os.Lstat(dst); !os.IsNotExist(err) {
 		t.Fatalf("dry run created %s: %v", dst, err)
@@ -250,10 +245,9 @@ func TestLinkTreeWithCustomLinkerSwallowsTypedForeignError(t *testing.T) {
 	if err := os.WriteFile(foreign, []byte("mine"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	lock := &lockfile.Lockfile{}
 	var swallowed []string
-	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, func(s, d string) error {
-		err := LinkOne(s, d, false, false, lock)
+	done, err := LinkTreeWith(false, src, dst, false, nil, func(s, d string) error {
+		_, err := LinkOne(s, d, false, false, untracked)
 		var fe *ForeignError
 		if errors.As(err, &fe) {
 			swallowed = append(swallowed, fe.Path)
@@ -261,8 +255,8 @@ func TestLinkTreeWithCustomLinkerSwallowsTypedForeignError(t *testing.T) {
 		}
 		return err
 	})
-	if err != nil || n != 3 {
-		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", n, err)
+	if err != nil || len(done) != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", len(done), err)
 	}
 	if len(swallowed) != 1 || swallowed[0] != foreign {
 		t.Fatalf("swallowed = %v, want [%s]", swallowed, foreign)
@@ -282,19 +276,15 @@ func TestLinkTreeWithCustomLinkerPropagatesTypedForeignError(t *testing.T) {
 	if err := os.WriteFile(foreign, []byte("mine"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	lock := &lockfile.Lockfile{}
-	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, linkOneWith(lock))
+	done, err := LinkTreeWith(false, src, dst, false, nil, linkOneWith())
 	var fe *ForeignError
 	if !errors.As(err, &fe) || fe.Path != foreign {
 		t.Fatalf("want *ForeignError for %s, got %v", foreign, err)
 	}
-	if n != 1 {
-		t.Fatalf("count = %d, want 1 (only a linked before the refusal)", n)
+	if len(done) != 1 {
+		t.Fatalf("count = %d, want 1 (only a linked before the refusal)", len(done))
 	}
-	if _, owned := lock.Owns(foreign); owned {
-		t.Fatal("refused path recorded in lock")
-	}
-	if _, owned := lock.Owns(filepath.Join(dst, "c")); owned {
-		t.Fatal("tree continued past the refusal")
+	if len(done) != 1 || done[0].Name != "a" {
+		t.Fatalf("done = %v, want only a", done)
 	}
 }

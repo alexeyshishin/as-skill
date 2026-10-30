@@ -8,18 +8,16 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"claude-harness/tools/internal/lockfile"
 )
 
-func TopNames(src string, kind lockfile.Kind) ([]string, error) {
+func TopNames(src string, skipReadme bool) ([]string, error) {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return nil, err
 	}
 	var names []string
 	for _, e := range entries {
-		if !SkipTop(kind, e.Name()) {
+		if !SkipTop(skipReadme, e.Name()) {
 			names = append(names, e.Name())
 		}
 	}

@@ -7,36 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"claude-harness/tools/internal/fsys"
-	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/lockfile"
 )
 
-func SkipTop(kind lockfile.Kind, name string) bool {
-	return kind == lockfile.KindHooks && name == "README.md"
+func SkipTop(skipReadme bool, name string) bool {
+	return skipReadme && name == "README.md"
 }
 
-func findHarnessRoot(src string) string {
-	abs, err := filepath.Abs(src)
-	if err != nil {
-		return src
-	}
-	for dir := abs; ; dir = filepath.Dir(dir) {
-		if info, err := os.Stat(harness.DomainsDir(dir)); err == nil && info.IsDir() {
-			return dir
-		}
-		if filepath.Dir(dir) == dir {
-			return abs
-		}
-	}
-}
-
-func CopyTree(kind lockfile.Kind, src, dst string, dryRun bool) (int, error) {
-	return CopyTreeRoot(kind, src, dst, findHarnessRoot(src), dryRun)
-}
-
-func CopyTreeRoot(kind lockfile.Kind, src, dst, root string, dryRun bool) (int, error) {
+func CopyTreeRoot(skipReadme bool, src, dst, root string, dryRun bool) (int, error) {
 	info, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -52,10 +29,10 @@ func CopyTreeRoot(kind lockfile.Kind, src, dst, root string, dryRun bool) (int, 
 	if err != nil {
 		return 0, err
 	}
-	return copyDir(kind, src, dst, "", realRoot, map[string]bool{realSrc: true}, dryRun)
+	return copyDir(skipReadme, src, dst, "", realRoot, map[string]bool{realSrc: true}, dryRun)
 }
 
-func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
+func copyDir(skipReadme bool, srcDir, dstDir, relBase, realRoot string, stack map[string]bool, dryRun bool) (int, error) {
 	if !dryRun {
 		if err := os.MkdirAll(dstDir, 0o755); err != nil {
 			return 0, err
@@ -68,7 +45,7 @@ func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack
 	count := 0
 	for _, e := range entries {
 		rel := filepath.Join(relBase, e.Name())
-		if SkipTop(kind, rel) {
+		if SkipTop(skipReadme, rel) {
 			continue
 		}
 		path := filepath.Join(srcDir, e.Name())
@@ -80,7 +57,7 @@ func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack
 			if err != nil {
 				return count, fmt.Errorf("resolving symlink %s: %w", path, err)
 			}
-			if !fsys.Within(realRoot, resolved) {
+			if !Within(realRoot, resolved) {
 				return count, fmt.Errorf("symlink %s resolves to %s, outside the harness root %s", path, resolved, realRoot)
 			}
 			st, err := os.Stat(resolved)
@@ -99,7 +76,7 @@ func copyDir(kind lockfile.Kind, srcDir, dstDir, relBase, realRoot string, stack
 				return count, fmt.Errorf("symlink cycle at %s -> %s", path, real)
 			}
 			stack[real] = true
-			n, err := copyDir(kind, realPath, target, rel, realRoot, stack, dryRun)
+			n, err := copyDir(skipReadme, realPath, target, rel, realRoot, stack, dryRun)
 			delete(stack, real)
 			count += n
 			if err != nil {
@@ -163,11 +140,14 @@ func MakeShellScriptsExecutable(dir string) error {
 	return nil
 }
 
-func WarnHooksNotExecutable(srcDir string) {
+// NonExecutableScripts returns the *.sh files directly under srcDir that lack
+// any exec bit.
+func NonExecutableScripts(srcDir string) []string {
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
-		return
+		return nil
 	}
+	var out []string
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sh") {
 			continue
@@ -176,6 +156,7 @@ func WarnHooksNotExecutable(srcDir string) {
 		if err != nil || info.Mode().Perm()&0o111 != 0 {
 			continue
 		}
-		fmt.Fprintf(os.Stderr, "as-skill: warning: %s is not executable; the symlinked hook won't be either (fix it in domains/)\n", filepath.Join(srcDir, e.Name()))
+		out = append(out, filepath.Join(srcDir, e.Name()))
 	}
+	return out
 }

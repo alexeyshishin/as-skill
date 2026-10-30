@@ -31,7 +31,7 @@ func TestCopyTreeDereferencesSymlinksInsideRoot(t *testing.T) {
 	}
 
 	dst := filepath.Join(t.TempDir(), "out")
-	n, err := CopyTree("skills", skill, dst, false)
+	n, err := CopyTreeRoot(false, skill, dst, root, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestCopyTreeRejectsSymlinkEscapingRoot(t *testing.T) {
 	if err := os.Symlink(filepath.Join(outside, "secret"), filepath.Join(skill, "leak")); err != nil {
 		t.Fatal(err)
 	}
-	_, err := CopyTree("skills", skill, filepath.Join(t.TempDir(), "out"), false)
+	_, err := CopyTreeRoot(false, skill, filepath.Join(t.TempDir(), "out"), root, false)
 	if err == nil || !strings.Contains(err.Error(), "outside the harness root") {
 		t.Fatalf("err = %v, want escape error", err)
 	}
@@ -72,7 +72,7 @@ func TestCopyTreeCycleGuard(t *testing.T) {
 	if err := os.Symlink(".", filepath.Join(skill, "loop")); err != nil {
 		t.Fatal(err)
 	}
-	_, err := CopyTree("skills", skill, filepath.Join(t.TempDir(), "out"), false)
+	_, err := CopyTreeRoot(false, skill, filepath.Join(t.TempDir(), "out"), root, false)
 	if err == nil || !strings.Contains(err.Error(), "cycle") {
 		t.Fatalf("err = %v, want cycle error", err)
 	}
@@ -85,7 +85,7 @@ func TestCopyTreeBrokenSymlinkErrors(t *testing.T) {
 	if err := os.Symlink("missing", filepath.Join(skill, "bad")); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := CopyTree("skills", skill, filepath.Join(t.TempDir(), "out"), false); err == nil {
+	if _, err := CopyTreeRoot(false, skill, filepath.Join(t.TempDir(), "out"), root, false); err == nil {
 		t.Fatal("want error for broken symlink")
 	}
 }
