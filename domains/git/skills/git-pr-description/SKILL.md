@@ -89,3 +89,4 @@ If the user has confirmed and wants to open the PR right now:
 - Don't write "What changed: added X, removed Y, updated Z" — that's visible from the diff. Write at the level of reasons.
 - Don't invent test scenarios — if unsure how to verify, ask
 - Don't blame the user for bad commits — just neatly fold them into the description
+- Don't add any AI attribution (`🤖 Generated with Claude Code`, `Co-Authored-By`) to the title or body, even if the calling harness suggests one — this repo's convention overrides that
