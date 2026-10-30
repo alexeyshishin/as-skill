@@ -153,19 +153,47 @@ func contains(l []string, s string) bool {
 	return false
 }
 
-func allPlatformOptions(selected map[platform.ID]bool, note string) []prompt.Option {
+func allPlatformOptions(selected map[platform.ID]bool, note string, unignored map[platform.ID]string) []prompt.Option {
 	var opts []prompt.Option
 	for _, id := range platform.IDs() {
 		l := string(id)
 		if selected[id] && note != "" {
 			l += " (" + note + ")"
 		}
+		if r := unignored[id]; r != "" {
+			l += " [" + r + " not git-ignored]"
+		}
 		opts = append(opts, prompt.Option{Value: string(id), Label: l, Selected: selected[id]})
 	}
 	return opts
 }
 
-func askPlatforms(p prompt.Prompter, detected []platform.ID, real bool, prev []platform.ID) ([]platform.ID, error) {
+// unignoredRoots maps each platform to its git-unignored link roots, so the
+// platform list can warn before a symlink install would be refused. The mode
+// is asked after platforms, so only the pre-answered --copy/--force are known
+// here; either one skips the guard.
+func unignoredRoots(project string, copyMode, force bool) map[platform.ID]string {
+	out := map[platform.ID]string{}
+	if copyMode || force {
+		return out
+	}
+	for _, id := range platform.IDs() {
+		in := &installer.Installer{ProjectRoot: project, Mode: "link", Platforms: []platform.ID{id}}
+		cs, _ := in.Collect(func() error { return in.GuardRoots("skills", "agents", "rules", "hooks") })
+		var roots []string
+		for _, c := range cs {
+			if c.Reason == installer.ReasonNotIgnored {
+				roots = append(roots, c.Path)
+			}
+		}
+		if len(roots) > 0 {
+			out[id] = strings.Join(roots, ", ")
+		}
+	}
+	return out
+}
+
+func askPlatforms(p prompt.Prompter, project string, copyMode, force bool, detected []platform.ID, real bool, prev []platform.ID) ([]platform.ID, error) {
 	sel := map[platform.ID]bool{}
 	for _, id := range detected {
 		sel[id] = true
@@ -180,7 +208,7 @@ func askPlatforms(p prompt.Prompter, detected []platform.ID, real bool, prev []p
 	if real {
 		note = "detected"
 	}
-	got, err := p.MultiSelect("platforms", "Platforms", allPlatformOptions(sel, note), func(s []string) error {
+	got, err := p.MultiSelect("platforms", "Platforms", allPlatformOptions(sel, note, unignoredRoots(project, copyMode, force)), func(s []string) error {
 		if len(s) == 0 {
 			return errors.New("select at least one platform")
 		}
@@ -229,6 +257,9 @@ type addPlan struct {
 	detected         bool
 	dialog           bool
 	mode             string
+	exclude          map[string]bool
+	overwrite        map[string]bool
+	adjust           []string
 }
 
 func addDialog(opts addOpts) (*addPlan, error) {
@@ -240,6 +271,10 @@ func addDialog(opts addOpts) (*addPlan, error) {
 		prevPlats []platform.ID
 		prevMode  string
 		platSrc   string
+		rawPlats  []platform.ID
+		rawMode   string
+		custom    customizeState
+		prevRes   = map[string]string{}
 	)
 	names := opts.names
 	err := runSteps([]func() (bool, error){
@@ -284,6 +319,16 @@ func addDialog(opts addOpts) (*addPlan, error) {
 			return false, nil
 		},
 		func() (bool, error) {
+			pl.exclude = nil
+			doms := customizableDomains(pl.harness, pl.reg, pl.sel)
+			if len(doms) == 0 {
+				return false, nil
+			}
+			var err error
+			pl.exclude, err = askCustomize(p, doms, &custom)
+			return true, err
+		},
+		func() (bool, error) {
 			det, src := detectPlatforms(pl.project, pl.lock)
 			platSrc = "default"
 			if len(src) > 0 {
@@ -293,26 +338,33 @@ func addDialog(opts addOpts) (*addPlan, error) {
 			if len(opts.agents) > 0 {
 				platSrc = "-a"
 				pl.plats, err = platform.ParsePlatforms(opts.agents)
+				rawPlats = pl.plats
 				return false, err
 			}
-			if pl.plats, err = askPlatforms(p, det, len(src) > 0, prevPlats); err != nil {
+			if pl.plats, err = askPlatforms(p, pl.project, opts.copy, opts.force, det, len(src) > 0, prevPlats); err != nil {
 				return true, err
 			}
-			prevPlats = pl.plats
+			prevPlats, rawPlats = pl.plats, pl.plats
 			return true, nil
 		},
 		func() (bool, error) {
 			pl.mode = "link"
 			if opts.copy {
 				pl.mode = "copy"
+				rawMode = pl.mode
 				return false, nil
 			}
 			var err error
 			if pl.mode, err = askMode(p, prevMode); err != nil {
 				return true, err
 			}
-			prevMode = pl.mode
+			prevMode, rawMode = pl.mode, pl.mode
 			return true, nil
+		},
+		func() (bool, error) {
+			pl.plats, pl.mode = append([]platform.ID(nil), rawPlats...), rawMode
+			pl.overwrite, pl.adjust = nil, nil
+			return resolveConflicts(p, opts, pl, prevRes)
 		},
 		func() (bool, error) {
 			if opts.dryRun {
@@ -344,7 +396,19 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 	if len(pl.sel.Skills) > 0 {
 		fmt.Fprintf(&b, "skills:    %s\n", strings.Join(pl.sel.Skills, ", "))
 	}
+	if ex := sortedKeys(pl.exclude); len(ex) > 0 {
+		fmt.Fprintf(&b, "deselect:  %s\n", strings.Join(ex, ", "))
+		fmt.Fprintf(&b, "warning:   agents may reference deselected skills\n")
+		for _, k := range ex {
+			if skillInstalled(pl.lock, pl.project, k[strings.Index(k, "/")+1:]) {
+				fmt.Fprintf(&b, "warning:   %s: already installed, deselected, kept — use remove\n", k)
+			}
+		}
+	}
 	fmt.Fprintf(&b, "platforms: %s (%s)\n", strings.Join(platformDirNames(pl.plats), ", "), platSrc)
+	for _, a := range pl.adjust {
+		fmt.Fprintf(&b, "adjusted:  %s\n", a)
+	}
 	for _, id := range pl.plats {
 		if g := installer.CapGap(id); g != "" {
 			fmt.Fprintf(&b, "warning:   %s: %s\n", id, g)

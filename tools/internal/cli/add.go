@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/registry"
@@ -35,12 +34,9 @@ func runAdd(args []string) error {
 	if err != nil {
 		return err
 	}
-	projectRoot, harnessRoot, reg, sel, lock, plats, mode := pl.project, pl.harness, pl.reg, pl.sel, pl.lock, pl.plats, pl.mode
+	projectRoot, reg, sel, lock, plats, mode := pl.project, pl.reg, pl.sel, pl.lock, pl.plats, pl.mode
 	detected := pl.detected || pl.dialog
-	in := &installer.Installer{
-		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
-		DryRun: opts.dryRun, Force: opts.force, Mode: mode, Lock: lock, Platforms: plats,
-	}
+	in := pl.newInstaller(opts)
 
 	if detected && mode == "link" {
 		kinds := []string{"skills", "agents", "rules", "hooks"}
@@ -53,24 +49,20 @@ func runAdd(args []string) error {
 		}
 	}
 
-	if len(sel.Domains) > 0 {
-		if err := in.Preflight(reg, sel.domainNames()); err != nil {
-			return err
+	if !pl.dialog {
+		cs, cerr := collectConflicts(in, reg, sel)
+		if cerr != nil {
+			return cerr
+		}
+		if len(cs) > 0 {
+			return conflictsError(cs)
 		}
 	}
-	var runErr error
-	for _, d := range sel.Domains {
-		if runErr = in.InstallDomain(reg, d.Name, d.Strict); runErr != nil {
-			break
-		}
+
+	if err := preflightAll(in, reg, sel); err != nil {
+		return err
 	}
-	if runErr == nil {
-		for _, s := range sel.Skills {
-			if runErr = in.InstallSkill(reg, s); runErr != nil {
-				break
-			}
-		}
-	}
+	runErr := installAll(in, reg, sel)
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
 			if runErr != nil {

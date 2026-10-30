@@ -23,10 +23,16 @@ type fakePrompt struct {
 	validate map[string]func([]string) error
 	summary  string
 	history  map[string][][]string // per id: selected values at each ask
+	descs    map[string]string
+	confDef  map[string]bool
+	selDef   map[string]string
 }
 
 func newFake(t *testing.T, answers map[string]any) *fakePrompt {
-	return &fakePrompt{t: t, answers: answers, options: map[string][]prompt.Option{}, validate: map[string]func([]string) error{}}
+	return &fakePrompt{
+		t: t, answers: answers, options: map[string][]prompt.Option{}, validate: map[string]func([]string) error{},
+		descs: map[string]string{}, confDef: map[string]bool{}, selDef: map[string]string{},
+	}
 }
 
 // enableDialog opts a test in to the interactive path with fp as the prompter.
@@ -79,6 +85,7 @@ func (f *fakePrompt) MultiSelect(id, title string, opts []prompt.Option, validat
 func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) (string, error) {
 	a := f.answer(id)
 	f.options[id] = opts
+	f.selDef[id] = def
 	f.record(id, opts)
 	if err, ok := a.(error); ok {
 		return "", err
@@ -88,7 +95,11 @@ func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) 
 
 func (f *fakePrompt) Confirm(id, title, desc string, def bool) (bool, error) {
 	a := f.answer(id)
-	f.summary = desc
+	f.descs[id] = desc
+	f.confDef[id] = def
+	if id == "confirm" {
+		f.summary = desc
+	}
 	if err, ok := a.(error); ok {
 		return false, err
 	}
