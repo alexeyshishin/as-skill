@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/transfer"
 )
 
 func rerunSetup(t *testing.T, mode string) (*Installer, *harness.Registry, string) {
@@ -178,7 +178,7 @@ func TestLegacyWholeDirHashAcceptedSharedDir(t *testing.T) {
 		}
 		for i, e := range in.Lock.Entries {
 			if e.Domain == d && e.Name == "" && e.Mode == "copy" && e.Kind == "skills" {
-				h, err := transfer.HashTree(e.Path)
+				h, err := fsys.HashTree(e.Path)
 				if err != nil {
 					t.Fatal(err)
 				}

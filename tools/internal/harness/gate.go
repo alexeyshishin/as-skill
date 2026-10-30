@@ -1,9 +1,8 @@
 package harness
 
 import (
+	"claude-harness/tools/internal/fsys"
 	"os"
-
-	"claude-harness/tools/internal/fsutil"
 )
 
 type MissKind int
@@ -34,5 +33,5 @@ func (m *Manifest) GateWith(lookupEnv func(string) string, hasBin func(string) b
 }
 
 func (m *Manifest) Gate() (Miss, bool) {
-	return m.GateWith(os.Getenv, fsutil.HasBin)
+	return m.GateWith(os.Getenv, fsys.HasBin)
 }

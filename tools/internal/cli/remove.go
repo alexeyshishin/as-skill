@@ -8,14 +8,13 @@ import (
 	"sort"
 	"strings"
 
-	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/transfer"
 )
 
 type removeTarget struct {
@@ -351,7 +350,7 @@ func (r *remover) sweep(rows []lockfile.Entry, afterHarness bool) {
 		if !ok {
 			continue
 		}
-		if afterHarness && r.dry && (e.Source == "" || e.Mode == lockfile.ModeCopy || fsutil.PathExists(e.Source)) {
+		if afterHarness && r.dry && (e.Source == "" || e.Mode == lockfile.ModeCopy || fsys.PathExists(e.Source)) {
 			continue
 		}
 		r.removeRow(e)
@@ -447,7 +446,7 @@ func (r *remover) rowPaths(e lockfile.Entry) (paths []string, ok bool) {
 	case e.Mode == lockfile.ModeCopy && len(e.Items) > 0:
 		return e.CoveredPaths(), true
 	case e.Mode == lockfile.ModeCopy:
-		names, err := transfer.TopNames(e.Source, e.Kind)
+		names, err := fsys.TopNames(e.Source, e.Kind.SkipsReadme())
 		if err != nil {
 			return nil, false
 		}

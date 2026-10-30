@@ -6,11 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/transfer"
 )
 
 type domainSel struct {
@@ -101,7 +100,7 @@ func detectPlatforms(project string, lock *lockfile.Lockfile) ([]platform.ID, []
 			if !claudeDirMeaningful(filepath.Join(project, dir)) {
 				continue
 			}
-		} else if !fsutil.DirExists(filepath.Join(project, dir)) {
+		} else if !fsys.DirExists(filepath.Join(project, dir)) {
 			continue
 		}
 		found[id] = dir
@@ -203,7 +202,7 @@ func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 	}
 	total := 0
 	for _, kind := range harness.DomainKinds {
-		names, err := transfer.TopNames(harness.KindDir(harnessRoot, domain, kind), kind)
+		names, err := fsys.TopNames(harness.KindDir(harnessRoot, domain, kind), kind.SkipsReadme())
 		if err != nil {
 			continue
 		}

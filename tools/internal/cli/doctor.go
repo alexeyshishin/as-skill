@@ -1,13 +1,13 @@
 package cli
 
 import (
+	"claude-harness/tools/internal/fsys"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -56,7 +56,7 @@ func runDoctor(args []string, d Deps) error {
 
 		switch e.Mode {
 		case lockfile.ModeLink:
-			if herr == nil && !fsutil.PathExists(e.Source) {
+			if herr == nil && !fsys.PathExists(e.Source) {
 				fmt.Fprintf(ios.Stdout(), "as-skill: doctor: %-11s %s/%s/%s — source %s no longer exists under harness root %s\n",
 					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
 				entryFailed = true

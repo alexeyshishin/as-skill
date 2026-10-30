@@ -11,11 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/transfer"
 )
 
 type Installer struct {
@@ -61,7 +60,21 @@ func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst str
 		if kind == lockfile.KindSkills && in.hasExclusions(domain) {
 			skip = func(item string) bool { return in.excluded(domain, kind, item) }
 		}
-		n, err := transfer.LinkTreeWith(domain, kind, src, dst, in.DryRun, in.Lock, skip, in.linkOne)
+		linked, err := fsys.LinkTreeWith(kind.SkipsReadme(), src, dst, in.DryRun, skip, in.linkOne)
+		n := len(linked)
+		if !in.DryRun {
+			for _, l := range linked {
+				in.Lock.Record(lockfile.Entry{
+					Domain:      domain,
+					Kind:        kind,
+					Name:        l.Name,
+					Mode:        lockfile.ModeLink,
+					Path:        l.Dst,
+					Source:      l.Src,
+					InstalledAt: time.Now(),
+				})
+			}
+		}
 		if err == nil && !in.DryRun && name == "" {
 			if skip == nil {
 				in.Lock.RemoveAt(domain, kind, "", dst)
@@ -78,7 +91,7 @@ func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst str
 	if !in.DryRun && name == "" {
 		in.dropLinksUnder(kind, src, dst)
 	}
-	n, err := transfer.CopyTree(kind, src, dst, in.DryRun)
+	n, err := fsys.CopyTreeRoot(kind.SkipsReadme(), src, dst, in.HarnessRoot, in.DryRun)
 	if err != nil {
 		return n, err
 	}
@@ -86,15 +99,15 @@ func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst str
 		var hash string
 		var items []string
 		if name == "" {
-			names, nerr := transfer.TopNames(src, kind)
+			names, nerr := fsys.TopNames(src, kind.SkipsReadme())
 			items = append(items, names...)
 			sort.Strings(items)
 			if nerr != nil {
 				return n, nerr
 			}
-			hash, err = transfer.HashNames(dst, names)
+			hash, err = fsys.HashNames(dst, names)
 		} else {
-			hash, err = transfer.HashTree(dst)
+			hash, err = fsys.HashTree(dst)
 		}
 		if err != nil {
 			return n, fmt.Errorf("hashing %s: %w", dst, err)
@@ -128,7 +141,7 @@ func (in *Installer) keepExcluded(domain string, kind lockfile.Kind, dst string,
 		}
 	}
 	sort.Strings(keep)
-	hash, err := transfer.HashNames(dst, keep)
+	hash, err := fsys.HashNames(dst, keep)
 	if len(keep) == 0 || err != nil {
 		in.Lock.RemoveAt(domain, kind, "", dst)
 		return
@@ -138,7 +151,7 @@ func (in *Installer) keepExcluded(domain string, kind lockfile.Kind, dst string,
 }
 
 func (in *Installer) dropLinksUnder(kind lockfile.Kind, src, dst string) {
-	names, err := transfer.TopNames(src, kind)
+	names, err := fsys.TopNames(src, kind.SkipsReadme())
 	if err != nil {
 		return
 	}
@@ -179,7 +192,7 @@ func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bo
 	}
 	for _, kind := range harness.DomainKinds {
 		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
-		if !fsutil.DirExists(srcDir) {
+		if !fsys.DirExists(srcDir) {
 			continue
 		}
 		if err := in.installKind(m, name, kind, srcDir); err != nil {
@@ -212,11 +225,11 @@ func (in *Installer) claudeKind(m *harness.Manifest, name string, kind lockfile.
 	in.report(name, string(kind), destPath, n)
 	if kind == lockfile.KindHooks && !in.DryRun {
 		if in.Mode == lockfile.ModeCopy {
-			if err := transfer.MakeShellScriptsExecutable(destPath); err != nil {
+			if err := fsys.MakeShellScriptsExecutable(destPath); err != nil {
 				return fmt.Errorf("domain %q: chmod hooks: %w", name, err)
 			}
 		} else {
-			transfer.WarnHooksNotExecutable(srcDir)
+			warnHooksNotExecutable(srcDir)
 		}
 	}
 	return nil
@@ -286,7 +299,7 @@ func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
 func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) error {
 	for _, kind := range harness.DomainKinds {
 		srcDir := harness.KindDir(in.HarnessRoot, name, kind)
-		if !fsutil.DirExists(srcDir) {
+		if !fsys.DirExists(srcDir) {
 			continue
 		}
 		destPath, err := in.resolveTarget(m, kind)
@@ -300,7 +313,7 @@ func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) err
 		var goneHooks []string
 		for _, e := range entries {
 			itemName := e.Name()
-			if transfer.SkipTop(kind, itemName) {
+			if fsys.SkipTop(kind.SkipsReadme(), itemName) {
 				continue
 			}
 			dst := filepath.Join(destPath, itemName)
@@ -432,4 +445,10 @@ func (in *Installer) report(scope, kind, dest string, n int) {
 		plural = ""
 	}
 	fmt.Printf("%-13s %-8s %-7s -> %s (%d file%s)\n", verb, scope, kind, dest, n, plural)
+}
+
+func warnHooksNotExecutable(srcDir string) {
+	for _, p := range fsys.NonExecutableScripts(srcDir) {
+		fmt.Fprintf(os.Stderr, "as-skill: warning: %s is not executable; the symlinked hook won't be either (fix it in domains/)\n", p)
+	}
 }

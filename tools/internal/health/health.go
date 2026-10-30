@@ -10,10 +10,10 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/transfer"
 )
 
 const (
@@ -109,10 +109,10 @@ func RenderState(e lockfile.Entry) (stale, drifted bool) {
 	if e.Mode != lockfile.ModeRender {
 		return false, false
 	}
-	if data, err := os.ReadFile(e.Source); err == nil && e.SrcSHA256 != "" && transfer.HashBytes(data) != e.SrcSHA256 {
+	if data, err := os.ReadFile(e.Source); err == nil && e.SrcSHA256 != "" && fsys.HashBytes(data) != e.SrcSHA256 {
 		stale = true
 	}
-	if out, err := os.ReadFile(e.Path); err == nil && e.SHA256 != "" && transfer.HashBytes(out) != e.SHA256 {
+	if out, err := os.ReadFile(e.Path); err == nil && e.SHA256 != "" && fsys.HashBytes(out) != e.SHA256 {
 		drifted = true
 	}
 	return stale, drifted
@@ -237,21 +237,21 @@ func CopyMatches(e lockfile.Entry) (bool, error) {
 // matched and the names are unknowable (Source gone, no Items).
 func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
 	if e.Name != "" || e.Kind == "" && e.Source == "" {
-		hash, err := transfer.HashPath(e.Path)
+		hash, err := fsys.HashPath(e.Path)
 		if err != nil {
 			return false, err
 		}
 		return hash == e.SHA256, nil
 	}
 	if len(e.Items) > 0 {
-		hash, err := transfer.HashNames(e.Path, e.Items)
+		hash, err := fsys.HashNames(e.Path, e.Items)
 		if err != nil {
 			return false, err
 		}
 		return hash == e.SHA256, nil
 	}
 	try := func(names []string) (bool, error) {
-		hash, err := transfer.HashNames(e.Path, names)
+		hash, err := fsys.HashNames(e.Path, names)
 		if err != nil {
 			return false, err
 		}
@@ -260,7 +260,7 @@ func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
 	srcKnown := false
 	var own []string
 	if e.Source != "" {
-		if names, err := transfer.TopNames(e.Source, e.Kind); err == nil {
+		if names, err := fsys.TopNames(e.Source, e.Kind.SkipsReadme()); err == nil {
 			srcKnown = true
 			own = names
 			if ok, err := try(own); err != nil || ok {
@@ -280,7 +280,7 @@ func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
 			}
 			names := o.Items
 			if len(names) == 0 && o.Source != "" {
-				names, _ = transfer.TopNames(o.Source, o.Kind)
+				names, _ = fsys.TopNames(o.Source, o.Kind.SkipsReadme())
 			}
 			if len(names) == 0 {
 				complete = false
@@ -300,7 +300,7 @@ func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
 			}
 		}
 	}
-	hash, err := transfer.HashPath(e.Path)
+	hash, err := fsys.HashPath(e.Path)
 	if err != nil {
 		return false, err
 	}

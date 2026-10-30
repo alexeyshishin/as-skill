@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/transfer"
 )
 
 const (
@@ -29,7 +29,7 @@ func (e ConflictError) Error() string {
 	if e.Reason == ReasonNotIgnored {
 		return fmt.Sprintf("refusing: %s is not git-ignored; add %s to .gitignore or use --copy (or --force)", e.Path, e.Path)
 	}
-	return (&transfer.ForeignError{Path: e.Path}).Error()
+	return (&fsys.ForeignError{Path: e.Path}).Error()
 }
 
 // Collect runs run (the caller's real Preflight/InstallDomain/InstallSkill
@@ -86,8 +86,14 @@ func (in *Installer) overwrites(dst string) bool {
 }
 
 func (in *Installer) linkOne(src, dst string) error {
-	err := transfer.LinkOne(src, dst, in.DryRun, in.Force || in.overwrites(dst), in.Lock)
-	var fe *transfer.ForeignError
+	prior, err := fsys.LinkOne(src, dst, in.DryRun, in.Force || in.overwrites(dst), func(p string) (string, bool) {
+		e, ok := in.Lock.Covering(p)
+		return string(e.Mode), ok
+	})
+	if prior.Tracked && lockfile.Mode(prior.Mode) != lockfile.ModeLink {
+		fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, prior.Mode)
+	}
+	var fe *fsys.ForeignError
 	if errors.As(err, &fe) {
 		return in.conflict(fe.Path, ReasonForeign)
 	}

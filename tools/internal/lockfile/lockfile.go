@@ -29,6 +29,9 @@ const (
 	KindInstructions Kind = "instructions"
 )
 
+// SkipsReadme reports whether top-level README.md is not an installable item of this kind.
+func (k Kind) SkipsReadme() bool { return k == KindHooks }
+
 const DefaultPlatform = "claude"
 
 type Entry struct {

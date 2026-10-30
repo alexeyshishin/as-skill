@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"claude-harness/tools/internal/fsys"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/frontmatter"
-	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/harness"
 )
 
@@ -37,7 +37,7 @@ func runCheck(args []string, d Deps) error {
 		}
 		domainNames = append(domainNames, de.Name())
 		manifestPath := filepath.Join(domainsDir, de.Name(), "manifest.yaml")
-		if !fsutil.FileExists(manifestPath) {
+		if !fsys.FileExists(manifestPath) {
 			failures = append(failures, fmt.Sprintf("%s: missing manifest.yaml", manifestPath))
 			continue
 		}

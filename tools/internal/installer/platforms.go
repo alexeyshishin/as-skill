@@ -13,14 +13,12 @@ import (
 	"time"
 
 	"claude-harness/tools/internal/frontmatter"
-	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/hookcfg"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/render"
-	"claude-harness/tools/internal/transfer"
 )
 
 const agentsMD = "AGENTS.md"
@@ -304,7 +302,7 @@ func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 		}
 		kinds := map[lockfile.Kind]bool{}
 		for _, kind := range harness.DomainKinds {
-			if fsutil.DirExists(harness.KindDir(in.HarnessRoot, name, kind)) {
+			if fsys.DirExists(harness.KindDir(in.HarnessRoot, name, kind)) {
 				kinds[kind] = true
 			}
 		}
@@ -331,7 +329,7 @@ func (in *Installer) preflightForeign(name string, kinds map[lockfile.Kind]bool)
 			return
 		}
 		for _, e := range entries {
-			if transfer.SkipTop(kind, e.Name()) || in.excluded(name, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
+			if fsys.SkipTop(kind.SkipsReadme(), e.Name()) || in.excluded(name, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
 				continue
 			}
 			paths = append(paths, filepath.Join(dstDir, e.Name()))
@@ -475,7 +473,7 @@ func (in *Installer) placeItems(domain string, kind lockfile.Kind, srcDir, dstDi
 	}
 	n := 0
 	for _, e := range entries {
-		if transfer.SkipTop(kind, e.Name()) || in.excluded(domain, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
+		if fsys.SkipTop(kind.SkipsReadme(), e.Name()) || in.excluded(domain, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
 			continue
 		}
 		if err := in.placeOne(domain, kind, e.Name(), filepath.Join(srcDir, e.Name()), filepath.Join(dstDir, e.Name()), plats); err != nil {
@@ -525,7 +523,7 @@ func (in *Installer) placeOne(domain string, kind lockfile.Kind, name, src, dst 
 		return err
 	}
 	if fi.IsDir() {
-		if _, err := transfer.CopyTreeRoot(kind, src, dst, in.HarnessRoot, in.DryRun); err != nil {
+		if _, err := fsys.CopyTreeRoot(kind.SkipsReadme(), src, dst, in.HarnessRoot, in.DryRun); err != nil {
 			return err
 		}
 	} else if !in.DryRun {
@@ -540,7 +538,7 @@ func (in *Installer) placeOne(domain string, kind lockfile.Kind, name, src, dst 
 	if in.DryRun {
 		return nil
 	}
-	hash, err := transfer.HashPath(dst)
+	hash, err := fsys.HashPath(dst)
 	if err != nil {
 		return fmt.Errorf("hashing %s: %w", dst, err)
 	}
@@ -588,7 +586,7 @@ func (in *Installer) writeRendered(domain string, kind lockfile.Kind, name, src,
 	}
 	in.Lock.Record(lockfile.Entry{
 		Domain: domain, Kind: kind, Name: name, Mode: lockfile.ModeRender,
-		Path: dst, Source: src, SHA256: transfer.HashBytes(out), SrcSHA256: transfer.HashBytes(srcData),
+		Path: dst, Source: src, SHA256: fsys.HashBytes(out), SrcSHA256: fsys.HashBytes(srcData),
 		Platforms: pl, InstalledAt: time.Now(),
 	})
 	return nil
@@ -731,11 +729,11 @@ func (in *Installer) placeHooks(domain, srcDir string, p platform.Platform) erro
 	}
 	if !in.DryRun {
 		if in.Mode == lockfile.ModeCopy {
-			if err := transfer.MakeShellScriptsExecutable(dst); err != nil {
+			if err := fsys.MakeShellScriptsExecutable(dst); err != nil {
 				return err
 			}
 		} else {
-			transfer.WarnHooksNotExecutable(srcDir)
+			warnHooksNotExecutable(srcDir)
 		}
 	}
 	fmt.Fprintf(os.Stderr, "as-skill: warning: hooks on %s: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)\n", p.ID)

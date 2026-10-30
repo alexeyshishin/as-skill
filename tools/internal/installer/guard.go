@@ -11,7 +11,6 @@ import (
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/transfer"
 )
 
 // PlatformRoots lists the project-relative top-level dirs as-skill may write
@@ -138,7 +137,7 @@ func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill str
 					continue
 				}
 				for _, e := range entries {
-					if !transfer.SkipTop(kind, e.Name()) {
+					if !fsys.SkipTop(kind.SkipsReadme(), e.Name()) {
 						check(filepath.Join(destPath, e.Name()))
 					}
 				}
