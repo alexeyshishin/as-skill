@@ -25,9 +25,14 @@ type Installer struct {
 	Lock        *lockfile.Lockfile
 	Platforms   []platform.ID
 
+	ExcludeSkills map[string]bool
+	Overwrite     map[string]bool
+
 	gitChecked map[string]bool
 	dupWarned  bool
 	gapsDone   bool
+	collecting bool
+	conflicts  []ConflictError
 }
 
 func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
@@ -38,7 +43,7 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 					return 0, err
 				}
 			}
-			if err := transfer.LinkOne(src, dst, in.DryRun, in.Force, in.Lock); err != nil {
+			if err := in.linkOne(src, dst); err != nil {
 				return 0, err
 			}
 			if !in.DryRun {
@@ -50,9 +55,17 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 			}
 			return 1, nil
 		}
-		n, err := transfer.LinkTree(domain, kind, src, dst, in.DryRun, in.Force, in.Lock)
+		var skip func(string) bool
+		if kind == "skills" && in.hasExclusions(domain) {
+			skip = func(item string) bool { return in.excluded(domain, kind, item) }
+		}
+		n, err := transfer.LinkTreeWith(domain, kind, src, dst, in.DryRun, in.Lock, skip, in.linkOne)
 		if err == nil && !in.DryRun && name == "" {
-			in.Lock.RemoveAt(domain, kind, "", dst)
+			if skip == nil {
+				in.Lock.RemoveAt(domain, kind, "", dst)
+			} else {
+				in.keepExcluded(domain, kind, dst, skip)
+			}
 		}
 		return n, err
 	}
@@ -84,6 +97,9 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 		if err != nil {
 			return n, fmt.Errorf("hashing %s: %w", dst, err)
 		}
+		for _, it := range items {
+			in.Lock.RemoveAllAt(filepath.Join(dst, it))
+		}
 		in.Lock.Record(lockfile.Entry{
 			Domain: domain, Kind: kind, Name: name,
 			Mode: "copy", Path: dst, Source: src, SHA256: hash, Items: items,
@@ -91,6 +107,32 @@ func (in *Installer) place(domain, kind, name, src, dst string) (int, error) {
 		})
 	}
 	return n, nil
+}
+
+func (in *Installer) keepExcluded(domain, kind, dst string, skip func(string) bool) {
+	parent, ok := in.Lock.FindAt(domain, kind, "", dst)
+	if !ok {
+		return
+	}
+	if parent.Mode != lockfile.ModeCopy {
+		in.Lock.RemoveAt(domain, kind, "", dst)
+		return
+	}
+	var keep []string
+	for _, p := range parent.CoveredPaths() {
+		item := filepath.Base(p)
+		if fi, err := os.Lstat(p); skip(item) && err == nil && fi.Mode()&os.ModeSymlink == 0 {
+			keep = append(keep, item)
+		}
+	}
+	sort.Strings(keep)
+	hash, err := transfer.HashNames(dst, keep)
+	if len(keep) == 0 || err != nil {
+		in.Lock.RemoveAt(domain, kind, "", dst)
+		return
+	}
+	parent.Items, parent.SHA256 = keep, hash
+	in.Lock.Record(parent)
 }
 
 func (in *Installer) dropLinksUnder(kind, src, dst string) {
@@ -161,6 +203,15 @@ func (in *Installer) claudeKind(m *registry.Manifest, name, kind, srcDir string,
 	}
 	prior := in.snapshotPlatforms(name, kind, destPath)
 	defer in.applyPlatforms(name, kind, destPath, plats, prior)
+	if kind == "skills" && in.Mode != "link" && in.hasExclusions(name) {
+		if err := in.placeItems(name, kind, srcDir, destPath, plats); err != nil {
+			return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
+		}
+		if !in.DryRun {
+			in.keepExcluded(name, kind, destPath, func(item string) bool { return in.excluded(name, kind, item) })
+		}
+		return nil
+	}
 	n, err := in.place(name, kind, "", srcDir, destPath)
 	if err != nil {
 		return fmt.Errorf("domain %q: copying %s: %w", name, kind, err)
@@ -337,6 +388,9 @@ func (in *Installer) uninstallOne(domain, kind, name, dst string) bool {
 		}
 	}
 	if !tracked {
+		if _, err := os.Lstat(dst); os.IsNotExist(err) {
+			return false
+		}
 		fmt.Fprintf(os.Stderr, "as-skill: warning: skipping %s — not tracked by as-skill\n", dst)
 		return false
 	}

@@ -203,7 +203,7 @@ func (in *Installer) guardRoot(root string) error {
 		if ok {
 			return nil
 		}
-		return guardErr(root)
+		return in.conflict(root, ReasonNotIgnored)
 	}
 	if in.gitChecked == nil {
 		in.gitChecked = map[string]bool{}
@@ -213,11 +213,7 @@ func (in *Installer) guardRoot(root string) error {
 	if ok {
 		return nil
 	}
-	return guardErr(root)
-}
-
-func guardErr(root string) error {
-	return fmt.Errorf("refusing: %s is not git-ignored; add %s to .gitignore or use --copy (or --force)", root, root)
+	return in.conflict(root, ReasonNotIgnored)
 }
 
 func gitIgnored(project, root string) bool {
@@ -368,7 +364,7 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 			return
 		}
 		for _, e := range entries {
-			if transfer.SkipTop(kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
+			if transfer.SkipTop(kind, e.Name()) || in.excluded(name, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
 				continue
 			}
 			paths = append(paths, filepath.Join(dstDir, e.Name()))
@@ -379,7 +375,7 @@ func (in *Installer) preflightForeign(name string, kinds map[string]bool) error 
 		if kind == "skills" {
 			locs, _ := platform.SkillLocations(in.plats())
 			for loc, plats := range locs {
-				if loc != claudeSkillsLoc && in.Mode != "link" {
+				if (loc != claudeSkillsLoc || in.hasExclusions(name)) && in.Mode != "link" {
 					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, loc), plats)
 				}
 			}
@@ -512,7 +508,7 @@ func (in *Installer) placeItems(domain, kind, srcDir, dstDir string, plats []pla
 	}
 	n := 0
 	for _, e := range entries {
-		if transfer.SkipTop(kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
+		if transfer.SkipTop(kind, e.Name()) || in.excluded(domain, kind, e.Name()) || !hookWanted(kind, filepath.Join(srcDir, e.Name()), plats) {
 			continue
 		}
 		if err := in.placeOne(domain, kind, e.Name(), filepath.Join(srcDir, e.Name()), filepath.Join(dstDir, e.Name()), plats); err != nil {
@@ -538,7 +534,7 @@ func (in *Installer) placeOne(domain, kind, name, src, dst string, plats []platf
 		}
 	}
 	if in.Mode == "link" {
-		if err := transfer.LinkOne(src, dst, in.DryRun, in.Force, in.Lock); err != nil {
+		if err := in.linkOne(src, dst); err != nil {
 			return err
 		}
 		if !in.DryRun {
@@ -592,10 +588,10 @@ func (in *Installer) refuseForeign(dst string) error {
 	if _, err := os.Lstat(dst); err != nil {
 		return nil
 	}
-	if _, ok := in.Lock.Covering(dst); ok || in.Force {
+	if _, ok := in.Lock.Covering(dst); ok || in.Force || in.overwrites(dst) {
 		return nil
 	}
-	return fmt.Errorf("%s exists, not tracked by as-skill, use --force", dst)
+	return in.conflict(dst, ReasonForeign)
 }
 
 func (in *Installer) writeRendered(domain, kind, name, src, dst string, srcData, out []byte, p platform.ID) error {

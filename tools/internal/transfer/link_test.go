@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -149,5 +150,151 @@ func TestLinkOneRefusesUntrackedExistingContentWithoutForce(t *testing.T) {
 	}
 	if string(got) != "pre-existing, not tracked" {
 		t.Fatalf("dst content changed despite refusal: %q", got)
+	}
+}
+
+func linkTreeSrc(t *testing.T) string {
+	t.Helper()
+	src := filepath.Join(t.TempDir(), "skills")
+	for _, n := range []string{"a", "b", "c"} {
+		if err := os.MkdirAll(filepath.Join(src, n), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return src
+}
+
+func linkOneWith(lock *lockfile.Lockfile) func(src, dst string) error {
+	return func(s, d string) error { return LinkOne(s, d, false, false, lock) }
+}
+
+func TestLinkTreeWithSkipLeavesNamesOutAndUnrecorded(t *testing.T) {
+	src := linkTreeSrc(t)
+	dst := filepath.Join(t.TempDir(), "out")
+	lock := &lockfile.Lockfile{}
+
+	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, func(name string) bool { return name == "b" }, linkOneWith(lock))
+	if err != nil || n != 2 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 2, nil", n, err)
+	}
+	for name, want := range map[string]bool{"a": true, "b": false, "c": true} {
+		_, err := os.Lstat(filepath.Join(dst, name))
+		if (err == nil) != want {
+			t.Fatalf("%s present = %v, want %v", name, err == nil, want)
+		}
+		_, owned := lock.Owns(filepath.Join(dst, name))
+		if owned != want {
+			t.Fatalf("%s row = %v, want %v", name, owned, want)
+		}
+	}
+}
+
+func TestLinkTreeWithNilSkipLinksEverything(t *testing.T) {
+	src := linkTreeSrc(t)
+	dst := filepath.Join(t.TempDir(), "out")
+	lock := &lockfile.Lockfile{}
+	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, linkOneWith(lock))
+	if err != nil || n != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", n, err)
+	}
+	for _, name := range []string{"a", "b", "c"} {
+		target, err := os.Readlink(filepath.Join(dst, name))
+		if err != nil || target != filepath.Join(src, name) {
+			t.Fatalf("%s -> %q, %v", name, target, err)
+		}
+	}
+}
+
+func TestLinkOneForeignErrorTypedWithUnchangedText(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src")
+	dst := filepath.Join(dir, "dst")
+	for _, p := range []string{src, dst} {
+		if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	err := LinkOne(src, dst, false, false, &lockfile.Lockfile{})
+	var fe *ForeignError
+	if !errors.As(err, &fe) || fe.Path != dst {
+		t.Fatalf("want *ForeignError for %s, got %v", dst, err)
+	}
+	if want := dst + " exists, not tracked by as-skill, use --force"; err.Error() != want {
+		t.Fatalf("text = %q, want %q", err.Error(), want)
+	}
+}
+
+func TestLinkTreeWithCustomLinkerCanSwallowRefusal(t *testing.T) {
+	src := linkTreeSrc(t)
+	dst := filepath.Join(t.TempDir(), "out")
+	var seen []string
+	n, err := LinkTreeWith("d", "skills", src, dst, true, &lockfile.Lockfile{}, nil, func(s, d string) error {
+		seen = append(seen, filepath.Base(d))
+		return nil
+	})
+	if err != nil || n != 3 || len(seen) != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v, seen %v", n, err, seen)
+	}
+	if _, err := os.Lstat(dst); !os.IsNotExist(err) {
+		t.Fatalf("dry run created %s: %v", dst, err)
+	}
+}
+
+func TestLinkTreeWithCustomLinkerSwallowsTypedForeignError(t *testing.T) {
+	src := linkTreeSrc(t)
+	dst := filepath.Join(t.TempDir(), "out")
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	foreign := filepath.Join(dst, "b")
+	if err := os.WriteFile(foreign, []byte("mine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lock := &lockfile.Lockfile{}
+	var swallowed []string
+	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, func(s, d string) error {
+		err := LinkOne(s, d, false, false, lock)
+		var fe *ForeignError
+		if errors.As(err, &fe) {
+			swallowed = append(swallowed, fe.Path)
+			return nil
+		}
+		return err
+	})
+	if err != nil || n != 3 {
+		t.Fatalf("LinkTreeWith = %d, %v; want 3, nil", n, err)
+	}
+	if len(swallowed) != 1 || swallowed[0] != foreign {
+		t.Fatalf("swallowed = %v, want [%s]", swallowed, foreign)
+	}
+	if got, err := os.ReadFile(foreign); err != nil || string(got) != "mine" {
+		t.Fatalf("foreign file touched: %q, %v", got, err)
+	}
+}
+
+func TestLinkTreeWithCustomLinkerPropagatesTypedForeignError(t *testing.T) {
+	src := linkTreeSrc(t)
+	dst := filepath.Join(t.TempDir(), "out")
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	foreign := filepath.Join(dst, "b")
+	if err := os.WriteFile(foreign, []byte("mine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lock := &lockfile.Lockfile{}
+	n, err := LinkTreeWith("d", "skills", src, dst, false, lock, nil, linkOneWith(lock))
+	var fe *ForeignError
+	if !errors.As(err, &fe) || fe.Path != foreign {
+		t.Fatalf("want *ForeignError for %s, got %v", foreign, err)
+	}
+	if n != 1 {
+		t.Fatalf("count = %d, want 1 (only a linked before the refusal)", n)
+	}
+	if _, owned := lock.Owns(foreign); owned {
+		t.Fatal("refused path recorded in lock")
+	}
+	if _, owned := lock.Owns(filepath.Join(dst, "c")); owned {
+		t.Fatal("tree continued past the refusal")
 	}
 }

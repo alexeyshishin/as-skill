@@ -9,11 +9,19 @@ import (
 	"claude-harness/tools/internal/lockfile"
 )
 
+type ForeignError struct {
+	Path string
+}
+
+func (e *ForeignError) Error() string {
+	return fmt.Sprintf("%s exists, not tracked by as-skill, use --force", e.Path)
+}
+
 func LinkOne(src, dst string, dryRun, force bool, lock *lockfile.Lockfile) error {
 	if _, err := os.Lstat(dst); err == nil {
 		entry, tracked := lock.Covering(dst)
 		if !tracked && !force {
-			return fmt.Errorf("%s exists, not tracked by as-skill, use --force", dst)
+			return &ForeignError{Path: dst}
 		}
 		if tracked && entry.Mode != "link" {
 			fmt.Fprintf(os.Stderr, "as-skill: warning: %s was installed via %q, replacing with a link — mixed channels may cause confusion\n", dst, entry.Mode)
@@ -36,7 +44,7 @@ func LinkOne(src, dst string, dryRun, force bool, lock *lockfile.Lockfile) error
 	return nil
 }
 
-func LinkTree(domain, kind, src, dstDir string, dryRun, force bool, lock *lockfile.Lockfile) (int, error) {
+func LinkTreeWith(domain, kind, src, dstDir string, dryRun bool, lock *lockfile.Lockfile, skip func(name string) bool, link func(src, dst string) error) (int, error) {
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return 0, err
@@ -49,12 +57,12 @@ func LinkTree(domain, kind, src, dstDir string, dryRun, force bool, lock *lockfi
 	count := 0
 	for _, e := range entries {
 		name := e.Name()
-		if SkipTop(kind, name) {
+		if SkipTop(kind, name) || (skip != nil && skip(name)) {
 			continue
 		}
 		srcPath := filepath.Join(src, name)
 		dstPath := filepath.Join(dstDir, name)
-		if err := LinkOne(srcPath, dstPath, dryRun, force, lock); err != nil {
+		if err := link(srcPath, dstPath); err != nil {
 			return count, err
 		}
 		count++
