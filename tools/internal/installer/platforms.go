@@ -611,10 +611,6 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 	if err != nil {
 		return err
 	}
-	mode := render.Copy
-	if in.Mode == lockfile.ModeLink {
-		mode = render.Link
-	}
 	n := 0
 	for _, e := range entries {
 		stem := strings.TrimSuffix(e.Name(), ".md")
@@ -628,13 +624,13 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 			return err
 		}
 		promptRel := ""
-		if mode == render.Link {
+		if in.Mode == lockfile.ModeLink {
 			promptRel = platform.PromptsDir + "/" + e.Name()
 			if err := in.placeOne(domain, lockfile.KindPrompts, e.Name(), src, filepath.Join(in.ProjectRoot, promptRel), []platform.ID{p.ID}); err != nil {
 				return err
 			}
 		}
-		out, err := render.RenderAgent(data, filepath.ToSlash(relToHarness(in.HarnessRoot, src)), stem, render.Format(p.Agents.Format), mode, promptRel)
+		out, err := render.RenderAgent(data, filepath.ToSlash(relToHarness(in.HarnessRoot, src)), stem, p.Agents.Format, in.Mode, promptRel)
 		if err != nil {
 			return err
 		}

@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/platform"
 )
 
 var update = flag.Bool("update", false, "update golden files")
@@ -53,14 +56,14 @@ func tomlCheck(t *testing.T, data []byte) {
 func TestRenderGolden(t *testing.T) {
 	cases := []struct {
 		src, out string
-		f        Format
-		mode     Mode
+		f        platform.AgentFormat
+		mode     lockfile.Mode
 	}{
-		{"tricky.md", "tricky.codex.link.toml", FormatCodexTOML, Link},
-		{"tricky.md", "tricky.codex.copy.toml", FormatCodexTOML, Copy},
-		{"tricky.md", "tricky.cursor.copy.md", FormatCursorMD, Copy},
-		{"tricky.md", "tricky.opencode.link.md", FormatOpenCodeMD, Link},
-		{"crlf.md", "crlf.codex.copy.toml", FormatCodexTOML, Copy},
+		{"tricky.md", "tricky.codex.link.toml", platform.AgentCodexTOML, lockfile.ModeLink},
+		{"tricky.md", "tricky.codex.copy.toml", platform.AgentCodexTOML, lockfile.ModeCopy},
+		{"tricky.md", "tricky.cursor.copy.md", platform.AgentCursorMD, lockfile.ModeCopy},
+		{"tricky.md", "tricky.opencode.link.md", platform.AgentOpenCodeMD, lockfile.ModeLink},
+		{"crlf.md", "crlf.codex.copy.toml", platform.AgentCodexTOML, lockfile.ModeCopy},
 	}
 	var toml [][]byte
 	for _, c := range cases {
@@ -79,7 +82,7 @@ func TestRenderGolden(t *testing.T) {
 			t.Errorf("%s: model id leaked", c.out)
 		}
 		golden(t, c.out, got)
-		if c.f == FormatCodexTOML {
+		if c.f == platform.AgentCodexTOML {
 			toml = append(toml, got)
 		}
 	}
@@ -92,7 +95,7 @@ func TestRenderGolden(t *testing.T) {
 
 func TestRenderDetails(t *testing.T) {
 	src, _ := os.ReadFile("testdata/tricky.md")
-	toml, _ := RenderAgent(src, "s.md", "tricky", FormatCodexTOML, Copy, "")
+	toml, _ := RenderAgent(src, "s.md", "tricky", platform.AgentCodexTOML, lockfile.ModeCopy, "")
 	s := string(toml)
 	for _, w := range []string{`model_reasoning_effort = "high"`, `description = "Folded описание with \"quotes\" and \\ backslash."`, `Triple ""\" quotes`, `C:\\dir\\new`, "привет, мир."} {
 		if !strings.Contains(s, w) {
@@ -100,17 +103,17 @@ func TestRenderDetails(t *testing.T) {
 		}
 	}
 	crlf, _ := os.ReadFile("testdata/crlf.md")
-	c, _ := RenderAgent(crlf, "s.md", "crlf", FormatCodexTOML, Copy, "")
+	c, _ := RenderAgent(crlf, "s.md", "crlf", platform.AgentCodexTOML, lockfile.ModeCopy, "")
 	if strings.Contains(string(c), "\r") || strings.Contains(string(c), "model_reasoning_effort") {
 		t.Errorf("crlf/effort: %q", c)
 	}
-	if _, err := RenderAgent(src, "s.md", "x", FormatCodexTOML, Link, ""); err == nil {
+	if _, err := RenderAgent(src, "s.md", "x", platform.AgentCodexTOML, lockfile.ModeLink, ""); err == nil {
 		t.Error("link without prompt path must fail")
 	}
-	if _, err := RenderAgent([]byte("no fm"), "s.md", "x", FormatCursorMD, Copy, ""); err == nil {
+	if _, err := RenderAgent([]byte("no fm"), "s.md", "x", platform.AgentCursorMD, lockfile.ModeCopy, ""); err == nil {
 		t.Error("no frontmatter must fail")
 	}
-	cur, _ := RenderAgent(src, "s.md", "tricky", FormatCursorMD, Link, ".claude/agents/tricky.md")
+	cur, _ := RenderAgent(src, "s.md", "tricky", platform.AgentCursorMD, lockfile.ModeLink, ".claude/agents/tricky.md")
 	if !strings.Contains(string(cur), "model: inherit") || !strings.Contains(string(cur), "Read `.claude/agents/tricky.md` and follow it exactly; it is your complete instructions.") {
 		t.Errorf("cursor: %s", cur)
 	}
