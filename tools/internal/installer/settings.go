@@ -559,15 +559,28 @@ func (in *Installer) EnableHooks(p platform.ID, names []string) error {
 
 func (in *Installer) enableHooks(p platform.ID, names []string) error {
 	spec, _ := platform.Get(p)
-	if p == platform.Claude {
-		if home, err := os.UserHomeDir(); err == nil && filepath.Clean(home) == filepath.Clean(in.ProjectRoot) {
-			return fmt.Errorf("refusing: %s/.claude/settings.json is the global settings file", in.ProjectRoot)
-		}
+	if err := in.refuseGlobalSettings(p); err != nil {
+		return err
 	}
 	regs, err := hookFiles(filepath.Join(in.ProjectRoot, spec.Hooks.Dir), names, p)
 	if err != nil {
 		return err
 	}
+	return in.applyRegs(p, regs)
+}
+
+func (in *Installer) refuseGlobalSettings(p platform.ID) error {
+	if p == platform.Claude {
+		if home, err := os.UserHomeDir(); err == nil && filepath.Clean(home) == filepath.Clean(in.ProjectRoot) {
+			return fmt.Errorf("refusing: %s/.claude/settings.json is the global settings file", in.ProjectRoot)
+		}
+	}
+	return nil
+}
+
+// applyRegs merges regs into the platform's hook config file (read-only in DryRun).
+func (in *Installer) applyRegs(p platform.ID, regs []hookReg) error {
+	spec, _ := platform.Get(p)
 	path := filepath.Join(in.ProjectRoot, spec.Hooks.ConfigFile)
 	data, err := os.ReadFile(path)
 	if err != nil && !os.IsNotExist(err) {
