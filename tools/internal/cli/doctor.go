@@ -153,6 +153,7 @@ func codexHooksNeedTrust(projectRoot string, lock *lockfile.Lockfile) bool {
 	if !has {
 		return false
 	}
-	data, err := os.ReadFile(filepath.Join(projectRoot, ".codex", "hooks.json"))
-	return err == nil && strings.Contains(string(data), "./.codex/hooks/")
+	spec, _ := platform.Get(platform.Codex)
+	data, err := os.ReadFile(filepath.Join(projectRoot, spec.Hooks.ConfigFile))
+	return err == nil && strings.Contains(string(data), "./"+spec.Hooks.Dir+"/")
 }

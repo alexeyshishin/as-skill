@@ -416,7 +416,7 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 		fmt.Fprintf(&b, "adjusted:  %s\n", a)
 	}
 	for _, id := range pl.plats {
-		if g := installer.CapGap(id); g != "" {
+		if g := platform.CapGap(id); g != "" {
 			fmt.Fprintf(&b, "warning:   %s: %s\n", id, g)
 		}
 	}

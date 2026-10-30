@@ -21,12 +21,7 @@ import (
 	"claude-harness/tools/internal/transfer"
 )
 
-const (
-	claudeSkillsLoc = ".claude/skills"
-	promptsDir      = ".agents/prompts"
-	agentsRulesDir  = ".agents/rules"
-	agentsMD        = "AGENTS.md"
-)
+const agentsMD = "AGENTS.md"
 
 func (in *Installer) plats() []platform.ID {
 	if len(in.Platforms) == 0 {
@@ -103,7 +98,7 @@ func (in *Installer) dupPlatforms(locs map[string][]platform.ID) []platform.ID {
 		if e.Kind != lockfile.KindSkills && e.Kind != lockfile.KindSkill {
 			continue
 		}
-		for _, loc := range []string{".claude/skills", ".agents/skills", ".cursor/skills", ".opencode/skills", ".codex/skills"} {
+		for _, loc := range platform.AllSkillDirs() {
 			if under(filepath.Join(in.ProjectRoot, loc), e.Path) {
 				occupied[loc] = true
 			}
@@ -181,8 +176,6 @@ func (in *Installer) setEntryPlatforms(e lockfile.Entry, plats []string) {
 	}
 }
 
-var nonClaudeRoots = map[string]bool{".agents": true, ".codex": true, ".cursor": true, ".opencode": true}
-
 func (in *Installer) guard(dst string) error {
 	if in.Mode != lockfile.ModeLink || in.Force {
 		return nil
@@ -195,7 +188,7 @@ func (in *Installer) guard(dst string) error {
 }
 
 func (in *Installer) guardRoot(root string) error {
-	if in.Mode != lockfile.ModeLink || in.Force || !nonClaudeRoots[root] {
+	if in.Mode != lockfile.ModeLink || in.Force || !platform.IsLinkRoot(root) {
 		return nil
 	}
 	if ok, done := in.gitChecked[root]; done {
@@ -232,29 +225,16 @@ func gitIgnored(project, root string) bool {
 	return true
 }
 
-var capGaps = map[platform.ID]string{
-	platform.Codex:    "agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks",
-	platform.Cursor:   "agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block",
-	platform.OpenCode: "agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported",
-}
-
-// CapGap returns the known capability gap note for a platform, or "".
-func CapGap(id platform.ID) string { return capGaps[id] }
-
 func (in *Installer) noteGaps() {
 	if in.gapsDone {
 		return
 	}
 	in.gapsDone = true
 	for _, id := range in.plats() {
-		if g, ok := capGaps[id]; ok {
+		if g := platform.CapGap(id); g != "" {
 			fmt.Fprintf(os.Stderr, "as-skill: note: %s: %s\n", id, g)
 		}
 	}
-}
-
-func rootOf(rel string) string {
-	return strings.Split(filepath.ToSlash(rel), "/")[0]
 }
 
 func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
@@ -262,7 +242,7 @@ func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
 	if kinds[lockfile.KindSkills] {
 		locs, _ := platform.SkillLocations(in.plats())
 		for loc := range locs {
-			roots[rootOf(loc)] = true
+			roots[platform.RootOf(loc)] = true
 		}
 	}
 	for _, id := range in.plats() {
@@ -271,16 +251,16 @@ func (in *Installer) touchedRoots(kinds map[lockfile.Kind]bool) []string {
 		}
 		p, _ := platform.Get(id)
 		if kinds[lockfile.KindAgents] {
-			roots[rootOf(p.Agents.Dir)] = true
+			roots[platform.RootOf(p.Agents.Dir)] = true
 			if in.Mode == lockfile.ModeLink {
-				roots[rootOf(promptsDir)] = true
+				roots[platform.RootOf(platform.PromptsDir)] = true
 			}
 		}
 		if kinds[lockfile.KindRules] {
-			roots[rootOf(p.Rules.Dir)] = true
+			roots[platform.RootOf(p.Rules.Dir)] = true
 		}
 		if kinds[lockfile.KindHooks] && p.Hooks.Schema != platform.HooksNone {
-			roots[rootOf(p.Hooks.Dir)] = true
+			roots[platform.RootOf(p.Hooks.Dir)] = true
 		}
 	}
 	var out []string
@@ -365,7 +345,7 @@ func (in *Installer) preflightForeign(name string, kinds map[lockfile.Kind]bool)
 		if kind == lockfile.KindSkills {
 			locs, _ := platform.SkillLocations(in.plats())
 			for loc, plats := range locs {
-				if (loc != claudeSkillsLoc || in.hasExclusions(name)) && in.Mode != lockfile.ModeLink {
+				if (loc != platform.ClaudeSkillsLoc || in.hasExclusions(name)) && in.Mode != lockfile.ModeLink {
 					itemPaths(kind, srcDir, filepath.Join(in.ProjectRoot, loc), plats)
 				}
 			}
@@ -453,7 +433,7 @@ func (in *Installer) installKind(m *harness.Manifest, name string, kind lockfile
 		locs, _ := platform.SkillLocations(in.plats())
 		in.warnDup(locs)
 		for _, loc := range slices.Sorted(maps.Keys(locs)) {
-			if loc == claudeSkillsLoc {
+			if loc == platform.ClaudeSkillsLoc {
 				if err := in.claudeKind(m, name, kind, srcDir, locs[loc]); err != nil {
 					return err
 				}
@@ -654,7 +634,7 @@ func (in *Installer) placeAgents(domain, srcDir string, p platform.Platform) err
 		}
 		promptRel := ""
 		if mode == render.Link {
-			promptRel = promptsDir + "/" + e.Name()
+			promptRel = platform.PromptsDir + "/" + e.Name()
 			if err := in.placeOne(domain, lockfile.KindPrompts, e.Name(), src, filepath.Join(in.ProjectRoot, promptRel), []platform.ID{p.ID}); err != nil {
 				return err
 			}
@@ -714,7 +694,7 @@ func (in *Installer) placeRules(domain, srcDir string, p platform.Platform) erro
 			if err != nil {
 				return err
 			}
-			rel := agentsRulesDir + "/" + e.Name()
+			rel := platform.AgentsRulesDir + "/" + e.Name()
 			body := string(data)
 			if in.Mode == lockfile.ModeLink {
 				if err := in.placeOne(domain, lockfile.KindRules, e.Name(), src, filepath.Join(in.ProjectRoot, rel), []platform.ID{p.ID}); err != nil {
@@ -767,7 +747,7 @@ func (in *Installer) placeHooks(domain, srcDir string, p platform.Platform) erro
 
 func (in *Installer) syncAgentsMD() error {
 	path := filepath.Join(in.ProjectRoot, agentsMD)
-	rulesRoot := filepath.Join(in.ProjectRoot, agentsRulesDir)
+	rulesRoot := filepath.Join(in.ProjectRoot, platform.AgentsRulesDir)
 	var files []string
 	var plats []string
 	for _, e := range in.Lock.Entries {
@@ -783,7 +763,7 @@ func (in *Installer) syncAgentsMD() error {
 		if len(hit) == 0 {
 			continue
 		}
-		files = append(files, agentsRulesDir+"/"+filepath.Base(e.Path))
+		files = append(files, platform.AgentsRulesDir+"/"+filepath.Base(e.Path))
 		plats = unionPlats(plats, hit)
 	}
 	sort.Strings(files)
@@ -853,7 +833,7 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 		if skill != "" && (e.Name != skill || (e.Kind != lockfile.KindSkill && e.Kind != lockfile.KindSkills)) {
 			continue
 		}
-		if in.hasClaude() && under(filepath.Join(in.ProjectRoot, ".claude"), e.Path) {
+		if in.hasClaude() && under(filepath.Join(in.ProjectRoot, platform.ClaudeHome), e.Path) {
 			continue
 		}
 		remaining := minusPlats(e.Platforms, plats)

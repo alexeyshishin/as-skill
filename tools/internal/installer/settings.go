@@ -222,13 +222,18 @@ func filterFlatEntry(event string, raw json.RawMessage, projectRoot string, name
 func hookDirRel(p platform.ID) string {
 	spec, ok := platform.Get(p)
 	if !ok || spec.Hooks.Dir == "" {
-		return ".claude/hooks"
+		return claudeHooksDir()
 	}
 	return spec.Hooks.Dir
 }
 
+func claudeHooksDir() string {
+	spec, _ := platform.Get(platform.Claude)
+	return spec.Hooks.Dir
+}
+
 func ownedHook(handler json.RawMessage, projectRoot string, names map[string]bool) (string, bool) {
-	return ownedHookIn(handler, projectRoot, names, ".claude/hooks")
+	return ownedHookIn(handler, projectRoot, names, claudeHooksDir())
 }
 
 func ownedHookIn(handler json.RawMessage, projectRoot string, names map[string]bool, dirRel string) (string, bool) {
@@ -588,7 +593,7 @@ func (in *Installer) applyRegs(p platform.ID, regs []hookReg) error {
 	}
 	var also []byte
 	if p == platform.Claude {
-		also, _ = os.ReadFile(filepath.Join(in.ProjectRoot, ".claude", "settings.local.json"))
+		also, _ = os.ReadFile(filepath.Join(in.ProjectRoot, platform.ClaudeHome, "settings.local.json"))
 	}
 	out, results, err := addRegistrations(data, p, regs, also)
 	if err != nil {

@@ -85,7 +85,7 @@ func runUninstall(args []string) error {
 		return fmt.Errorf("unknown uninstall verb %q (want domain|domains|all|skill)", verb)
 	}
 
-	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, ".claude"))
+	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, platform.ClaudeHome))
 	if !opts.dryRun {
 		if err := lock.Save(projectRoot); err != nil {
 			return fmt.Errorf("saving lockfile: %w", err)

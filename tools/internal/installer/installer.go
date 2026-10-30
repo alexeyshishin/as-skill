@@ -242,7 +242,7 @@ func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	in.warnDup(locs)
 	for _, loc := range slices.Sorted(maps.Keys(locs)) {
 		var dest string
-		if loc == claudeSkillsLoc {
+		if loc == platform.ClaudeSkillsLoc {
 			destBase, err := in.resolveTarget(m, lockfile.KindSkills)
 			if err != nil {
 				return fmt.Errorf("skill %q: %w", name, err)

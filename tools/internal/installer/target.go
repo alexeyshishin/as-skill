@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"claude-harness/tools/internal/platform"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,7 +19,7 @@ func (in *Installer) resolveTarget(m *harness.Manifest, kind lockfile.Kind) (str
 	if raw, ok := m.Targets[string(kind)]; ok {
 		return expandTarget(raw, in.ProjectRoot)
 	}
-	return filepath.Join(in.ProjectRoot, ".claude", string(kind)), nil
+	return filepath.Join(in.ProjectRoot, platform.ClaudeHome, string(kind)), nil
 }
 
 func expandTarget(raw, projectRoot string) (string, error) {
@@ -26,7 +27,7 @@ func expandTarget(raw, projectRoot string) (string, error) {
 	out := varPattern.ReplaceAllStringFunc(raw, func(tok string) string {
 		name := varPattern.FindStringSubmatch(tok)[1]
 		if name == claudeHomeVar {
-			return filepath.Join(projectRoot, ".claude")
+			return filepath.Join(projectRoot, platform.ClaudeHome)
 		}
 		v, ok := os.LookupEnv(name)
 		if !ok || v == "" {

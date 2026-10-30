@@ -13,8 +13,6 @@ import (
 	"claude-harness/tools/internal/prompt"
 )
 
-const agentPromptsRoot = ".agents"
-
 func preflightAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
 	if len(sel.Domains) == 0 {
 		return nil
@@ -74,10 +72,6 @@ func (pl *addPlan) newInstaller(opts addOpts) *installer.Installer {
 	}
 }
 
-func rootOf(rel string) string {
-	return strings.Split(filepath.ToSlash(rel), "/")[0]
-}
-
 // platformsTouching lists the selected non-claude platforms that write under
 // root, derived from the platform tables plus the shared prompts root.
 func platformsTouching(root string, plats []platform.ID) []platform.ID {
@@ -88,11 +82,11 @@ func platformsTouching(root string, plats []platform.ID) []platform.ID {
 			continue
 		}
 		p, _ := platform.Get(id)
-		hit := root == "."+string(id) || root == agentPromptsRoot ||
-			root == rootOf(p.Agents.Dir) || root == rootOf(p.Rules.Dir) ||
-			(p.Hooks.Schema != platform.HooksNone && root == rootOf(p.Hooks.Dir))
+		hit := root == "."+string(id) || root == platform.AgentsRoot ||
+			root == platform.RootOf(p.Agents.Dir) || root == platform.RootOf(p.Rules.Dir) ||
+			(p.Hooks.Schema != platform.HooksNone && root == platform.RootOf(p.Hooks.Dir))
 		for loc, ids := range locs {
-			if rootOf(loc) == root && slices.Contains(ids, id) {
+			if platform.RootOf(loc) == root && slices.Contains(ids, id) {
 				hit = true
 			}
 		}

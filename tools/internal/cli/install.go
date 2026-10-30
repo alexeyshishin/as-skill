@@ -175,7 +175,7 @@ func runInstall(args []string) error {
 	if runErr != nil {
 		return runErr
 	}
-	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, ".claude"))
+	fmt.Printf("done -> %s\n", filepath.Join(projectRoot, platform.ClaudeHome))
 	return nil
 }
 

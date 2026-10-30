@@ -127,7 +127,7 @@ func platformDirs(plats []platform.ID) []string {
 		}
 	}
 	for _, kind := range harness.DomainKinds {
-		add(".claude/" + string(kind))
+		add(platform.ClaudeHome + "/" + string(kind))
 	}
 	for _, id := range plats {
 		p, ok := platform.Get(id)
@@ -141,7 +141,7 @@ func platformDirs(plats []platform.ID) []string {
 		add(p.Agents.Dir)
 		add(p.Rules.Dir)
 		add(p.Hooks.Dir)
-		add(".agents/prompts")
+		add(platform.PromptsDir)
 	}
 	return dirs
 }
