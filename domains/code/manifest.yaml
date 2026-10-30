@@ -3,7 +3,7 @@
 # No requirements from the environment.
 
 name: code
-description: Code and plans - interrogate the plan to implementation, competitive review, line-by-line comments, last 20%.
+description: Dev loop: plan, build, review, debug.
 
 requires_env: []
 

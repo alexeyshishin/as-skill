@@ -5,7 +5,7 @@
 # Requires nothing from the environment. Agents-only for now — no rules or skills yet.
 
 name: devops
-description: DevOps / infrastructure — Kubernetes, Helm, GitLab CI, ArgoCD: architecture, security, and SRE review, CI pipelines, Helm charts, K8s manifests, incident diagnostics.
+description: Kubernetes, Helm, GitLab CI, ArgoCD agents.
 
 requires_env: []
 

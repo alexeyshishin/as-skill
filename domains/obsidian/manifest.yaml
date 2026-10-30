@@ -2,7 +2,7 @@
 # a personal knowledge base using the PARA methodology.
 
 name: obsidian
-description: Obsidian PKB using PARA — ingest, inbox triage, hub untangling, daily journal.
+description: Obsidian PARA vault: ingest, triage, refactor.
 
 requires_env:
   - OBSIDIAN_VAULT

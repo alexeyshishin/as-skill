@@ -3,7 +3,7 @@
 # rules, skills, agents go to the target project's platform dirs (see `as-skill add -a`).
 
 name: git
-description: Git workflow — Conventional Commits, PR descriptions, semver releases.
+description: Conventional Commits, PR descriptions, semver releases.
 
 requires_env: []
 
