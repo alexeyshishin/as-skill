@@ -827,3 +827,15 @@ func TestClaudeKindStampsPlatformsOnPartialFailure(t *testing.T) {
 		t.Fatal("no partial hook entries recorded")
 	}
 }
+
+func TestSnapshotPlatformsIncludesDotDotPrefixedChild(t *testing.T) {
+	dest := filepath.Join(string(filepath.Separator), "p", ".claude", "skills")
+	child := filepath.Join(dest, "..foo")
+	in := &Installer{Lock: &lockfile.Lockfile{Entries: []lockfile.Entry{
+		{Domain: "d", Kind: lockfile.KindSkills, Path: child, Platforms: []string{"claude"}},
+	}}}
+	snap := in.snapshotPlatforms("d", lockfile.KindSkills, dest)
+	if _, ok := snap[child]; !ok {
+		t.Fatalf("child %s named with leading ..: missing from snapshot %v", child, snap)
+	}
+}

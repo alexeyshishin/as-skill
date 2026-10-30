@@ -14,6 +14,7 @@ import (
 
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/fsys"
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
@@ -99,7 +100,7 @@ func (in *Installer) dupPlatforms(locs map[string][]platform.ID) []platform.ID {
 			continue
 		}
 		for _, loc := range platform.AllSkillDirs() {
-			if under(filepath.Join(in.ProjectRoot, loc), e.Path) {
+			if fsys.Within(filepath.Join(in.ProjectRoot, loc), e.Path) {
 				occupied[loc] = true
 			}
 		}
@@ -135,16 +136,11 @@ func (in *Installer) warnDup(locs map[string][]platform.ID) {
 	fmt.Fprintf(os.Stderr, "as-skill: warning: skills land in both .claude/skills and .agents/skills; %s will see each skill twice (doctor reports DUPLICATE-SKILL)\n", strings.Join(strs(dup), ", "))
 }
 
-func under(root, p string) bool {
-	rel, err := filepath.Rel(filepath.Clean(root), filepath.Clean(p))
-	return err == nil && !strings.HasPrefix(rel, "..")
-}
-
 func (in *Installer) snapshotPlatforms(domain string, kind lockfile.Kind, dest string) map[string][]string {
 	out := map[string][]string{}
 	var all []string
 	for _, e := range in.Lock.Entries {
-		if e.Domain == domain && e.Kind == kind && under(dest, e.Path) {
+		if e.Domain == domain && e.Kind == kind && fsys.Within(dest, e.Path) {
 			out[filepath.Clean(e.Path)] = e.Platforms
 			all = unionPlats(all, e.Platforms)
 		}
@@ -158,7 +154,7 @@ func (in *Installer) applyPlatforms(domain string, kind lockfile.Kind, dest stri
 		return
 	}
 	for i, e := range in.Lock.Entries {
-		if e.Domain == domain && e.Kind == kind && under(dest, e.Path) {
+		if e.Domain == domain && e.Kind == kind && fsys.Within(dest, e.Path) {
 			p, ok := prior[filepath.Clean(e.Path)]
 			if !ok {
 				p = prior[filepath.Clean(dest)]
@@ -751,7 +747,7 @@ func (in *Installer) syncAgentsMD() error {
 	var files []string
 	var plats []string
 	for _, e := range in.Lock.Entries {
-		if e.Kind != lockfile.KindRules || (e.Mode != lockfile.ModeLink && e.Mode != lockfile.ModeCopy) || !under(rulesRoot, e.Path) {
+		if e.Kind != lockfile.KindRules || (e.Mode != lockfile.ModeLink && e.Mode != lockfile.ModeCopy) || !fsys.Within(rulesRoot, e.Path) {
 			continue
 		}
 		var hit []string
@@ -833,7 +829,7 @@ func (in *Installer) uninstallNonClaude(domain, skill string) {
 		if skill != "" && (e.Name != skill || (e.Kind != lockfile.KindSkill && e.Kind != lockfile.KindSkills)) {
 			continue
 		}
-		if in.hasClaude() && under(filepath.Join(in.ProjectRoot, platform.ClaudeHome), e.Path) {
+		if in.hasClaude() && fsys.Within(filepath.Join(in.ProjectRoot, platform.ClaudeHome), e.Path) {
 			continue
 		}
 		remaining := minusPlats(e.Platforms, plats)
