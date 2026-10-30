@@ -69,7 +69,7 @@ Gather only what you can observe — never invent commands:
   (`present` also covers an entry in `.claude/settings.local.json`). No output → no hooks
   installed, nothing to register. Any `would-add` → ask the user once, before composing:
   register those hooks in the project's `.claude/settings.json`? Claude Code runs a hook
-  only when a `settings.json` lists it — the installer just places the files. The answer
+  only when a `settings.json` lists it — the installer places the hook files, and registration is opt-in (the `as-skill add` dialog can register chosen hooks; otherwise this skill or `as-skill hooks enable`). The answer
   drives Step 3 and Step 4. Exit 1 (no `jq`, `settings.json` unparseable) → relay the
   stderr message, treat as declined.
 

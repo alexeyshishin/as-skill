@@ -591,6 +591,9 @@ func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 // registerSelected registers the chosen hooks on every final platform that
 // supports them and allows each hook.
 func registerSelected(in *installer.Installer, pl *addPlan) error {
+	if len(pl.hooks) == 0 {
+		return nil
+	}
 	for _, id := range pl.plats {
 		names, err := in.DomainHookNames(pl.reg, pl.sel.domainNames(), id)
 		if err != nil {

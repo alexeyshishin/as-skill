@@ -6,7 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
+	"claude-harness/tools/internal/registry"
 )
 
 func hookAnswers(p string, doms, plats, hooks []string) map[string]any {
@@ -35,6 +38,9 @@ func TestDialogHooksRegisterOnlySelectedPerPlatform(t *testing.T) {
 		if !strings.Contains(claude, n) {
 			t.Errorf("claude settings lacks %s:\n%s", n, claude)
 		}
+	}
+	if strings.Contains(claude, "test-gate-record") {
+		t.Errorf("claude settings must not register codex/cursor-only test-gate-record:\n%s", claude)
 	}
 	cursor := readOr(filepath.Join(p, ".cursor", "hooks.json"))
 	if cursor == "" || strings.Contains(cursor, "memory-bank-logger") {
@@ -217,5 +223,43 @@ func TestDialogHooksLabelsAndOrder(t *testing.T) {
 	}
 	if strings.Join(orders[0], ",") != strings.Join(orders[1], ",") || len(orders[0]) != 5 {
 		t.Errorf("order not deterministic: %v", orders)
+	}
+}
+
+func TestDialogHooksCodexRegistersCodexCapableOnly(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	all := []string{"test-gate.sh", "prettier-format.sh", "test-gate-record.sh", "memory-bank-load.sh"}
+	enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"codex"}, all)))
+	if _, err := run(t, "add", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	s := readOr(filepath.Join(p, ".codex", "hooks.json"))
+	for _, n := range all {
+		if !strings.Contains(s, n) {
+			t.Errorf("codex hooks.json lacks %s:\n%s", n, s)
+		}
+	}
+	if strings.Contains(s, "memory-bank-logger") {
+		t.Errorf("codex must not register memory-bank-logger:\n%s", s)
+	}
+}
+
+func TestRegisterSelectedNoHooksSkipsSources(t *testing.T) {
+	reg, err := registry.LoadRegistry(realHarness(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	bogus := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(bogus, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	in := &installer.Installer{HarnessRoot: bogus, ProjectRoot: t.TempDir()}
+	pl := &addPlan{reg: reg, sel: selection{Domains: []domainSel{{Name: "code"}}}, plats: []platform.ID{"claude"}}
+	if err := registerSelected(in, pl); err != nil {
+		t.Errorf("nil hooks must not read sources: %v", err)
+	}
+	pl.hooks = []string{"test-gate.sh"}
+	if err := registerSelected(in, pl); err == nil {
+		t.Error("selected hook with unreadable sources must error")
 	}
 }

@@ -17,7 +17,7 @@ done -> <P>/.claude
       "mode": "copy",
       "path": "<P>/.claude/skills",
       "source": "<H>/domains/code/skills",
-      "sha256": "adcd71c4ce8ae28061e9e864fe67542307b3cc6ff82079b6d5c0fc32aaf24ed9",
+      "sha256": "d472bc3caed2083b9600a8164d705e55aaa1f9a2b41fd5817a504d8f0f1ce786",
       "platforms": [
         "claude"
       ],
