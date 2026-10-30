@@ -29,8 +29,8 @@ func TestDialogHooksRegisterOnlySelectedPerPlatform(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	all := []string{"test-gate.sh", "prettier-format.sh", "test-gate-record.sh", "memory-bank-load.sh", "memory-bank-logger.sh"}
 	fp := newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude", "cursor"}, all))
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	claude := readOr(filepath.Join(p, ".claude", "settings.json"))
@@ -56,8 +56,8 @@ func TestDialogHooksRegisterOnlySelectedPerPlatform(t *testing.T) {
 
 func TestDialogHooksSubsetOnly(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
-	enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude"}, []string{"memory-bank-load.sh"})))
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude"}, []string{"memory-bank-load.sh"})))
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	s := readOr(filepath.Join(p, ".claude", "settings.json"))
@@ -69,8 +69,8 @@ func TestDialogHooksSubsetOnly(t *testing.T) {
 func TestDialogHooksEmptyRegistersNothing(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	fp := newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude"}, []string{}))
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if exists(filepath.Join(p, ".claude", "settings.json")) {
@@ -96,8 +96,8 @@ func TestDialogHooksNotAskedWithoutApplicableHooks(t *testing.T) {
 			ans := hookAnswers(p, tc.doms, tc.plats, []string{})
 			ans["mode"] = "copy"
 			fp := newFake(t, ans)
-			enableDialog(t, fp)
-			if _, err := run(t, "add", "--harness-root", h); err != nil {
+			d := enableDialog(t, fp)
+			if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 				t.Fatal(err)
 			}
 			for _, id := range fp.asked {
@@ -126,8 +126,8 @@ func TestAddYesNeverRegistersHooks(t *testing.T) {
 
 func TestDialogHooksDryRunEmptyProjectPreviews(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
-	enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude"}, []string{"test-gate.sh", "memory-bank-load.sh"})))
-	out, err := run(t, "add", "--harness-root", h, "--dry-run")
+	d := enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"claude"}, []string{"test-gate.sh", "memory-bank-load.sh"})))
+	out, err := runD(t, d, "add", "--harness-root", h, "--dry-run")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,8 +147,8 @@ func TestDialogHooksBackReturnsToPreviousStepKeepingSelection(t *testing.T) {
 	ans["hooks"] = seq{[]string{"test-gate.sh"}, []string{}}
 	ans["confirm"] = seq{prompt.ErrBack, true}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm", "hooks", "confirm")
@@ -168,8 +168,8 @@ func TestDialogBackFromHooksGoesToConflictsStep(t *testing.T) {
 	ans["guard:cursor"] = "drop"
 	ans["hooks"] = seq{prompt.ErrBack, []string{}}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:cursor", "hooks", "guard:cursor", "hooks", "confirm")
@@ -182,8 +182,8 @@ func TestDialogHooksOnlyOnPlatformsKeptByConflictStep(t *testing.T) {
 	ans["mode"] = "link"
 	ans["guard:cursor"] = "drop"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if lbl := fp.labelOf("hooks", "memory-bank-load.sh"); strings.Contains(lbl, "cursor") {
@@ -202,8 +202,8 @@ func TestDialogHooksLabelsAndOrder(t *testing.T) {
 	var orders [][]string
 	for i := 0; i < 2; i++ {
 		fp := newFake(t, hookAnswers(t.TempDir(), []string{"code", "core"}, []string{"claude", "cursor"}, []string{}))
-		enableDialog(t, fp)
-		if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+		d := enableDialog(t, fp)
+		if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
 			t.Fatal(err)
 		}
 		var vals []string
@@ -229,8 +229,8 @@ func TestDialogHooksLabelsAndOrder(t *testing.T) {
 func TestDialogHooksCodexRegistersCodexCapableOnly(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	all := []string{"test-gate.sh", "prettier-format.sh", "test-gate-record.sh", "memory-bank-load.sh"}
-	enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"codex"}, all)))
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, newFake(t, hookAnswers(p, []string{"code", "core"}, []string{"codex"}, all)))
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	s := readOr(filepath.Join(p, ".codex", "hooks.json"))

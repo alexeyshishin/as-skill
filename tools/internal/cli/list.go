@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runList(args []string, ios *iostreams.IOStreams) error {
+func runList(args []string, d Deps) error {
+	ios := d.IO
 	what := "all"
 	project, harnessFlag := ".", ""
 	var pos []string
@@ -51,7 +51,7 @@ func runList(args []string, ios *iostreams.IOStreams) error {
 		return fmt.Errorf("unknown list target %q (want domains|skills|platforms)", what)
 	}
 
-	harnessRoot, err := harness.ResolveHarnessRootAuto(harnessFlag)
+	harnessRoot, err := d.Locator.Locate(harnessFlag)
 	if err != nil {
 		return err
 	}

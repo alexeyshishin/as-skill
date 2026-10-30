@@ -106,12 +106,13 @@ func TestRemoveSkillInsideCopiedDomainErrors(t *testing.T) {
 	}
 	for name, root := range map[string]string{"with harness": h, "without harness": ""} {
 		args := []string{"remove", "caveman", "-y", "-p", p}
+		d := testDeps()
 		if root != "" {
 			args = append(args, "--harness-root", root)
 		} else {
-			noHarness(t)
+			d = noHarness(t)
 		}
-		_, err := run(t, args...)
+		_, err := runD(t, d, args...)
 		if err == nil || !strings.Contains(err.Error(), "installed as part of domain core (copy); remove the domain") {
 			t.Fatalf("%s: got %v", name, err)
 		}
@@ -133,8 +134,8 @@ func TestRemoveWorksWithoutHarness(t *testing.T) {
 			if _, err := run(t, args...); err != nil {
 				t.Fatal(err)
 			}
-			noHarness(t)
-			if _, err := run(t, "remove", "git", "-y", "-p", p); err != nil {
+			d := noHarness(t)
+			if _, err := runD(t, d, "remove", "git", "-y", "-p", p); err != nil {
 				t.Fatal(err)
 			}
 			if lexists(filepath.Join(p, ".claude", "skills", "git-conventional-commits")) {
@@ -271,8 +272,8 @@ func TestRemoveNoHarnessDomainRowsFully(t *testing.T) {
 			if err := os.RemoveAll(h); err != nil {
 				t.Fatal(err)
 			}
-			noHarness(t)
-			if _, err := run(t, "remove", "code", "core", "-y", "-p", p); err != nil {
+			d := noHarness(t)
+			if _, err := runD(t, d, "remove", "code", "core", "-y", "-p", p); err != nil {
 				t.Fatal(err)
 			}
 			if !lexists(foreign) {
@@ -318,14 +319,15 @@ func TestRemoveRefusesRowOutsideProject(t *testing.T) {
 				)
 			})
 			rmArgs := []string{"remove", "git", "-y", "-p", p, "--harness-root", h}
+			d := testDeps()
 			if harness == "without" {
 				if err := os.RemoveAll(h); err != nil {
 					t.Fatal(err)
 				}
-				noHarness(t)
+				d = noHarness(t)
 				rmArgs = []string{"remove", "git", "-y", "-p", p}
 			}
-			_, err := run(t, rmArgs...)
+			_, err := runD(t, d, rmArgs...)
 			if err == nil || !strings.Contains(err.Error(), "refus") {
 				t.Fatalf("want refusal, got %v", err)
 			}
@@ -349,8 +351,8 @@ func TestRemoveLegacyRowWithoutSourceNotExpandable(t *testing.T) {
 	if err := os.RemoveAll(h); err != nil {
 		t.Fatal(err)
 	}
-	noHarness(t)
-	_, err := run(t, "remove", "core", "-y", "-p", p)
+	d := noHarness(t)
+	_, err := runD(t, d, "remove", "core", "-y", "-p", p)
 	if err == nil || !strings.Contains(err.Error(), "reinstall") || !strings.Contains(err.Error(), filepath.Join(p, ".claude", "skills")) {
 		t.Fatalf("want non-zero naming the row, got %v", err)
 	}
@@ -367,12 +369,12 @@ func TestRemoveSharedLocationKeepsOtherPlatform(t *testing.T) {
 	if err := os.RemoveAll(h); err != nil {
 		t.Fatal(err)
 	}
-	noHarness(t)
+	d := noHarness(t)
 	skill := filepath.Join(p, ".agents", "skills", "git-conventional-commits")
 	if !lexists(skill) {
 		t.Fatalf("setup: %s missing", skill)
 	}
-	if _, err := run(t, "remove", "git", "-a", "codex", "-y", "-p", p); err != nil {
+	if _, err := runD(t, d, "remove", "git", "-a", "codex", "-y", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	if !lexists(skill) {
@@ -383,7 +385,7 @@ func TestRemoveSharedLocationKeepsOtherPlatform(t *testing.T) {
 			t.Fatalf("row platforms: %v", e.Platforms)
 		}
 	}
-	if _, err := run(t, "remove", "git", "-a", "cursor", "-y", "-p", p); err != nil {
+	if _, err := runD(t, d, "remove", "git", "-a", "cursor", "-y", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	if lexists(skill) {
@@ -396,18 +398,18 @@ func TestRemoveSkillCountsClaudeCopyCoveredByDomainRow(t *testing.T) {
 	if err := os.RemoveAll(h); err != nil {
 		t.Fatal(err)
 	}
-	noHarness(t)
-	if _, err := run(t, "add", "caveman", "--copy", "-y", "-a", "codex", "-p", p, "--harness-root", tempHarness(t)); err != nil {
+	d := noHarness(t)
+	if _, err := runD(t, d, "add", "caveman", "--copy", "-y", "-a", "codex", "-p", p, "--harness-root", tempHarness(t)); err != nil {
 		t.Fatal(err)
 	}
-	_, err := run(t, "remove", "caveman", "-y", "-p", p)
+	_, err := runD(t, d, "remove", "caveman", "-y", "-p", p)
 	if err == nil || !strings.Contains(err.Error(), "installed as part of domain core (copy)") {
 		t.Fatalf("got %v", err)
 	}
 	if !lexists(filepath.Join(p, ".claude", "skills", "caveman")) || !lexists(filepath.Join(p, ".agents", "skills", "caveman")) {
 		t.Fatal("nothing may be removed on the refused call")
 	}
-	if _, err := run(t, "remove", "caveman", "-a", "codex", "-y", "-p", p); err != nil {
+	if _, err := runD(t, d, "remove", "caveman", "-a", "codex", "-y", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	if lexists(filepath.Join(p, ".agents", "skills", "caveman")) || !lexists(filepath.Join(p, ".claude", "skills", "caveman")) {
@@ -465,11 +467,11 @@ func TestDoctorListRejectHomeProject(t *testing.T) {
 	}
 }
 
-func noHarness(t *testing.T) {
+func noHarness(t *testing.T) Deps {
 	t.Helper()
-	old := resolveHarness
-	resolveHarness = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
-	t.Cleanup(func() { resolveHarness = old })
+	d := testDeps()
+	d.Resolve = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
+	return d
 }
 
 func TestRemoveAddRejectBadExplicitHarnessRoot(t *testing.T) {

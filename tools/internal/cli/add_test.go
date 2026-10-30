@@ -77,7 +77,12 @@ func assertSameInstall(t *testing.T, a, b string) {
 
 func run(t *testing.T, args ...string) (string, error) {
 	t.Helper()
-	return capture(t, func() error { return Run(args) })
+	return runD(t, testDeps(), args...)
+}
+
+func runD(t *testing.T, d Deps, args ...string) (string, error) {
+	t.Helper()
+	return capture(t, func() error { return Dispatch(args, d) })
 }
 
 func TestAddParityWithLegacyInstall(t *testing.T) {
@@ -330,10 +335,9 @@ func TestDoctorWithoutHarness(t *testing.T) {
 	if _, err := run(t, "add", "git", "-y", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	old := resolveHarness
-	resolveHarness = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
-	t.Cleanup(func() { resolveHarness = old })
-	out, err := run(t, "doctor", "-p", p)
+	d := testDeps()
+	d.Resolve = func(string) (string, error) { return "", errors.New("no claude-harness checkout found") }
+	out, err := runD(t, d, "doctor", "-p", p)
 	if err != nil {
 		t.Fatalf("doctor must not error without harness: %v\n%s", err, out)
 	}

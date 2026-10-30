@@ -94,6 +94,7 @@ type gcase struct {
 	h, p  string
 	out   strings.Builder
 	steps int
+	deps  Deps
 }
 
 var (
@@ -183,7 +184,7 @@ func (c *gcase) run(args ...string) {
 	c.t.Helper()
 	backup := c.t.TempDir()
 	copyDir(c.t, c.p, backup)
-	so, se, err := captureBoth(c.t, func() error { return Run(args) })
+	so, se, err := captureBoth(c.t, func() error { return Dispatch(args, c.deps) })
 	if e := os.RemoveAll(c.p); e != nil {
 		c.t.Fatal(e)
 	}
@@ -191,7 +192,7 @@ func (c *gcase) run(args ...string) {
 		c.t.Fatal(e)
 	}
 	copyDir(c.t, backup, c.p)
-	comb, err2 := captureCombined(c.t, func() error { return Run(args) })
+	comb, err2 := captureCombined(c.t, func() error { return Dispatch(args, c.deps) })
 	if fmt.Sprint(err) != fmt.Sprint(err2) {
 		c.t.Fatalf("passes disagree on result: %v vs %v", err, err2)
 	}
@@ -244,7 +245,7 @@ func goldenCase(t *testing.T, name string, body func(c *gcase)) {
 		t.Setenv("CI", "x")
 		os.Unsetenv("CI")
 		t.Setenv("TERM", "xterm")
-		c := &gcase{t: t, h: goldenHarness(t), p: t.TempDir()}
+		c := &gcase{t: t, h: goldenHarness(t), p: t.TempDir(), deps: testDeps()}
 		t.Setenv("GIT_CEILING_DIRECTORIES", filepath.Dir(c.p))
 		t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
 		t.Setenv("GIT_CONFIG_SYSTEM", os.DevNull)
@@ -380,10 +381,8 @@ func TestGoldenCLI(t *testing.T) {
 	goldenCase(t, "remove_no_harness", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y")...)
 		c.run("remove", "alpha", "-y", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
-		// no flag: auto-resolution fails (package seam), remove falls back to no-harness mode
-		old := resolveHarness
-		resolveHarness = func(string) (string, error) { return "", errors.New("no harness (stub)") }
-		defer func() { resolveHarness = old }()
+		// no flag: auto-resolution fails (injected resolver), remove falls back to no-harness mode
+		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
 		c.run("remove", "alpha", "-y", "-p", c.p)
 		c.tree()
 	})
@@ -442,9 +441,7 @@ func TestGoldenCLI(t *testing.T) {
 	goldenCase(t, "doctor_no_harness", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y", "--copy")...)
 		c.run("doctor", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
-		old := resolveHarness
-		resolveHarness = func(string) (string, error) { return "", errors.New("no harness (stub)") }
-		defer func() { resolveHarness = old }()
+		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
 		c.run("doctor", "-p", c.p)
 	})
 
@@ -525,11 +522,10 @@ func TestGoldenCLI(t *testing.T) {
 		lockPath := filepath.Join(c.p, ".claude", "skills-lock.json")
 		lock := `{"entries":[{"domain":"beta","kind":"skills","name":"","mode":"copy","path":"` + filepath.Join(c.p, ".claude", "skills") + `","source":"` + filepath.Join(c.h, "domains", "beta", "gone-skills") + `","installed_at":"2026-01-01T00:00:00Z"}]}`
 		gWrite(t, lockPath, lock, 0o644)
-		old := resolveHarness
-		resolveHarness = func(string) (string, error) { return "", errors.New("no harness (stub)") }
+		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
 		c.run("remove", "beta", "-y", "-p", c.p)
 		c.tree()
-		resolveHarness = old
+		c.deps.Resolve = nil
 		c.run(c.std("remove", "beta", "-y")...)
 		c.tree()
 	})
@@ -543,8 +539,8 @@ func TestGoldenCLI(t *testing.T) {
 		c.run(c.std("add", "all", "-y")...)
 		// dialog per-bin label: reachable only through the interactive seam with a fake prompter
 		fp := newFake(t, map[string]any{"project": c.p, "domains": []string{"alpha"}, "customize": false, "platforms": []string{"claude"}, "mode": "copy", "hooks": []string{}, "confirm": false})
-		enableDialog(t, fp)
-		_, _, err := captureBoth(t, func() error { return Run([]string{"add", "--harness-root", c.h}) })
+		d := enableDialog(t, fp)
+		_, _, err := captureBoth(t, func() error { return Dispatch([]string{"add", "--harness-root", c.h}, d) })
 		var labels []string
 		for _, o := range fp.options["domains"] {
 			labels = append(labels, o.Label)

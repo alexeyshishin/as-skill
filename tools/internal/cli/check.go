@@ -11,14 +11,14 @@ import (
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsutil"
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/iostreams"
 )
 
-func runCheck(args []string, ios *iostreams.IOStreams) error {
+func runCheck(args []string, d Deps) error {
+	ios := d.IO
 	if len(args) != 0 {
 		return fmt.Errorf("check takes no arguments (got %s)", strings.Join(args, " "))
 	}
-	harnessRoot, err := harness.ResolveHarnessRootAuto("")
+	harnessRoot, err := d.Locator.Locate("")
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,6 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -91,7 +90,8 @@ func parseInstallArgs(args []string) ([]string, installOpts, error) {
 	return positionals, opts, nil
 }
 
-func runInstall(args []string, ios *iostreams.IOStreams) error {
+func runInstall(args []string, d Deps) error {
+	ios := d.IO
 	if len(args) == 0 {
 		return errors.New("install needs a verb: domain|domains|all|skill")
 	}

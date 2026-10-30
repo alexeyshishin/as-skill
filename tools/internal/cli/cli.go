@@ -9,30 +9,37 @@ import (
 
 func Run(args []string) error { return Main(args, iostreams.Std()) }
 
-func Main(args []string, ios *iostreams.IOStreams) error {
+func Main(args []string, ios *iostreams.IOStreams) error { return Dispatch(args, Deps{IO: ios}) }
+
+// Dispatch runs a command with explicit dependencies.
+func Dispatch(args []string, d Deps) error {
+	if d.IO == nil {
+		d.IO = iostreams.Std()
+	}
+	ios := d.IO
 	if len(args) == 0 {
 		printUsage(ios.Stderr())
 		return errors.New("no command given")
 	}
 	switch args[0] {
 	case "add":
-		return runAdd(args[1:], ios)
+		return runAdd(args[1:], d)
 	case "remove":
-		return runRemove(args[1:], ios)
+		return runRemove(args[1:], d)
 	case "install":
-		return runInstall(args[1:], ios)
+		return runInstall(args[1:], d)
 	case "uninstall":
-		return runUninstall(args[1:], ios)
+		return runUninstall(args[1:], d)
 	case "list":
-		return runList(args[1:], ios)
+		return runList(args[1:], d)
 	case "status":
-		return runStatus(args[1:], ios)
+		return runStatus(args[1:], d)
 	case "doctor":
-		return runDoctor(args[1:], ios)
+		return runDoctor(args[1:], d)
 	case "hooks":
-		return runHooks(args[1:], ios)
+		return runHooks(args[1:], d)
 	case "check":
-		return runCheck(args[1:], ios)
+		return runCheck(args[1:], d)
 	case "help", "-h", "--help":
 		printUsage(ios.Stdout())
 		return nil

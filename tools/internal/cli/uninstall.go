@@ -8,12 +8,12 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runUninstall(args []string, ios *iostreams.IOStreams) error {
+func runUninstall(args []string, d Deps) error {
+	ios := d.IO
 	if len(args) == 0 {
 		return errors.New("uninstall needs a verb: domain|domains|all|skill")
 	}

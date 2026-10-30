@@ -8,21 +8,18 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
-	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-var resolveHarness = harness.ResolveHarnessRootAuto
-
-func runDoctor(args []string, ios *iostreams.IOStreams) error {
+func runDoctor(args []string, d Deps) error {
+	ios := d.IO
 	opts, err := parseStatusArgs(args)
 	if err != nil {
 		return err
 	}
-	harnessRoot, herr := resolveHarness(opts.harnessRoot)
+	harnessRoot, herr := d.resolveHarness(opts.harnessRoot)
 	if herr != nil && opts.harnessRoot != "" {
 		return fmt.Errorf("doctor: --harness-root rejected: %w", herr)
 	}

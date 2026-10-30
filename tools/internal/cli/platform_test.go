@@ -43,7 +43,7 @@ func agentHarness(t *testing.T) (harness, agentSrc string) {
 }
 
 func TestListPlatformsMatrix(t *testing.T) {
-	out, err := capture(t, func() error { return Run([]string{"list", "platforms"}) })
+	out, err := capture(t, func() error { return runCLI([]string{"list", "platforms"}) })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestListPlatformsMatrix(t *testing.T) {
 }
 
 func TestUnknownPlatformFailsListingValid(t *testing.T) {
-	err := Run([]string{"install", "all", "--platform", "vim", "--project", t.TempDir()})
+	err := runCLI([]string{"install", "all", "--platform", "vim", "--project", t.TempDir()})
 	if err == nil || !strings.Contains(err.Error(), "claude, codex, cursor, opencode") {
 		t.Fatalf("got %v", err)
 	}
@@ -74,7 +74,7 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, err := capture(t, func() error {
-		return Run([]string{"hooks", "enable", "gate", "--platform", "codex", "--project", project, "--dry-run"})
+		return runCLI([]string{"hooks", "enable", "gate", "--platform", "codex", "--project", project, "--dry-run"})
 	})
 	if err != nil || !strings.Contains(out, "would register") {
 		t.Fatalf("dry-run: %v\n%s", err, out)
@@ -83,7 +83,7 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 		t.Fatal("dry-run wrote file")
 	}
 	out, err = capture(t, func() error {
-		return Run([]string{"hooks", "enable", "all", "--platform", "codex", "--project", project})
+		return runCLI([]string{"hooks", "enable", "all", "--platform", "codex", "--project", project})
 	})
 	if err != nil || !strings.Contains(out, "UNVERIFIED") {
 		t.Fatalf("enable: %v\n%s", err, out)
@@ -92,7 +92,7 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 		t.Fatal("codex enable did not write hooks.json")
 	}
 	out, err = capture(t, func() error {
-		return Run([]string{"hooks", "enable", "all", "--platform", "opencode", "--project", project})
+		return runCLI([]string{"hooks", "enable", "all", "--platform", "opencode", "--project", project})
 	})
 	if err != nil || !strings.Contains(out, "unsupported") {
 		t.Fatalf("opencode: %v\n%s", err, out)
@@ -102,14 +102,14 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 func installPlatforms(t *testing.T, harness, project string, extra ...string) {
 	t.Helper()
 	args := append([]string{"install", "domain", "testdomain", "--harness-root", harness, "--project", project}, extra...)
-	if _, err := capture(t, func() error { return Run(args) }); err != nil {
+	if _, err := capture(t, func() error { return runCLI(args) }); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func doctor(t *testing.T, harness, project string, extra ...string) (string, error) {
 	args := append([]string{"doctor", "--harness-root", harness, "--project", project}, extra...)
-	return capture(t, func() error { return Run(args) })
+	return capture(t, func() error { return runCLI(args) })
 }
 
 func TestDoctorStaleAndDrifted(t *testing.T) {
@@ -155,11 +155,11 @@ func TestStatusPlatformFilterAndColumn(t *testing.T) {
 	harness, _ := agentHarness(t)
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "codex,cursor", "--copy")
-	out, err := capture(t, func() error { return Run([]string{"status", "--project", project}) })
+	out, err := capture(t, func() error { return runCLI([]string{"status", "--project", project}) })
 	if err != nil || !strings.Contains(out, "PLATFORMS") || !strings.Contains(out, "codex,cursor") {
 		t.Fatalf("status: %v\n%s", err, out)
 	}
-	out, err = capture(t, func() error { return Run([]string{"status", "--project", project, "--platform", "cursor"}) })
+	out, err = capture(t, func() error { return runCLI([]string{"status", "--project", project, "--platform", "cursor"}) })
 	if err != nil || strings.Contains(out, ".codex/agents") || !strings.Contains(out, ".cursor/agents") {
 		t.Fatalf("filtered status: %v\n%s", err, out)
 	}
@@ -170,7 +170,7 @@ func TestUninstallPlatformFlag(t *testing.T) {
 	project := t.TempDir()
 	installPlatforms(t, harness, project, "--platform", "codex,cursor", "--copy")
 	if _, err := capture(t, func() error {
-		return Run([]string{"uninstall", "domain", "testdomain", "--harness-root", harness, "--project", project, "--platform", "cursor"})
+		return runCLI([]string{"uninstall", "domain", "testdomain", "--harness-root", harness, "--project", project, "--platform", "cursor"})
 	}); err != nil {
 		t.Fatal(err)
 	}

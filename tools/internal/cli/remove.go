@@ -96,7 +96,8 @@ func recordedPlatforms(rows []lockfile.Entry) []platform.ID {
 	return out
 }
 
-func runRemove(args []string, ios *iostreams.IOStreams) error {
+func runRemove(args []string, d Deps) error {
+	ios := d.IO
 	opts, err := parseAddArgs("remove", args)
 	if err != nil {
 		return err
@@ -105,13 +106,13 @@ func runRemove(args []string, ios *iostreams.IOStreams) error {
 		printUsage(ios.Stdout())
 		return nil
 	}
-	dlg := wantDialog(opts)
+	dlg := wantDialog(d, opts)
 	if !dlg && (len(opts.names) == 0 || !(opts.yes || opts.dryRun)) {
 		return gateError(opts)
 	}
 	var pr prompt.Prompter
 	if dlg {
-		pr = newPrompter()
+		pr = d.newPrompter()
 	}
 	var (
 		projectRoot, harnessRoot string
@@ -161,7 +162,7 @@ func runRemove(args []string, ios *iostreams.IOStreams) error {
 				return false, err
 			}
 			var herr error
-			harnessRoot, herr = resolveHarness(opts.harnessRoot)
+			harnessRoot, herr = d.resolveHarness(opts.harnessRoot)
 			reg = nil
 			if herr == nil {
 				r, rerr := harness.LoadRegistry(harnessRoot)

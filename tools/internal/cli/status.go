@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/health"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -63,7 +62,8 @@ func parseStatusArgs(args []string) (statusOpts, error) {
 	return opts, nil
 }
 
-func runStatus(args []string, ios *iostreams.IOStreams) error {
+func runStatus(args []string, d Deps) error {
+	ios := d.IO
 	opts, err := parseStatusArgs(args)
 	if err != nil {
 		return err

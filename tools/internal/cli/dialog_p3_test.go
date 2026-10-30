@@ -99,8 +99,8 @@ func TestDialogCustomizeAskedAfterDomainsDefaultNo(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["customize"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm")
@@ -120,8 +120,8 @@ func TestDialogCustomizeAskedAfterDomainsDefaultNo(t *testing.T) {
 func TestDialogCustomizeIDsOrderAndPreselectionAllOn(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	fp := newFake(t, customAnswers(p, "copy", allGit, allCore))
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "platforms", "mode", "hooks", "confirm")
@@ -150,8 +150,8 @@ func TestDialogCustomizeBindsPerDomainAndReachesInstaller(t *testing.T) {
 			t.Run(mode+"/"+c.name, func(t *testing.T) {
 				p := t.TempDir()
 				fp := newFake(t, customAnswers(p, mode, c.git, c.core))
-				enableDialog(t, fp)
-				if _, err := run(t, "add", "--harness-root", h); err != nil {
+				d := enableDialog(t, fp)
+				if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 					t.Fatal(err)
 				}
 				for _, s := range append(append([]string(nil), allGit...), allCore...) {
@@ -188,8 +188,8 @@ func TestDialogCustomizeNamesPreAnsweredStillAsks(t *testing.T) {
 	ans["customize"] = true
 	ans["skills:git"] = without(allGit, "git-pr-description")
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "git", "-p", p, "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "git", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("customize", "skills:git", "platforms", "mode", "confirm")
@@ -203,8 +203,8 @@ func TestDialogCustomizeNotAskedForStandaloneSkills(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["customize"] = true
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "caveman", "-p", p, "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "caveman", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("platforms", "mode", "confirm")
@@ -212,11 +212,11 @@ func TestDialogCustomizeNotAskedForStandaloneSkills(t *testing.T) {
 
 func TestDialogYesExcludesNothing(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
-	oldI, oldN := interactive, newPrompter
-	interactive = func() bool { return true }
-	newPrompter = func() prompt.Prompter { t.Fatal("prompter constructed under -y"); return nil }
-	t.Cleanup(func() { interactive, newPrompter = oldI, oldN })
-	if _, err := run(t, "add", "core", "-y", "--copy", "-p", p, "--harness-root", h); err != nil {
+	d := Deps{
+		Interactive: func() bool { return true },
+		Prompter:    func() prompt.Prompter { t.Fatal("prompter constructed under -y"); return nil },
+	}
+	if _, err := runD(t, d, "add", "core", "-y", "--copy", "-p", p, "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	for _, s := range allCore {
@@ -233,8 +233,8 @@ func TestDialogBackWithinSkillSteps(t *testing.T) {
 	ans["skills:git"] = seq{noRelease, noRelease}
 	ans["skills:core"] = seq{prompt.ErrBack, without(allCore, "caveman")}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "skills:git", "skills:core", "platforms", "mode", "hooks", "confirm")
@@ -252,8 +252,8 @@ func TestDialogBackFromFirstSkillStepReasksCustomize(t *testing.T) {
 	ans["customize"] = seq{true, false}
 	ans["skills:git"] = seq{prompt.ErrBack}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:git", "customize", "platforms", "mode", "hooks", "confirm")
@@ -268,8 +268,8 @@ func TestDialogBackFromCustomizeGoesToDomains(t *testing.T) {
 	ans["customize"] = seq{prompt.ErrBack, false}
 	ans["domains"] = seq{[]string{"git"}, []string{"git"}}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "domains", "customize", "platforms", "mode")
@@ -287,8 +287,8 @@ func TestDialogBackFromPlatformsGoesToCustomizeKeepingAnswers(t *testing.T) {
 	ans["skills:core"] = seq{allCore, allCore}
 	ans["platforms"] = seq{prompt.ErrBack, []string{"claude"}}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:git", "skills:core", "platforms",
@@ -307,8 +307,8 @@ func TestDialogPlatformListAnnotatesUnignoredRoots(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	if l := fp.labelOf("platforms", "cursor"); !strings.Contains(l, ".cursor") || !strings.Contains(l, "not git-ignored") {
 		t.Errorf("cursor label %q", l)
 	}
@@ -318,8 +318,8 @@ func TestDialogPlatformListAnnotatesUnignoredRoots(t *testing.T) {
 	writeFile(t, filepath.Join(p, ".gitignore"), ".cursor/\n.agents/\n.codex/\n.opencode/\n")
 	fp = newFake(t, fullAnswers(p))
 	fp.answers["confirm"] = false
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d = enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	for _, id := range []string{"claude", "codex", "cursor", "opencode"} {
 		if l := fp.labelOf("platforms", id); strings.Contains(l, "git-ignored") {
 			t.Errorf("%s label %q after gitignore", id, l)
@@ -341,8 +341,8 @@ func TestDialogGuardSwitchToCopy(t *testing.T) {
 	ans := guardAnswers(p, []string{"claude", "cursor"})
 	ans["guard:cursor"] = "copy"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:cursor", "confirm")
@@ -380,8 +380,8 @@ func TestDialogGuardDefaultsToDropWithSeveralPlatforms(t *testing.T) {
 	ans := guardAnswers(p, []string{"claude", "cursor"})
 	ans["guard:cursor"] = "drop"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if fp.selDef["guard:cursor"] != "drop" {
@@ -398,8 +398,8 @@ func TestDialogGuardDefaultsToCopyForOnlyPlatform(t *testing.T) {
 	ans := guardAnswers(p, []string{"cursor"})
 	ans["guard:cursor"] = "copy"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if fp.selDef["guard:cursor"] != "copy" {
@@ -419,8 +419,8 @@ func TestDialogGuardCopyLabelNamesAllPlatforms(t *testing.T) {
 	ans := guardAnswers(p, []string{"claude", "cursor"})
 	ans["guard:cursor"] = "drop"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	l := fp.labelOf("guard:cursor", "copy")
@@ -438,8 +438,8 @@ func TestDialogGuardPreviousChoiceBeatsDropDefaultAfterBack(t *testing.T) {
 	ans["guard:cursor"] = seq{"copy", "copy"}
 	ans["confirm"] = seq{prompt.ErrBack, true}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if got := fp.history["guard:cursor"]; len(got) != 2 || !reflect.DeepEqual(got[0], []string{"drop"}) || !reflect.DeepEqual(got[1], []string{"copy"}) {
@@ -456,8 +456,8 @@ func TestDialogGuardDropPlatform(t *testing.T) {
 	ans := guardAnswers(p, []string{"claude", "cursor"})
 	ans["guard:cursor"] = "drop"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:cursor", "confirm")
@@ -479,8 +479,8 @@ func TestDialogGuardAbortWritesNothing(t *testing.T) {
 	p := gitProject(t, ".cursor")
 	ans := guardAnswers(p, []string{"claude", "cursor"})
 	ans["guard:cursor"] = "abort"
-	enableDialog(t, newFake(t, ans))
-	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, newFake(t, ans))
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	for _, d := range []string{".claude", ".agents", ".cursor/agents", ".cursor/rules"} {
@@ -495,8 +495,8 @@ func TestDialogGuardDropLastPlatformAborts(t *testing.T) {
 	p := gitProject(t, ".cursor")
 	ans := guardAnswers(p, []string{"cursor"})
 	ans["guard:cursor"] = "drop"
-	enableDialog(t, newFake(t, ans))
-	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, newFake(t, ans))
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	if exists(filepath.Join(p, ".agents")) || exists(filepath.Join(p, ".claude")) {
@@ -511,8 +511,8 @@ func TestDialogGuardRecollectsUntilClean(t *testing.T) {
 	ans["guard:codex"] = "drop"
 	ans["guard:cursor"] = "copy"
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:codex", "guard:cursor", "confirm")
@@ -531,8 +531,8 @@ func TestDialogBackFromGuardGoesToMode(t *testing.T) {
 	ans["mode"] = seq{"link", "link"}
 	ans["guard:cursor"] = seq{prompt.ErrBack, "drop"}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:cursor", "mode", "guard:cursor", "confirm")
@@ -548,8 +548,8 @@ func TestDialogBackFromConfirmReasksGuardKeepingChoice(t *testing.T) {
 	ans["guard:cursor"] = seq{"copy", "drop"}
 	ans["confirm"] = seq{prompt.ErrBack, true}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "guard:cursor", "confirm", "guard:cursor", "confirm")
@@ -586,8 +586,8 @@ func TestDialogOverwriteYesWritesOnlyListedPaths(t *testing.T) {
 	ans["skills:core"] = without(allCore, "advanced-search")
 	ans["overwrite"] = true
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "skills:core", "platforms", "mode", "overwrite", "hooks", "confirm")
@@ -621,8 +621,8 @@ func TestDialogOverwriteNoAbortsWritingNothing(t *testing.T) {
 	ans := coreLinkAnswers(p)
 	ans["overwrite"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "overwrite")
@@ -650,8 +650,8 @@ func TestDialogBackFromOverwriteGoesToMode(t *testing.T) {
 	ans["mode"] = seq{"link", "copy"}
 	ans["overwrite"] = seq{prompt.ErrBack}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "overwrite", "mode", "hooks", "confirm")
@@ -667,8 +667,8 @@ func TestDialogReservedAgentNameIsHardError(t *testing.T) {
 	}
 	p := t.TempDir()
 	fp := newFake(t, map[string]any{"customize": false, "confirm": true})
-	enableDialog(t, fp)
-	_, err := run(t, "add", "testdomain", "-a", "codex", "--copy", "-p", p, "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, err := runD(t, d, "add", "testdomain", "-a", "codex", "--copy", "-p", p, "--harness-root", h)
 	if err == nil || !strings.Contains(err.Error(), "reserved") {
 		t.Fatalf("got %v", err)
 	}
@@ -736,8 +736,8 @@ func TestDialogSummaryListsDeselectedAlreadyInstalled(t *testing.T) {
 	ans["customize"] = true
 	ans["skills:core"] = without(allCore, "caveman", "advanced-search")
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	for _, w := range []string{
@@ -771,13 +771,10 @@ func TestRemoveDomainKeepsForeignExcludedSkill(t *testing.T) {
 			ans["mode"] = mode
 			ans["customize"] = true
 			ans["skills:core"] = without(allCore, "caveman", "advanced-search")
-			enableDialog(t, newFake(t, ans))
-			if _, err := run(t, "add", "--harness-root", h); err != nil {
+			d := enableDialog(t, newFake(t, ans))
+			if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 				t.Fatal(err)
 			}
-			oldI := interactive
-			interactive = func() bool { return false }
-			defer func() { interactive = oldI }()
 			var rmErr error
 			stderr := captureStderr(t, func() {
 				_, rmErr = run(t, "remove", "core", "-y", "-p", p, "--harness-root", h)
@@ -815,8 +812,8 @@ func TestDialogSummaryNoKeptHintForForeignUntracked(t *testing.T) {
 	ans["customize"] = true
 	ans["skills:core"] = without(allCore, "caveman")
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(fp.summary, "deselect:  core/caveman") {
@@ -848,8 +845,8 @@ func TestDialogPlatformListNoUnignoredNoteUnderCopyAndForce(t *testing.T) {
 			ans := fullAnswers(p)
 			ans["confirm"] = false
 			fp := newFake(t, ans)
-			enableDialog(t, fp)
-			_, _ = run(t, "add", "--harness-root", h, flag)
+			d := enableDialog(t, fp)
+			_, _ = runD(t, d, "add", "--harness-root", h, flag)
 			for _, o := range fp.options["platforms"] {
 				if strings.Contains(o.Label, "not git-ignored") {
 					t.Errorf("label %q under %s", o.Label, flag)
@@ -864,8 +861,8 @@ func TestDialogCustomizeRejectsEmptySkillSelection(t *testing.T) {
 	ans := customAnswers(p, "copy", allGit, allCore)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	v := fp.validate["skills:git"]
 	if v == nil {
 		t.Fatal("skills:git has no validator")
@@ -881,8 +878,8 @@ func TestDialogCustomizeRejectsEmptySkillSelection(t *testing.T) {
 
 func TestDialogCustomizeEmptyAnswerWritesNothing(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
-	enableDialog(t, newFake(t, customAnswers(p, "copy", []string{}, allCore)))
-	_, err := run(t, "add", "--harness-root", h)
+	d := enableDialog(t, newFake(t, customAnswers(p, "copy", []string{}, allCore)))
+	_, err := runD(t, d, "add", "--harness-root", h)
 	if err == nil || !strings.Contains(err.Error(), "select at least one skill") {
 		t.Fatalf("got %v", err)
 	}

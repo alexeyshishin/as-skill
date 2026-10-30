@@ -16,10 +16,6 @@ import (
 	"claude-harness/tools/internal/prompt"
 )
 
-var interactive = prompt.IsInteractive
-
-var newPrompter = func() prompt.Prompter { return prompt.NewHuh() }
-
 var errAborted = errors.New("aborted")
 
 func abortErr(err error) error {
@@ -56,11 +52,11 @@ func runSteps(steps []func() (bool, error)) error {
 }
 
 // wantDialog: a terminal, no -y, and not a fully specified dry-run.
-func wantDialog(o addOpts) bool {
+func wantDialog(d Deps, o addOpts) bool {
 	if o.yes || (o.dryRun && len(o.names) > 0) {
 		return false
 	}
-	return interactive()
+	return d.interactive()
 }
 
 func askProject(p prompt.Prompter, o addOpts, prev string) (string, error) {
@@ -254,8 +250,8 @@ type addPlan struct {
 	hooks            []string
 }
 
-func addDialog(opts addOpts) (*addPlan, error) {
-	p := newPrompter()
+func addDialog(opts addOpts, d Deps) (*addPlan, error) {
+	p := d.newPrompter()
 	pl := &addPlan{dialog: true}
 	var (
 		projRaw   string
@@ -281,7 +277,7 @@ func addDialog(opts addOpts) (*addPlan, error) {
 		},
 		func() (bool, error) {
 			var err error
-			if pl.harness, err = harness.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+			if pl.harness, err = d.Locator.Locate(opts.harnessRoot); err != nil {
 				return false, err
 			}
 			if pl.reg, err = harness.LoadRegistry(pl.harness); err != nil {
@@ -376,7 +372,7 @@ func addDialog(opts addOpts) (*addPlan, error) {
 			if opts.dryRun {
 				return false, nil
 			}
-			return true, confirm(p, "Install?", addSummary(opts, pl, platSrc))
+			return true, confirm(p, "Install?", addSummary(opts, pl, platSrc, d.Locator))
 		},
 	})
 	if err != nil {
@@ -385,12 +381,12 @@ func addDialog(opts addOpts) (*addPlan, error) {
 	return pl, nil
 }
 
-func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
+func addSummary(opts addOpts, pl *addPlan, platSrc string, loc harness.Locator) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "harness:   %s\n", pl.harness)
 	if opts.harnessRoot == "" {
-		c, cok := harness.CwdHarnessRoot()
-		e, eok := harness.ExecutableHarnessRoot()
+		c, cok := loc.CwdRoot()
+		e, eok := loc.ExecutableRoot()
 		if cok && eok && !sameDir(c, e) {
 			fmt.Fprintf(&b, "warning:   cwd checkout %s differs from binary checkout %s; using %s\n", c, e, pl.harness)
 		}

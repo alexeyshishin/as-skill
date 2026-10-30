@@ -40,7 +40,7 @@ func TestInstallAllCopyAllPlatforms(t *testing.T) {
 	t.Setenv("OBSIDIAN_VAULT", t.TempDir())
 	project := t.TempDir()
 	args := []string{"install", "all", "--copy", "--platform", "claude,codex,cursor,opencode", "--harness-root", harness, "--project", project}
-	if _, err := capture(t, func() error { return Run(args) }); err != nil {
+	if _, err := capture(t, func() error { return runCLI(args) }); err != nil {
 		t.Fatal(err)
 	}
 	err := filepath.WalkDir(project, func(p string, d fs.DirEntry, err error) error {
@@ -96,7 +96,7 @@ func TestInstallLinkReferencesResolve(t *testing.T) {
 		t.Fatal(err)
 	}
 	args := []string{"install", "domains", "git", "code", "--platform", "claude,codex", "--harness-root", harness, "--project", project}
-	if _, err := capture(t, func() error { return Run(args) }); err != nil {
+	if _, err := capture(t, func() error { return runCLI(args) }); err != nil {
 		t.Fatal(err)
 	}
 	skill := filepath.Join(project, ".claude", "skills", "git-conventional-commits")

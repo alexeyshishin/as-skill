@@ -1,17 +1,17 @@
 package cli
 
 import (
-	"os"
 	"reflect"
 	"testing"
 
 	"claude-harness/tools/internal/prompt"
 )
 
-func TestMain(m *testing.M) {
-	interactive = func() bool { return false }
-	os.Exit(m.Run())
-}
+// testDeps is the non-terminal default for tests.
+func testDeps() Deps { return Deps{Interactive: func() bool { return false }} }
+
+// runCLI runs a command with non-terminal deps.
+func runCLI(args []string) error { return Dispatch(args, testDeps()) }
 
 // fakePrompt answers by question id: string (Input/Select), []string
 // (MultiSelect), bool (Confirm) or an error (returned as-is).
@@ -36,11 +36,9 @@ func newFake(t *testing.T, answers map[string]any) *fakePrompt {
 }
 
 // enableDialog opts a test in to the interactive path with fp as the prompter.
-func enableDialog(t *testing.T, fp *fakePrompt) {
-	oldI, oldN := interactive, newPrompter
-	interactive = func() bool { return true }
-	newPrompter = func() prompt.Prompter { return fp }
-	t.Cleanup(func() { interactive, newPrompter = oldI, oldN })
+func enableDialog(t *testing.T, fp *fakePrompt) Deps {
+	t.Helper()
+	return Deps{Interactive: func() bool { return true }, Prompter: func() prompt.Prompter { return fp }}
 }
 
 // seq scripts successive answers to one question id (e.g. prompt.ErrBack, then a value).

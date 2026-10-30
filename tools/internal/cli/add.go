@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runAdd(args []string, ios *iostreams.IOStreams) error {
+func runAdd(args []string, d Deps) error {
+	ios := d.IO
 	opts, err := parseAddArgs("add", args)
 	if err != nil {
 		return err
@@ -21,15 +21,15 @@ func runAdd(args []string, ios *iostreams.IOStreams) error {
 		printUsage(ios.Stdout())
 		return nil
 	}
-	dlg := wantDialog(opts)
+	dlg := wantDialog(d, opts)
 	if !dlg && (len(opts.names) == 0 || !(opts.yes || opts.dryRun)) {
 		return gateError(opts)
 	}
 	var pl *addPlan
 	if dlg {
-		pl, err = addDialog(opts)
+		pl, err = addDialog(opts, d)
 	} else {
-		pl, err = planNonInteractive(opts, ios)
+		pl, err = planNonInteractive(opts, d)
 	}
 	if err != nil {
 		return err
@@ -83,13 +83,14 @@ func runAdd(args []string, ios *iostreams.IOStreams) error {
 	return nil
 }
 
-func planNonInteractive(opts addOpts, ios *iostreams.IOStreams) (*addPlan, error) {
+func planNonInteractive(opts addOpts, d Deps) (*addPlan, error) {
+	ios := d.IO
 	pl := &addPlan{mode: lockfile.ModeLink}
 	var err error
 	if pl.project, err = resolveProject(opts.project); err != nil {
 		return nil, err
 	}
-	if pl.harness, err = harness.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+	if pl.harness, err = d.Locator.Locate(opts.harnessRoot); err != nil {
 		return nil, err
 	}
 	if pl.reg, err = harness.LoadRegistry(pl.harness); err != nil {

@@ -28,8 +28,8 @@ func fullAnswers(project string) map[string]any {
 func TestDialogAddFullOrderAndMultiDomain(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	fp := newFake(t, fullAnswers(p))
-	enableDialog(t, fp)
-	out, err := run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	out, err := runD(t, d, "add", "--harness-root", h)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,9 +70,9 @@ func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
 				}
 			}
 			fp := newFake(t, ans)
-			enableDialog(t, fp)
+			d := enableDialog(t, fp)
 			args := append([]string{"add", "--harness-root", h}, c.extra(p)...)
-			if _, err := run(t, args...); err != nil {
+			if _, err := runD(t, d, args...); err != nil {
 				t.Fatal(err)
 			}
 			fp.wantAsked(want...)
@@ -85,18 +85,18 @@ func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
 
 func TestDialogYesNeverConstructsPrompter(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
-	oldI, oldN := interactive, newPrompter
-	interactive = func() bool { return true }
-	newPrompter = func() prompt.Prompter { t.Fatal("prompter constructed under -y"); return nil }
-	t.Cleanup(func() { interactive, newPrompter = oldI, oldN })
-	if _, err := run(t, "add", "git", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
+	d := Deps{
+		Interactive: func() bool { return true },
+		Prompter:    func() prompt.Prompter { t.Fatal("prompter constructed under -y"); return nil },
+	}
+	if _, err := runD(t, d, "add", "git", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := run(t, "remove", "git", "-y", "-p", p); err != nil {
+	if _, err := runD(t, d, "remove", "git", "-y", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	// -y without names still hits the gate, no prompter
-	if _, err := run(t, "add", "-y", "-p", p, "--harness-root", h); err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+	if _, err := runD(t, d, "add", "-y", "-p", p, "--harness-root", h); err == nil || !strings.Contains(err.Error(), "needs a terminal") {
 		t.Fatalf("want gate error mentioning terminal, got %v", err)
 	}
 }
@@ -109,8 +109,8 @@ func TestDialogDeclineWritesNothing(t *testing.T) {
 			ans := fullAnswers(p)
 			ans["confirm"] = conf
 			fp := newFake(t, ans)
-			enableDialog(t, fp)
-			_, err := run(t, "add", "--harness-root", h)
+			d := enableDialog(t, fp)
+			_, err := runD(t, d, "add", "--harness-root", h)
 			if err == nil || err.Error() != "aborted" {
 				t.Fatalf("want aborted, got %v", err)
 			}
@@ -126,8 +126,8 @@ func TestDialogCtrlCMidwayWritesNothing(t *testing.T) {
 	h, p := realHarness(t), t.TempDir()
 	ans := fullAnswers(p)
 	ans["platforms"] = prompt.ErrAborted
-	enableDialog(t, newFake(t, ans))
-	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, newFake(t, ans))
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	if ents, _ := os.ReadDir(p); len(ents) != 0 {
@@ -141,8 +141,8 @@ func TestDialogGatedDomainRejectedWhileEnvUnset(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	if l := fp.labelOf("domains", "obsidian"); !strings.Contains(l, "needs $OBSIDIAN_VAULT") {
 		t.Fatalf("label %q", l)
 	}
@@ -170,8 +170,8 @@ func TestDialogInstalledLabel(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	if !strings.Contains(fp.labelOf("domains", "git"), "[installed]") {
 		t.Errorf("git label %q", fp.labelOf("domains", "git"))
 	}
@@ -188,8 +188,8 @@ func TestDialogPlatformPreselectionIsDetected(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	if got := fp.selected("platforms"); !reflect.DeepEqual(got, []string{"codex"}) {
 		t.Fatalf("preselected %v", got)
 	}
@@ -207,8 +207,8 @@ func TestDialogRemoveOptionsFromLockfile(t *testing.T) {
 		t.Fatal(err)
 	}
 	fp := newFake(t, map[string]any{"remove": []string{"git", "caveman"}, "confirm": true})
-	enableDialog(t, fp)
-	if _, err := run(t, "remove", "-p", p); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("remove", "confirm")
@@ -236,8 +236,8 @@ func TestDialogRemovePlatformsAskedOnlyWhenMultiple(t *testing.T) {
 		t.Fatal(err)
 	}
 	fp := newFake(t, map[string]any{"remove": []string{"git"}, "platforms": []string{"claude", "codex"}, "confirm": false})
-	enableDialog(t, fp)
-	if _, err := run(t, "remove", "-p", p); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	fp.wantAsked("remove", "platforms", "confirm")
@@ -263,8 +263,8 @@ func TestDialogRemoveStandaloneSkillOption(t *testing.T) {
 		t.Fatal(err)
 	}
 	fp := newFake(t, map[string]any{"remove": []string{"caveman"}, "confirm": true})
-	enableDialog(t, fp)
-	if _, err := run(t, "remove", "-p", p); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("remove", "confirm")
@@ -281,8 +281,8 @@ func TestDialogPlatformNoDetectedNoteInEmptyProject(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["confirm"] = false
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	_, _ = run(t, "add", "--harness-root", h)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
 	for _, o := range fp.options["platforms"] {
 		if strings.Contains(o.Label, "detected") {
 			t.Errorf("label %q", o.Label)
@@ -297,8 +297,8 @@ func TestDialogBackReasksWithPreselection(t *testing.T) {
 	ans["customize"] = seq{false, prompt.ErrBack, false}
 	ans["domains"] = seq{[]string{"git"}, []string{"git"}}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "customize", "domains", "customize", "platforms", "mode")
@@ -312,8 +312,8 @@ func TestDialogBackOnFirstStepStays(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["project"] = seq{prompt.ErrBack, p}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h, "--dry-run"); err != nil {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "project", "domains", "customize", "platforms", "mode", "hooks")
@@ -324,9 +324,9 @@ func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
 	ans := fullAnswers(p)
 	ans["domains"] = seq{prompt.ErrBack, []string{"git"}}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
+	d := enableDialog(t, fp)
 	// -p pre-answers project: back from domains has nowhere to go, stays.
-	if _, err := run(t, "add", "--harness-root", h, "-p", p, "--dry-run"); err != nil {
+	if _, err := runD(t, d, "add", "--harness-root", h, "-p", p, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}
 	fp.wantAsked("domains", "domains", "customize", "platforms", "mode")
@@ -339,8 +339,8 @@ func TestDialogBackFromConfirmGoesToMode(t *testing.T) {
 	ans["mode"] = seq{"copy", "link"}
 	ans["confirm"] = seq{prompt.ErrBack, false}
 	fp := newFake(t, ans)
-	enableDialog(t, fp)
-	if _, err := run(t, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
 		t.Fatalf("got %v", err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "confirm", "mode", "confirm")

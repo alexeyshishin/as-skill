@@ -9,12 +9,11 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
-	"claude-harness/tools/internal/iostreams"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
 
-func runHooks(args []string, ios *iostreams.IOStreams) error {
+func runHooks(args []string, d Deps) error {
 	if len(args) == 0 {
 		return errors.New("hooks needs a verb: enable|disable")
 	}
@@ -39,7 +38,7 @@ func runHooks(args []string, ios *iostreams.IOStreams) error {
 	}
 	in := &installer.Installer{ProjectRoot: projectRoot, DryRun: opts.dryRun, Lock: &lockfile.Lockfile{}}
 	if len(opts.domains) > 0 {
-		return runHooksDomain(in, verb, positionals, opts, plats, ios)
+		return runHooksDomain(in, verb, positionals, opts, plats, d)
 	}
 	for _, p := range plats {
 		if verb == "enable" {
@@ -57,12 +56,13 @@ func runHooks(args []string, ios *iostreams.IOStreams) error {
 	return nil
 }
 
-func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID, ios *iostreams.IOStreams) error {
+func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID, d Deps) error {
+	ios := d.IO
 	root := ""
 	if opts.harnessSet {
 		root = opts.harnessRoot
 	}
-	hRoot, err := harness.ResolveHarnessRootAuto(root)
+	hRoot, err := d.Locator.Locate(root)
 	if err != nil {
 		return err
 	}
