@@ -144,7 +144,7 @@ func LoadRegistry(harnessRoot string) (*Registry, error) {
 		if !e.IsDir() {
 			continue
 		}
-		manifestPath := filepath.Join(domainsDir, e.Name(), "manifest.yaml")
+		manifestPath := filepath.Join(domainsDir, e.Name(), manifestFile)
 		if !fileExists(manifestPath) {
 			continue
 		}
@@ -181,7 +181,24 @@ func ResolveHarnessRoot(start string) (string, error) {
 	}
 }
 
-var executable = os.Executable
+// Markers that identify a claude-harness checkout.
+const (
+	harnessModule     = "claude-harness"
+	harnessEntrypoint = "tools/main.go"
+	manifestFile      = "manifest.yaml"
+)
+
+// Locator finds the harness checkout. Executable is os.Executable when nil.
+type Locator struct {
+	Executable func() (string, error)
+}
+
+func (l Locator) executable() (string, error) {
+	if l.Executable == nil {
+		return os.Executable()
+	}
+	return l.Executable()
+}
 
 type SkillInfo struct {
 	Name        string
@@ -224,15 +241,15 @@ func validHarnessRoot(dir string) bool {
 	isHarness := false
 	for _, line := range strings.Split(string(data), "\n") {
 		f := strings.Fields(line)
-		if len(f) == 2 && f[0] == "module" && f[1] == "claude-harness" {
+		if len(f) == 2 && f[0] == "module" && f[1] == harnessModule {
 			isHarness = true
 			break
 		}
 	}
-	if !isHarness || !fileExists(filepath.Join(dir, "tools", "main.go")) {
+	if !isHarness || !fileExists(filepath.Join(dir, filepath.FromSlash(harnessEntrypoint))) {
 		return false
 	}
-	manifests, _ := filepath.Glob(filepath.Join(DomainDir(dir, "*"), "manifest.yaml"))
+	manifests, _ := filepath.Glob(filepath.Join(DomainDir(dir, "*"), manifestFile))
 	return len(manifests) > 0
 }
 
@@ -249,7 +266,8 @@ func walkUpHarness(start string) (string, bool) {
 	}
 }
 
-func ResolveHarnessRootAuto(flag string) (string, error) {
+// Locate resolves the harness root: the flag if set, else cwd walk-up, else the binary's real path.
+func (l Locator) Locate(flag string) (string, error) {
 	if flag != "" {
 		root, err := ResolveHarnessRoot(flag)
 		if err != nil {
@@ -265,7 +283,7 @@ func ResolveHarnessRootAuto(flag string) (string, error) {
 			return root, nil
 		}
 	}
-	if exe, err := executable(); err == nil {
+	if exe, err := l.executable(); err == nil {
 		if real, err := filepath.EvalSymlinks(exe); err == nil {
 			if root, ok := walkUpHarness(filepath.Dir(real)); ok {
 				return root, nil
@@ -275,8 +293,8 @@ func ResolveHarnessRootAuto(flag string) (string, error) {
 	return "", fmt.Errorf("no claude-harness checkout found from the current directory or the as-skill binary — pass --harness-root")
 }
 
-// CwdHarnessRoot is the checkout found walking up from the current directory.
-func CwdHarnessRoot() (string, bool) {
+// CwdRoot is the checkout found walking up from the current directory.
+func (Locator) CwdRoot() (string, bool) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", false
@@ -284,9 +302,9 @@ func CwdHarnessRoot() (string, bool) {
 	return walkUpHarness(cwd)
 }
 
-// ExecutableHarnessRoot is the checkout found walking up from the real path of the binary.
-func ExecutableHarnessRoot() (string, bool) {
-	exe, err := executable()
+// ExecutableRoot is the checkout found walking up from the real path of the binary.
+func (l Locator) ExecutableRoot() (string, bool) {
+	exe, err := l.executable()
 	if err != nil {
 		return "", false
 	}

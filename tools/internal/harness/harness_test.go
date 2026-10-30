@@ -25,7 +25,7 @@ func writeHarness(t *testing.T, dir string, module string) {
 	}
 }
 
-func TestResolveHarnessRootAuto(t *testing.T) {
+func TestLocatorLocate(t *testing.T) {
 	real := func(p string) string {
 		r, err := filepath.EvalSymlinks(p)
 		if err != nil {
@@ -46,22 +46,20 @@ func TestResolveHarnessRootAuto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	old := executable
-	defer func() { executable = old }()
-	executable = func() (string, error) { return filepath.Join(good, "as-skill"), nil }
+	loc := Locator{Executable: func() (string, error) { return filepath.Join(good, "as-skill"), nil }}
 
 	chdir(t, filepath.Join(good, "domains", "x"))
-	if got, err := ResolveHarnessRootAuto(""); err != nil || got != good {
+	if got, err := loc.Locate(""); err != nil || got != good {
 		t.Fatalf("cwd walk-up: %q %v", got, err)
 	}
 
 	chdir(t, unrelated)
-	if got, err := ResolveHarnessRootAuto(""); err != nil || got != good {
+	if got, err := loc.Locate(""); err != nil || got != good {
 		t.Fatalf("exe fallback: %q %v", got, err)
 	}
 
 	chdir(t, bad)
-	if got, err := ResolveHarnessRootAuto(""); err != nil || got != good {
+	if got, err := loc.Locate(""); err != nil || got != good {
 		t.Fatalf("marker rejection should fall to exe: %q %v", got, err)
 	}
 
@@ -69,20 +67,20 @@ func TestResolveHarnessRootAuto(t *testing.T) {
 	if err := os.Symlink(filepath.Join(good, "as-skill"), link); err != nil {
 		t.Fatal(err)
 	}
-	executable = func() (string, error) { return link, nil }
-	if got, err := ResolveHarnessRootAuto(""); err != nil || got != good {
+	loc = Locator{Executable: func() (string, error) { return link, nil }}
+	if got, err := loc.Locate(""); err != nil || got != good {
 		t.Fatalf("symlinked exe: %q %v", got, err)
 	}
 
-	executable = func() (string, error) { return filepath.Join(unrelated, "as-skill"), nil }
-	if _, err := ResolveHarnessRootAuto(""); err == nil {
+	loc = Locator{Executable: func() (string, error) { return filepath.Join(unrelated, "as-skill"), nil }}
+	if _, err := loc.Locate(""); err == nil {
 		t.Fatal("expected error with no valid harness")
 	}
 
-	if _, err := ResolveHarnessRootAuto(bad); err == nil {
+	if _, err := loc.Locate(bad); err == nil {
 		t.Fatal("flag pointing at a non-harness dir must be rejected")
 	}
-	if got, err := ResolveHarnessRootAuto(good); err != nil || got != good {
+	if got, err := loc.Locate(good); err != nil || got != good {
 		t.Fatalf("valid flag: %q %v", got, err)
 	}
 	if got, err := ResolveHarnessRoot(bad); err != nil || got != bad {
