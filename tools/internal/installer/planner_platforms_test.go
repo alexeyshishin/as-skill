@@ -11,7 +11,6 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
-// planner tests write only source fixtures; planning itself must not touch the project.
 func srcTree(t *testing.T, files map[string]string) string {
 	t.Helper()
 	dir := t.TempDir()

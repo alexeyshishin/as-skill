@@ -20,10 +20,8 @@ var capGaps = map[ID]string{
 	OpenCode: "agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported",
 }
 
-// CapGap returns the known capability gap note for a platform, or "".
 func CapGap(id ID) string { return capGaps[id] }
 
-// AllSkillDirs returns the sorted union of every platform's SkillDirsRead.
 func AllSkillDirs() []string {
 	seen := map[string]bool{}
 	var out []string
@@ -39,7 +37,6 @@ func AllSkillDirs() []string {
 	return out
 }
 
-// LinkRoots returns the sorted non-claude platform roots: AgentsRoot plus ".<id>" per non-claude platform.
 func LinkRoots() []string {
 	out := []string{AgentsRoot}
 	for _, id := range order {
@@ -60,7 +57,6 @@ func IsLinkRoot(root string) bool {
 	return false
 }
 
-// RootOf returns the first path element of rel.
 func RootOf(rel string) string {
 	return strings.Split(filepath.ToSlash(rel), "/")[0]
 }

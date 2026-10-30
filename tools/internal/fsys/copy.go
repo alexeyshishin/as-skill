@@ -140,8 +140,6 @@ func MakeShellScriptsExecutable(dir string) error {
 	return nil
 }
 
-// NonExecutableScripts returns the *.sh files directly under srcDir that lack
-// any exec bit.
 func NonExecutableScripts(srcDir string) []string {
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {

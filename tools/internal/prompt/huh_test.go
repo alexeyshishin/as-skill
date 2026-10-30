@@ -95,7 +95,6 @@ func TestHuhMultiSelectPreselectedUntickAllReachesValidator(t *testing.T) {
 	}
 	opts := []Option{{"a", "A", true}, {"b", "B", true}}
 	var out bytes.Buffer
-	// untick b then a (cursor ends on a), Enter on the empty list (blocked), tick b, Enter
 	p := &huhPrompter{in: strings.NewReader("\x1b[B \x1b[A \r\x1b[B \r"), out: &out}
 	got, err := p.MultiSelect("d", "Pick", opts, nonEmpty)
 	if err != nil {

@@ -14,15 +14,11 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
-// DomainReq names a domain to install; Strict makes a gated domain an error instead of a skip.
 type DomainReq struct {
 	Name   string
 	Strict bool
 }
 
-// Planner builds one Plan. It owns the per-Plan state: the git-ignore cache and
-// the one-shot notes. collect gathers conflicts into Plan.Conflicts (and checks
-// every op read-only); otherwise the first conflict is returned as an error.
 type Planner struct {
 	in        *Installer
 	plan      *Plan
@@ -37,7 +33,6 @@ func (in *Installer) newPlanner(collect bool) *Planner {
 	return &Planner{in: in, plan: &Plan{git: g}, collect: collect, git: g}
 }
 
-// add records a conflict (deduped) or, when not collecting, returns it as the error.
 func (pl *Planner) add(c Conflict) error {
 	if !pl.collect {
 		return &c
@@ -191,14 +186,11 @@ func (pl *Planner) preflightForeign(name string, kinds map[lockfile.Kind]bool) e
 	return nil
 }
 
-// PreflightError marks a refusal before anything was planned or placed.
 type PreflightError struct{ Err error }
 
 func (e *PreflightError) Error() string { return e.Err.Error() }
 func (e *PreflightError) Unwrap() error { return e.Err }
 
-// build plans domains then skills into pl.plan. On error pl.plan holds
-// everything planned before the failure; the caller applies it first.
 func (pl *Planner) build(reg *harness.Registry, domains []DomainReq, skills []string) error {
 	if len(domains) > 0 {
 		names := make([]string, len(domains))
@@ -296,9 +288,6 @@ func (pl *Planner) buildSkill(reg *harness.Registry, name string) error {
 	return perr
 }
 
-// addChecked merges sub into the plan; when collecting it also runs the
-// read-only dry check of sub's ops (what a dry Apply would hit), whose hard
-// errors come back wrapped like Apply's.
 func (pl *Planner) addChecked(sub *Plan) error {
 	pl.plan.merge(sub)
 	if !pl.collect {
@@ -408,9 +397,6 @@ func wrapApplyErr(err error) error {
 	return kindApplyErr(oe.Op.unit, oe.Op.unitKind, err)
 }
 
-// PlanInstall plans the selection without touching disk or printing. Recoverable
-// refusals land in Plan.Conflicts (sorted, deduped); other failures come back as
-// err. The Plan is never nil.
 func (in *Installer) PlanInstall(reg *harness.Registry, domains []DomainReq, skills []string) (*Plan, error) {
 	pl := in.newPlanner(true)
 	err := pl.build(reg, domains, skills)
@@ -418,7 +404,6 @@ func (in *Installer) PlanInstall(reg *harness.Registry, domains []DomainReq, ski
 	return pl.plan, err
 }
 
-// InstallAll plans the selection, refusing on the first conflict, and applies it.
 func (in *Installer) InstallAll(reg *harness.Registry, domains []DomainReq, skills []string) error {
 	pl := in.newPlanner(false)
 	perr := pl.build(reg, domains, skills)
@@ -428,7 +413,6 @@ func (in *Installer) InstallAll(reg *harness.Registry, domains []DomainReq, skil
 	return perr
 }
 
-// PlanRoots plans only the git-ignore guard of the roots the kinds would touch.
 func (in *Installer) PlanRoots(kinds ...lockfile.Kind) *Plan {
 	pl := in.newPlanner(true)
 	_ = pl.guardRoots(kinds)
@@ -449,13 +433,10 @@ func (pl *Planner) guardRoots(kinds []lockfile.Kind) error {
 	return nil
 }
 
-// GuardRoots returns the first not-ignored root the kinds would touch.
 func (in *Installer) GuardRoots(kinds ...lockfile.Kind) error {
 	return in.newPlanner(false).guardRoots(kinds)
 }
 
-// Preflight checks reserved names, git-ignore roots and untracked destinations
-// for the domains, refusing on the first problem.
 func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 	pl := in.newPlanner(false)
 	err := pl.preflight(reg, domains)

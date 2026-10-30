@@ -23,8 +23,6 @@ const (
 	Stderr Stream = "stderr"
 )
 
-// Op is one placement unit. Name == "" means the whole Src tree at Dst;
-// Exclude lists skills left out of a skills tree.
 type Op struct {
 	Type      OpType
 	Src, Dst  string
@@ -36,13 +34,10 @@ type Op struct {
 	Exclude   []string
 	Item      bool
 	rm        *removeUnit
-	// unit/unitKind: the domain (or skill) and kind this op was planned for; error wording only.
-	unit     string
-	unitKind lockfile.Kind
+	unit      string
+	unitKind  lockfile.Kind
 }
 
-// Warning is printed before Ops[Before] (Before == len(Ops): after the last op).
-// WriteOnly warnings are skipped on a dry run.
 type Warning struct {
 	Text      string
 	Stream    Stream

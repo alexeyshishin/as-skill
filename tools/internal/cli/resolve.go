@@ -182,8 +182,6 @@ func skillInstalled(lock *lockfile.Lockfile, projectRoot, name string) bool {
 	return false
 }
 
-// domainInstalled marks a domain only when it has a domain-wide (kind-level)
-// row, or every top-level item of its kinds is covered by some row.
 func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 	if lock == nil {
 		return false

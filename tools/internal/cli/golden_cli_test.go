@@ -18,8 +18,6 @@ var goldenDir string
 
 var updateGolden = flag.Bool("update", false, "rewrite cli/testdata/golden/*.txt")
 
-// captureBoth runs fn with os.Stdout and os.Stderr swapped to pipes drained
-// concurrently; both are restored even if fn panics.
 func captureBoth(t *testing.T, fn func() error) (stdout, stderr string, err error) {
 	t.Helper()
 	oldO, oldE := os.Stdout, os.Stderr
@@ -61,8 +59,6 @@ func gWrite(t *testing.T, path, body string, mode os.FileMode) {
 	}
 }
 
-// goldenHarness builds a small fake harness: domains alpha (skills, agents,
-// rules, hooks), beta (skills, agents), gated (requires_env, skill).
 func goldenHarness(t *testing.T) string {
 	t.Helper()
 	h := t.TempDir()
@@ -114,18 +110,14 @@ func (c *gcase) norm(s string) string {
 			pairs = append(pairs, r, to)
 		}
 	}
-	// longest paths first so nested paths win
 	add(c.p, "<P>")
 	add(c.h, "<H>")
 	add(home, "<HOME>")
-	// strings.NewReplacer picks by argument order, so order matters: P/H are temp dirs outside HOME.
 	s = strings.NewReplacer(pairs...).Replace(s)
 	s = reTime.ReplaceAllString(s, "<TIME>")
 	return reHash.ReplaceAllString(s, "<SHA256>")
 }
 
-// captureCombined points stdout and stderr at ONE pipe so the relative order
-// of writes is preserved.
 func captureCombined(t *testing.T, fn func() error) (out string, err error) {
 	t.Helper()
 	oldO, oldE := os.Stdout, os.Stderr
@@ -177,9 +169,6 @@ func copyDir(t *testing.T, src, dst string) {
 	}
 }
 
-// run executes `as-skill args...` twice from the same project state: once with
-// stdout/stderr captured separately, once through a single shared pipe
-// (relative order). The project is restored between the passes.
 func (c *gcase) run(args ...string) {
 	c.t.Helper()
 	backup := c.t.TempDir()
@@ -209,7 +198,6 @@ func (c *gcase) note(s string) {
 	fmt.Fprintf(&c.out, "### note\n%s\n\n", c.norm(s))
 }
 
-// args appends the standard -p/--harness-root flags.
 func (c *gcase) std(args ...string) []string {
 	return append(args, "-p", c.p, "--harness-root", c.h)
 }
@@ -344,7 +332,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run("add", "alpha", "-y", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
 	})
 	goldenCase(t, "add_hooks_dry_run", func(c *gcase) {
-		// hook registration is dialog-only (default none, -y never): record what -y/--dry-run print.
 		c.run(c.std("add", "alpha", "--copy", "-y", "--dry-run", "-a", "claude,codex")...)
 		c.run(c.std("add", "alpha", "--copy", "-y", "-a", "claude,codex")...)
 		c.tree()
@@ -379,7 +366,6 @@ func TestGoldenCLI(t *testing.T) {
 	goldenCase(t, "remove_no_harness", func(c *gcase) {
 		c.run(c.std("add", "alpha", "-y")...)
 		c.run("remove", "alpha", "-y", "-p", c.p, "--harness-root", filepath.Join(c.p, "nowhere"))
-		// no flag: auto-resolution fails (injected resolver), remove falls back to no-harness mode
 		c.deps.Resolve = func(string) (string, error) { return "", errors.New("no harness (stub)") }
 		c.run("remove", "alpha", "-y", "-p", c.p)
 		c.tree()
@@ -528,7 +514,6 @@ func TestGoldenCLI(t *testing.T) {
 		c.run(c.std("add", "binned", "-y")...)
 		c.run(c.std("add", "binned-one", "-y")...)
 		c.run(c.std("add", "all", "-y")...)
-		// dialog per-bin label: reachable only through the interactive seam with a fake prompter
 		fp := newFake(t, map[string]any{"project": c.p, "domains": []string{"alpha"}, "customize": false, "platforms": []string{"claude"}, "mode": "copy", "hooks": []string{}, "confirm": false})
 		d := enableDialog(t, fp)
 		_, _, err := captureBoth(t, func() error { return Dispatch([]string{"add", "--harness-root", c.h}, d) })

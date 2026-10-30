@@ -13,15 +13,12 @@ import (
 const backHint = "shift+tab back"
 
 type huhPrompter struct {
-	in  io.Reader // nil = terminal stdin
+	in  io.Reader
 	out io.Writer
 }
 
-// NewHuh returns the terminal Prompter backed by charmbracelet/huh.
 func NewHuh() Prompter { return &huhPrompter{out: os.Stderr} }
 
-// formModel wraps a huh.Form so back/abort/submit all exit via tea.Quit
-// (final render flushed, frame cleared) instead of tea.Interrupt.
 type formModel struct {
 	form *huh.Form
 	back bool
@@ -95,8 +92,6 @@ func (p *huhPrompter) MultiSelect(id, title string, opts []Option, validate func
 	return p.multiSelect(title, opts, validate, false)
 }
 
-// MultiSelectOptional is MultiSelect where submitting nothing means "none":
-// no hovered-option fallback.
 func (p *huhPrompter) MultiSelectOptional(id, title string, opts []Option) ([]string, error) {
 	return p.multiSelect(title, opts, nil, true)
 }
@@ -159,7 +154,6 @@ func (p *huhPrompter) Confirm(id, title, desc string, def bool) (bool, error) {
 	return v, nil
 }
 
-// dedupe drops repeated values, keeping first-seen order.
 func dedupe(in []string) []string {
 	seen := make(map[string]bool, len(in))
 	out := make([]string, 0, len(in))

@@ -17,7 +17,6 @@ type Miss struct {
 	Name string
 }
 
-// GateWith returns the first unmet requirement (env before bin, declared order).
 func (m *Manifest) GateWith(lookupEnv func(string) string, hasBin func(string) bool) (Miss, bool) {
 	for _, e := range m.RequiresEnv {
 		if lookupEnv(e) == "" {

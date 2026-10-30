@@ -48,8 +48,6 @@ func requireSkill(s []string) error {
 	return nil
 }
 
-// askSkillSelection asks one multiselect per domain, all skills preselected
-// except those in prev. back is true when the user stepped back from the first.
 func askSkillSelection(p prompt.Prompter, doms []skillDomain, prev map[string]bool) (excl map[string]bool, back bool, err error) {
 	cur := map[string]bool{}
 	for k, v := range prev {

@@ -25,9 +25,6 @@ func abortErr(err error) error {
 	return err
 }
 
-// runSteps runs dialog steps in order. A step reports whether it asked a
-// question. On prompt.ErrBack it returns to the previous step that asked
-// (pre-answered/computed steps are skipped); on the first it stays.
 func runSteps(steps []func() (bool, error)) error {
 	asked := make([]bool, len(steps))
 	for i := 0; i < len(steps); {
@@ -51,7 +48,6 @@ func runSteps(steps []func() (bool, error)) error {
 	return nil
 }
 
-// wantDialog: a terminal, no -y, and not a fully specified dry-run.
 func wantDialog(d Deps, o addOpts) bool {
 	if o.yes || (o.dryRun && len(o.names) > 0) {
 		return false
@@ -153,10 +149,6 @@ func allPlatformOptions(selected map[platform.ID]bool, note string, unignored ma
 	return opts
 }
 
-// unignoredRoots maps each platform to its git-unignored link roots, so the
-// platform list can warn before a symlink install would be refused. The mode
-// is asked after platforms, so only the pre-answered --copy/--force are known
-// here; either one skips the guard.
 func unignoredRoots(project string, copyMode, force bool) map[platform.ID]string {
 	out := map[platform.ID]string{}
 	if copyMode || force {
@@ -432,11 +424,9 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string, loc harness.Locator) 
 	return b.String()
 }
 
-// removeChoices lists installed domains and standalone skills from the lockfile.
 func removeChoices(lock *lockfile.Lockfile) []prompt.Option {
 	domains := map[string]bool{}
 	skills := map[string]bool{}
-	// "whole" = any row that is not a named skill row; otherwise offered as standalone skills.
 	whole := map[string]bool{}
 	for _, e := range lock.Entries {
 		if e.Domain == "as-skill" || e.Kind == lockfile.KindInstructions {
@@ -522,9 +512,6 @@ const (
 	loggerWarning = "memory-bank-logger.sh sends the session transcript to the API and spawns a detached acceptEdits `claude -p` session"
 )
 
-// hookOptions lists the registerable hooks of the selected domains for the
-// final platforms, labelled with event and target platforms; none preselected
-// except prev. Empty when there is nothing to ask.
 func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 	in := &installer.Installer{HarnessRoot: pl.harness}
 	infos, err := in.DomainHooks(pl.reg, pl.sel.domainNames())
@@ -551,8 +538,6 @@ func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 	return opts, nil
 }
 
-// registerSelected registers the chosen hooks on every final platform that
-// supports them and allows each hook.
 func registerSelected(in *installer.Installer, pl *addPlan) error {
 	if len(pl.hooks) == 0 {
 		return nil

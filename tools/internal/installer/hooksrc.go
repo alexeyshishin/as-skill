@@ -13,11 +13,10 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
-// HookInfo describes one registerable hook of a domain, read from source.
 type HookInfo struct {
 	Name      string
 	Event     string
-	Platforms []platform.ID // hook-capable platforms its `# platforms:` header allows
+	Platforms []platform.ID
 }
 
 type srcHook struct {
@@ -25,8 +24,6 @@ type srcHook struct {
 	reg hookcfg.HookReg
 }
 
-// sourceHooks lists hooks with a `# register:` header in the domains' source
-// hooks dirs (the destination is never read), deduped by name, in domain order.
 func (in *Installer) sourceHooks(reg *harness.Registry, domains []string) ([]srcHook, error) {
 	var out []srcHook
 	seen := map[string]bool{}
@@ -69,7 +66,6 @@ func (in *Installer) sourceHooks(reg *harness.Registry, domains []string) ([]src
 	return out, nil
 }
 
-// DomainHooks lists the registerable hooks of the domains from source.
 func (in *Installer) DomainHooks(reg *harness.Registry, domains []string) ([]HookInfo, error) {
 	hs, err := in.sourceHooks(reg, domains)
 	if err != nil {
@@ -82,9 +78,6 @@ func (in *Installer) DomainHooks(reg *harness.Registry, domains []string) ([]Hoo
 	return out, nil
 }
 
-// DomainHookNames returns the hooks of the domains registerable on p: they
-// carry a `# register:` header and `# platforms:` allows p. Nil for a
-// platform without hook support.
 func (in *Installer) DomainHookNames(reg *harness.Registry, domains []string, p platform.ID) ([]string, error) {
 	hs, err := in.DomainHooks(reg, domains)
 	if err != nil {
@@ -101,9 +94,6 @@ func (in *Installer) DomainHookNames(reg *harness.Registry, domains []string, p 
 	return out, nil
 }
 
-// RegisterHooks registers the named hooks of the domains on p. A real run
-// reads the placed hook files like EnableHooks; a dry run builds the entries
-// from the domains' source, so it needs no prior placement.
 func (in *Installer) RegisterHooks(reg *harness.Registry, domains []string, p platform.ID, names []string) error {
 	if !in.DryRun {
 		return in.EnableHooks(p, names)

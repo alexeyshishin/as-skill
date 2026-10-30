@@ -97,7 +97,6 @@ func (in *Installer) refuseGlobalSettings(p platform.ID) error {
 	return nil
 }
 
-// applyRegs merges regs into the platform's hook config file (read-only in DryRun).
 func (in *Installer) applyRegs(p platform.ID, regs []hookcfg.HookReg) error {
 	spec, _ := platform.Get(p)
 	path := filepath.Join(in.ProjectRoot, spec.Hooks.ConfigFile)

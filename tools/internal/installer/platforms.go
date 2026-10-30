@@ -160,10 +160,8 @@ func (in *Installer) setEntryPlatforms(e lockfile.Entry, plats []string) {
 	}
 }
 
-// gitCache memoizes git-ignore answers per root for one Plan.
 type gitCache map[string]bool
 
-// unignored: a link-mode write under root would be committed (root not git-ignored).
 func (in *Installer) unignored(c gitCache, root string) bool {
 	if in.Mode != lockfile.ModeLink || in.Force || !platform.IsLinkRoot(root) {
 		return false
@@ -183,7 +181,6 @@ func (in *Installer) guardRootErr(c gitCache, root string) error {
 	return nil
 }
 
-// dstRoot is the first path segment of dst under the project.
 func (in *Installer) dstRoot(dst string) (string, bool) {
 	rel, err := filepath.Rel(in.ProjectRoot, dst)
 	if err != nil {
@@ -391,7 +388,6 @@ func (in *Installer) placeOne(c gitCache, domain string, kind lockfile.Kind, nam
 	return nil
 }
 
-// isForeign: dst exists, no lock row covers it and nothing allows overwriting it.
 func (in *Installer) isForeign(dst string) bool {
 	if _, err := os.Lstat(dst); err != nil {
 		return false

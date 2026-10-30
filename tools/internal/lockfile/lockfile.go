@@ -29,7 +29,6 @@ const (
 	KindInstructions Kind = "instructions"
 )
 
-// SkipsReadme reports whether top-level README.md is not an installable item of this kind.
 func (k Kind) SkipsReadme() bool { return k == KindHooks }
 
 const DefaultPlatform = "claude"
@@ -133,9 +132,6 @@ func (lf *Lockfile) Covering(dst string) (Entry, bool) {
 	return Entry{}, false
 }
 
-// CoveredPaths lists the concrete paths a kind-level row placed. Rows with
-// Items need no Source; legacy rows without Items fall back to listing Source
-// (every top-level entry, SkipTop not applied). Named rows return their own Path.
 func (e Entry) CoveredPaths() []string {
 	if e.Name != "" {
 		return []string{e.Path}

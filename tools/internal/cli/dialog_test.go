@@ -64,7 +64,6 @@ func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
 			ans := fullAnswers(p)
 			var want []string
 			for _, id := range []string{"project", "domains", "customize", "platforms", "mode", "hooks", "confirm"} {
-				// "names" selects git only, which has no registerable hooks
 				if id != c.skip && !(id == "hooks" && c.name == "names") {
 					want = append(want, id)
 				}
@@ -95,7 +94,6 @@ func TestDialogYesNeverConstructsPrompter(t *testing.T) {
 	if _, err := runD(t, d, "remove", "git", "-y", "-p", p); err != nil {
 		t.Fatal(err)
 	}
-	// -y without names still hits the gate, no prompter
 	if _, err := runD(t, d, "add", "-y", "-p", p, "--harness-root", h); err == nil || !strings.Contains(err.Error(), "needs a terminal") {
 		t.Fatalf("want gate error mentioning terminal, got %v", err)
 	}
@@ -325,7 +323,6 @@ func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
 	ans["domains"] = seq{prompt.ErrBack, []string{"git"}}
 	fp := newFake(t, ans)
 	d := enableDialog(t, fp)
-	// -p pre-answers project: back from domains has nowhere to go, stays.
 	if _, err := runD(t, d, "add", "--harness-root", h, "-p", p, "--dry-run"); err != nil {
 		t.Fatal(err)
 	}

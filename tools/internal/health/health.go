@@ -226,15 +226,10 @@ func FindUntracked(projectRoot string, lock *lockfile.Lockfile) ([]string, error
 
 var ErrCannotVerify = errors.New("cannot verify: row has no items and its source is gone")
 
-// CopyMatches verifies one row without lock context (no cumulative variant).
 func CopyMatches(e lockfile.Entry) (bool, error) {
 	return CopyMatchesIn(nil, e)
 }
 
-// CopyMatchesIn verifies a copy row. Rows with Items hash over Items. Legacy
-// kind-level rows try TopNames(Source), the cumulative set (earlier rows at the
-// same Path), then the whole-dir hash. Returns ErrCannotVerify when nothing
-// matched and the names are unknowable (Source gone, no Items).
 func CopyMatchesIn(lock *lockfile.Lockfile, e lockfile.Entry) (bool, error) {
 	if e.Name != "" || e.Kind == "" && e.Source == "" {
 		hash, err := fsys.HashPath(e.Path)

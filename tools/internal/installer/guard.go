@@ -13,8 +13,6 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
-// PlatformRoots lists the project-relative top-level dirs as-skill may write
-// to, derived from the platform table, as absolute paths under project.
 func PlatformRoots(project string) []string {
 	seen := map[string]bool{}
 	add := func(rel string) {
@@ -43,10 +41,6 @@ func PlatformRoots(project string) []string {
 	return out
 }
 
-// InsideRoots reports an error unless p is an absolute path strictly inside one
-// of the project's platform roots. If p exists, its symlink-resolved parent must
-// also stay under a resolved platform root. Gate for every lockfile-derived
-// destructive filesystem call.
 func InsideRoots(projectRoot, p string) error {
 	p = filepath.Clean(p)
 	matched := ""
@@ -92,9 +86,6 @@ func InsideRoots(projectRoot, p string) error {
 	return fmt.Errorf("%s resolves outside the project's platform dirs", p)
 }
 
-// preflightUninstall refuses, before anything is removed, when any lockfile row
-// of domain (narrowed to skill when non-empty) or any computed claude target
-// lies outside the platform roots.
 func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill string) error {
 	kinds := map[lockfile.Kind]bool{lockfile.KindRules: true, lockfile.KindSkills: true, lockfile.KindSkill: true, lockfile.KindAgents: true, lockfile.KindHooks: true, lockfile.KindPrompts: true}
 	var bad []string

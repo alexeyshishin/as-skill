@@ -11,7 +11,6 @@ func Run(args []string) error { return Main(args, iostreams.Std()) }
 
 func Main(args []string, ios *iostreams.IOStreams) error { return Dispatch(args, Deps{IO: ios}) }
 
-// Dispatch runs a command with explicit dependencies.
 func Dispatch(args []string, d Deps) error {
 	if d.IO == nil {
 		d.IO = iostreams.Std()

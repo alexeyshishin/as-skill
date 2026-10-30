@@ -16,9 +16,6 @@ const (
 	ReasonNotIgnored = "not-ignored"
 )
 
-// ConflictError is a recoverable install refusal. For ReasonForeign Path is the
-// untracked destination (usable as an Overwrite key); for ReasonNotIgnored it is
-// the platform root (".cursor", ".agents", ...) that is not git-ignored.
 type ConflictError struct {
 	Path   string
 	Reason string

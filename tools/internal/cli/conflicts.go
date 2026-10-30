@@ -59,8 +59,6 @@ func (pl *addPlan) newInstaller(opts addOpts) *installer.Installer {
 	}
 }
 
-// platformsTouching lists the selected non-claude platforms that write under
-// root, derived from the platform tables plus the shared prompts root.
 func platformsTouching(root string, plats []platform.ID) []platform.ID {
 	locs, _ := platform.SkillLocations(plats)
 	var out []platform.ID
@@ -95,10 +93,6 @@ func pathList(project string, paths []string) string {
 	return strings.Join(lines, "\n")
 }
 
-// resolveConflicts runs the real install sequence as a dry pass and resolves
-// what it collects: not-ignored roots per platform (switch to copy / drop /
-// abort), then untracked paths in one overwrite question. Re-collects after
-// every resolution until conflict-free; hard errors come back as-is.
 func resolveConflicts(p prompt.Prompter, opts addOpts, pl *addPlan, prev map[string]string) (bool, error) {
 	asked, overwritten := false, false
 	for {

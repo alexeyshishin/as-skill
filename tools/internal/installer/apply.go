@@ -17,7 +17,6 @@ const (
 	stageChmod = "chmod"
 )
 
-// OpError carries the failing op and stage so callers keep their error wording.
 type OpError struct {
 	Op    Op
 	Stage string
@@ -114,7 +113,6 @@ func (in *Installer) applyOp(c gitCache, op Op) error {
 	return nil
 }
 
-// renderOp reads op.Src and renders it; writes nothing.
 func (in *Installer) renderOp(op Op) (data, out []byte, pf platform.Platform, err error) {
 	data, err = os.ReadFile(op.Src)
 	if err != nil {

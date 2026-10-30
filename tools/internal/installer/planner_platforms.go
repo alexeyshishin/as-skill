@@ -13,7 +13,6 @@ import (
 	"claude-harness/tools/internal/platform"
 )
 
-// merge appends sub after p, shifting its warning positions.
 func (p *Plan) merge(sub *Plan) {
 	if sub == nil {
 		return
@@ -27,7 +26,6 @@ func (p *Plan) merge(sub *Plan) {
 	}
 }
 
-// row queues a stdout line printed after the ops planned so far.
 func (p *Plan) row(text string) {
 	p.Warnings = append(p.Warnings, Warning{Text: text, Stream: Stdout, Before: len(p.Ops)})
 }
@@ -40,7 +38,6 @@ func (in *Installer) itemOp(domain string, kind lockfile.Kind, name, src, dst st
 	return Op{Type: t, Src: src, Dst: dst, Mode: in.Mode, Domain: domain, Kind: kind, Name: name, Platforms: plats, Item: true}
 }
 
-// planDup queues the duplicate-skills warning, once per Plan.
 func (pl *Planner) planDup(p *Plan, locs map[string][]platform.ID) {
 	dup := pl.in.dupPlatforms(locs)
 	if len(dup) == 0 || pl.dupNoted {
@@ -53,7 +50,6 @@ func (pl *Planner) planDup(p *Plan, locs map[string][]platform.ID) {
 	})
 }
 
-// planGaps queues the capability-gap notes, once per Plan.
 func (pl *Planner) planGaps() *Plan {
 	p := &Plan{}
 	if pl.gapsNoted {
@@ -68,7 +64,6 @@ func (pl *Planner) planGaps() *Plan {
 	return p
 }
 
-// planItems plans each wanted child of srcDir at dstDir plus the summary row.
 func (in *Installer) planItems(domain string, kind lockfile.Kind, srcDir, dstDir string, plats []platform.ID) (*Plan, error) {
 	p := &Plan{}
 	entries, err := os.ReadDir(srcDir)
@@ -183,9 +178,6 @@ func (in *Installer) planHooks(domain, srcDir string, pf platform.Platform) (*Pl
 	return p, nil
 }
 
-// planKind plans one domain kind across all selected platforms. On error the
-// returned Plan holds everything planned before the failure; the caller applies
-// it first.
 func (pl *Planner) planKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string) (*Plan, error) {
 	in := pl.in
 	p := &Plan{}
@@ -239,7 +231,6 @@ func (pl *Planner) planKind(m *harness.Manifest, name string, kind lockfile.Kind
 	return p, nil
 }
 
-// planSkill plans one skill across all selected skill locations.
 func (pl *Planner) planSkill(m *harness.Manifest, owner, name, src string) (*Plan, error) {
 	in := pl.in
 	p := &Plan{}

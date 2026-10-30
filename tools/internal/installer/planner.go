@@ -30,7 +30,6 @@ func (in *Installer) claudeOp(domain string, kind lockfile.Kind, name, src, dst 
 	return op
 }
 
-// copyWarnings: stderr notes place() emits before a whole-tree or single copy.
 func (in *Installer) copyWarnings(p *Plan, op Op) {
 	if op.Type != OpCopy || len(op.Exclude) > 0 {
 		return
@@ -43,7 +42,6 @@ func (in *Installer) copyWarnings(p *Plan, op Op) {
 	}
 }
 
-// planClaudeKind plans one domain kind on the claude platform.
 func (in *Installer) planClaudeKind(m *harness.Manifest, name string, kind lockfile.Kind, srcDir string, plats []platform.ID) (*Plan, error) {
 	destPath, err := in.resolveTarget(m, kind)
 	if err != nil {
@@ -61,7 +59,6 @@ func (in *Installer) planClaudeKind(m *harness.Manifest, name string, kind lockf
 	return p, nil
 }
 
-// planClaudeSkill plans one skill on the claude platform.
 func (in *Installer) planClaudeSkill(m *harness.Manifest, owner, name, src string, plats []platform.ID) (*Plan, error) {
 	destBase, err := in.resolveTarget(m, lockfile.KindSkills)
 	if err != nil {
