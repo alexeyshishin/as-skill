@@ -64,7 +64,7 @@ Flags (add/remove):
   -h               this help
 
 Advanced:
-  as-skill hooks enable|disable <name|all> -a P [-p <path>] [--dry-run]
+  as-skill hooks enable|disable [<name>...|all] [-d D[,D]] -a P [-p <path>] [--dry-run]
                                          register/unregister placed hook files
                                          (claude, codex, cursor; opencode: unsupported)
   as-skill check                         validate domains/*/manifest.yaml and skills/*/SKILL.md

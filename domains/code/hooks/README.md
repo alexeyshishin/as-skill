@@ -42,7 +42,7 @@ Shell-хуки Claude Code для домена `code`. Хуки Memory Bank жи
 as-skill add code core -p <target> --copy -y
 ```
 
-Хуки по умолчанию не регистрируются. Выбрать их можно в диалоге `as-skill add` (шаг `hooks`, opt-in), либо затем `/code-init` в целевом проекте зарегистрирует хуки (с согласия пользователя), либо `as-skill hooks enable`.
+Хуки по умолчанию не регистрируются. Выбрать их можно в диалоге `as-skill add` (шаг `hooks`, opt-in), либо затем `/code-init` в целевом проекте зарегистрирует хуки (с согласия пользователя), либо `as-skill hooks enable`. С `--domain D[,D]` хуки берутся из исходников доменов, поэтому `as-skill hooks enable --domain code,core -a claude --dry-run` показывает `would register` и в проекте без установленных файлов.
 
 ## Удаление
 

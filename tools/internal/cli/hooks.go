@@ -3,11 +3,14 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
+	"claude-harness/tools/internal/registry"
 )
 
 func runHooks(args []string) error {
@@ -22,7 +25,7 @@ func runHooks(args []string) error {
 	if err != nil {
 		return err
 	}
-	if len(positionals) == 0 {
+	if len(positionals) == 0 && len(opts.domains) == 0 {
 		return fmt.Errorf("hooks %s needs a hook name or \"all\"", verb)
 	}
 	plats, err := platform.ParsePlatforms(opts.platforms)
@@ -34,11 +37,84 @@ func runHooks(args []string) error {
 		return err
 	}
 	in := &installer.Installer{ProjectRoot: projectRoot, DryRun: opts.dryRun, Lock: &lockfile.Lockfile{}}
+	if len(opts.domains) > 0 {
+		return runHooksDomain(in, verb, positionals, opts, plats)
+	}
 	for _, p := range plats {
 		if verb == "enable" {
 			err = in.EnableHooks(p, positionals)
 		} else {
 			err = in.DisableHooks(p, positionals)
+		}
+		if err != nil {
+			if opts.dryRun && verb == "enable" && errors.Is(err, os.ErrNotExist) {
+				err = fmt.Errorf("%w (pass --domain <name> to preview from the harness source)", err)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID) error {
+	root := ""
+	if opts.harnessSet {
+		root = opts.harnessRoot
+	}
+	harness, err := registry.ResolveHarnessRootAuto(root)
+	if err != nil {
+		return err
+	}
+	reg, err := registry.LoadRegistry(harness)
+	if err != nil {
+		return err
+	}
+	for _, d := range opts.domains {
+		if _, ok := reg.Domains[d]; !ok {
+			return fmt.Errorf("unknown domain %q (domains: %s)", d, strings.Join(reg.DomainNames(), ", "))
+		}
+	}
+	in.HarnessRoot = harness
+	all := len(names) == 0
+	for _, n := range names {
+		if n == "all" {
+			all = true
+		}
+	}
+	for _, p := range plats {
+		if spec, _ := platform.Get(p); spec.Hooks.Schema == platform.HooksNone {
+			fmt.Printf("hooks unsupported on %s\n", p)
+			continue
+		}
+		avail, err := in.DomainHookNames(reg, opts.domains, p)
+		if err != nil {
+			return err
+		}
+		sel := avail
+		if !all {
+			have := map[string]bool{}
+			for _, a := range avail {
+				have[a] = true
+			}
+			sel = nil
+			for _, n := range names {
+				if !strings.HasSuffix(n, ".sh") {
+					n += ".sh"
+				}
+				if !have[n] {
+					return fmt.Errorf("hook %q is not registerable on %s from domain(s) %s", n, p, strings.Join(opts.domains, ", "))
+				}
+				sel = append(sel, n)
+			}
+		}
+		if len(sel) == 0 {
+			fmt.Printf("no registerable hooks in %s for %s\n", strings.Join(opts.domains, ", "), p)
+			continue
+		}
+		if verb == "enable" {
+			err = in.RegisterHooks(reg, opts.domains, p, sel)
+		} else {
+			err = in.DisableHooks(p, sel)
 		}
 		if err != nil {
 			return err

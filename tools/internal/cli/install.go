@@ -19,6 +19,8 @@ type installOpts struct {
 	force       bool
 	copy        bool
 	platforms   []string
+	domains     []string
+	harnessSet  bool
 }
 
 func parseInstallArgs(args []string) ([]string, installOpts, error) {
@@ -55,13 +57,23 @@ func parseInstallArgs(args []string) ([]string, installOpts, error) {
 			if err != nil {
 				return nil, opts, err
 			}
-			opts.harnessRoot = v
+			opts.harnessRoot, opts.harnessSet = v, true
 		case "--platform", "--agent", "-a":
 			v, err := takeValue()
 			if err != nil {
 				return nil, opts, err
 			}
 			opts.platforms = append(opts.platforms, v)
+		case "--domain", "-d":
+			v, err := takeValue()
+			if err != nil {
+				return nil, opts, err
+			}
+			for _, d := range strings.Split(v, ",") {
+				if d = strings.TrimSpace(d); d != "" {
+					opts.domains = append(opts.domains, d)
+				}
+			}
 		case "--dry-run":
 			opts.dryRun = true
 		case "--force":
