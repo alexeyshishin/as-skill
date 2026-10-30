@@ -1,0 +1,26 @@
+### step 1: add alpha beta -y -a claude --copy -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+
+### tree
+.claude/agents/alpha-agent.md
+.claude/agents/beta-agent.md
+.claude/agents/plain.md
+.claude/hooks/claude-only.sh
+.claude/hooks/gate.sh
+.claude/rules/alpha-rule.md
+.claude/skills/alpha-one/README.md
+.claude/skills/alpha-one/SKILL.md
+.claude/skills/alpha-two/README.md
+.claude/skills/alpha-two/SKILL.md
+.claude/skills/beta-one/SKILL.md
+.claude/skills-lock.json

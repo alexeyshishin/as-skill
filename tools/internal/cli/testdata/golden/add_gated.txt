@@ -1,0 +1,38 @@
+### step 1: add gated -y -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+domain "gated" is gated: $GOLDEN_GATE_VAR is not set
+
+### step 2: add all -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+== stderr ==
+as-skill: skipping — domain "gated" requires $GOLDEN_GATE_VAR, which is not set
+== result ==
+ok
+
+### step 3: add gated-one -y -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+skill "gated-one" belongs to domain "gated", which is gated: $GOLDEN_GATE_VAR is not set
+
+### tree
+.claude/agents/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
+.claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
+.claude/agents/plain.md -> <H>/domains/alpha/agents/plain.md
+.claude/hooks/claude-only.sh -> <H>/domains/alpha/hooks/claude-only.sh
+.claude/hooks/gate.sh -> <H>/domains/alpha/hooks/gate.sh
+.claude/rules/alpha-rule.md -> <H>/domains/alpha/rules/alpha-rule.md
+.claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
+.claude/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
+.claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
+.claude/skills-lock.json

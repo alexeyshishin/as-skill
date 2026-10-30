@@ -1,0 +1,112 @@
+### step 1: add alpha -y --copy -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+
+### step 2: hooks enable all -a claude -p <P> --harness-root <H>
+== stdout ==
+registered      claude-only.sh (SessionEnd) in <P>/.claude/settings.json
+registered      gate.sh (Stop) in <P>/.claude/settings.json
+== stderr ==
+== result ==
+ok
+
+### step 3: hooks enable gate -a claude --dry-run -p <P> --harness-root <H>
+== stdout ==
+present         gate.sh (Stop) in <P>/.claude/settings.json
+== stderr ==
+== result ==
+ok
+
+### step 4: hooks disable gate -a claude -p <P> --harness-root <H>
+== stdout ==
+unregistered   gate.sh (Stop) in <P>/.claude/settings.json
+== stderr ==
+== result ==
+ok
+
+### step 5: hooks enable -d alpha -a claude -p <P> --harness-root <H>
+== stdout ==
+present         claude-only.sh (SessionEnd) in <P>/.claude/settings.json
+registered      gate.sh (Stop) in <P>/.claude/settings.json
+== stderr ==
+== result ==
+ok
+
+### step 6: hooks disable all -a claude -p <P> --harness-root <H>
+== stdout ==
+unregistered   claude-only.sh (SessionEnd) in <P>/.claude/settings.json
+unregistered   gate.sh (Stop) in <P>/.claude/settings.json
+== stderr ==
+== result ==
+ok
+
+### step 7: hooks enable claude-only -a codex -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+reading <P>/.codex/hooks: open <P>/.codex/hooks: no such file or directory
+
+### step 8: add alpha -y --copy -a codex -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+done -> <P>/.codex
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+
+### step 9: hooks enable all -a codex -p <P> --harness-root <H>
+== stdout ==
+registered      gate.sh (Stop) in <P>/.codex/hooks.json
+UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).
+== stderr ==
+== result ==
+ok
+
+### step 10: hooks disable all -a codex -p <P> --harness-root <H>
+== stdout ==
+unregistered   gate.sh (Stop) in <P>/.codex/hooks.json
+== stderr ==
+== result ==
+ok
+
+### step 11: hooks bogus -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+unknown hooks verb "bogus" (want enable|disable)
+
+### tree
+.agents/rules/alpha-rule.md
+.agents/skills/alpha-one/README.md
+.agents/skills/alpha-one/SKILL.md
+.agents/skills/alpha-two/README.md
+.agents/skills/alpha-two/SKILL.md
+.claude/agents/alpha-agent.md
+.claude/agents/plain.md
+.claude/hooks/claude-only.sh
+.claude/hooks/gate.sh
+.claude/rules/alpha-rule.md
+.claude/settings.json
+.claude/skills/alpha-one/README.md
+.claude/skills/alpha-one/SKILL.md
+.claude/skills/alpha-two/README.md
+.claude/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+.codex/agents/alpha-agent.toml
+.codex/agents/plain.toml
+.codex/hooks/gate.sh
+.codex/hooks.json
+AGENTS.md

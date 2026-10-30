@@ -1,0 +1,28 @@
+### step 1: add alpha -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+
+### step 2: doctor -p <P> --harness-root <H>
+== stdout ==
+DOMAIN     KIND     NAME                     MODE   HEALTH      PLATFORMS              PATH
+alpha      agents   alpha-agent.md           link   OK          claude                 <P>/.claude/agents/alpha-agent.md
+alpha      agents   plain.md                 link   OK          claude                 <P>/.claude/agents/plain.md
+alpha      hooks    claude-only.sh           link   OK          claude                 <P>/.claude/hooks/claude-only.sh
+alpha      hooks    gate.sh                  link   OK          claude                 <P>/.claude/hooks/gate.sh
+alpha      rules    alpha-rule.md            link   OK          claude                 <P>/.claude/rules/alpha-rule.md
+alpha      skills   alpha-one                link   OK          claude                 <P>/.claude/skills/alpha-one
+alpha      skills   alpha-two                link   OK          claude                 <P>/.claude/skills/alpha-two
+as-skill: doctor: UNTRACKED   <P>/.claude/skills/stray — present on disk, no lockfile entry
+doctor: 17 checks, 16/17 ok, 1 failed
+== stderr ==
+== result ==
+doctor: 1 failed
+

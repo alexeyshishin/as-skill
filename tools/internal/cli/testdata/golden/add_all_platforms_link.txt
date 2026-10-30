@@ -1,0 +1,67 @@
+### step 1: add alpha beta -y -a all -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    rules   -> <P>/.cursor/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    agents  -> <P>/.cursor/agents (2 files)
+installed     alpha    agents  -> <P>/.opencode/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
+installed     beta     skills  -> <P>/.agents/skills (1 file)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+installed     beta     agents  -> <P>/.codex/agents (1 file)
+installed     beta     agents  -> <P>/.cursor/agents (1 file)
+installed     beta     agents  -> <P>/.opencode/agents (1 file)
+done -> <P>/.claude
+done -> <P>/.codex
+done -> <P>/.cursor
+done -> <P>/.opencode
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
+as-skill: note: opencode: agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported
+as-skill: warning: skills land in both .claude/skills and .agents/skills; cursor, opencode will see each skill twice (doctor reports DUPLICATE-SKILL)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks unsupported on opencode
+== result ==
+ok
+
+### tree
+.agents/prompts/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
+.agents/prompts/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
+.agents/prompts/plain.md -> <H>/domains/alpha/agents/plain.md
+.agents/rules/alpha-rule.md -> <H>/domains/alpha/rules/alpha-rule.md
+.agents/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
+.agents/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
+.agents/skills/beta-one -> <H>/domains/beta/skills/beta-one
+.claude/agents/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
+.claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
+.claude/agents/plain.md -> <H>/domains/alpha/agents/plain.md
+.claude/hooks/claude-only.sh -> <H>/domains/alpha/hooks/claude-only.sh
+.claude/hooks/gate.sh -> <H>/domains/alpha/hooks/gate.sh
+.claude/rules/alpha-rule.md -> <H>/domains/alpha/rules/alpha-rule.md
+.claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
+.claude/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
+.claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
+.claude/skills-lock.json
+.codex/agents/alpha-agent.toml
+.codex/agents/beta-agent.toml
+.codex/agents/plain.toml
+.codex/hooks/gate.sh -> <H>/domains/alpha/hooks/gate.sh
+.cursor/agents/alpha-agent.md
+.cursor/agents/beta-agent.md
+.cursor/agents/plain.md
+.cursor/hooks/gate.sh -> <H>/domains/alpha/hooks/gate.sh
+.cursor/rules/alpha-rule.mdc
+.opencode/agents/alpha-agent.md
+.opencode/agents/beta-agent.md
+.opencode/agents/plain.md
+AGENTS.md

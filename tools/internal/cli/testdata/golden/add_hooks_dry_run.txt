@@ -1,0 +1,56 @@
+### step 1: add alpha --copy -y --dry-run -a claude,codex -p <P> --harness-root <H>
+== stdout ==
+would install alpha    rules   -> <P>/.claude/rules (1 file)
+would install alpha    rules   -> <P>/.agents/rules (1 file)
+would install alpha    skills  -> <P>/.agents/skills (2 files)
+would install alpha    skills  -> <P>/.claude/skills (4 files)
+would install alpha    agents  -> <P>/.claude/agents (2 files)
+would install alpha    agents  -> <P>/.codex/agents (2 files)
+would install alpha    hooks   -> <P>/.claude/hooks (2 files)
+would install alpha    hooks   -> <P>/.codex/hooks (1 file)
+done -> <P>/.claude
+done -> <P>/.codex
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+
+### step 2: add alpha --copy -y -a claude,codex -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+done -> <P>/.claude
+done -> <P>/.codex
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+
+### tree
+.agents/rules/alpha-rule.md
+.agents/skills/alpha-one/README.md
+.agents/skills/alpha-one/SKILL.md
+.agents/skills/alpha-two/README.md
+.agents/skills/alpha-two/SKILL.md
+.claude/agents/alpha-agent.md
+.claude/agents/plain.md
+.claude/hooks/claude-only.sh
+.claude/hooks/gate.sh
+.claude/rules/alpha-rule.md
+.claude/skills/alpha-one/README.md
+.claude/skills/alpha-one/SKILL.md
+.claude/skills/alpha-two/README.md
+.claude/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+.codex/agents/alpha-agent.toml
+.codex/agents/plain.toml
+.codex/hooks/gate.sh
+AGENTS.md

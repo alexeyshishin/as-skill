@@ -1,0 +1,7 @@
+### step 1: check
+== stdout ==
+check: OK — 3 manifest(s), 4 SKILL.md(s)
+== stderr ==
+== result ==
+ok
+

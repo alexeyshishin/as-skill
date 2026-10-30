@@ -1,0 +1,29 @@
+### step 1: add alpha -y -a codex --copy -p <P> --harness-root <H>
+== stdout ==
+installed     alpha    rules   -> <P>/.agents/rules (1 file)
+installed     alpha    skills  -> <P>/.agents/skills (2 files)
+installed     alpha    agents  -> <P>/.codex/agents (2 files)
+installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
+done -> <P>/.codex
+== stderr ==
+as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+== result ==
+ok
+
+### step 2: remove alpha -y -a codex -p <P> --harness-root <H>
+== stdout ==
+platforms: .codex
+uninstalled    <P>/.agents/rules/alpha-rule.md
+uninstalled    <P>/.agents/skills/alpha-one
+uninstalled    <P>/.agents/skills/alpha-two
+uninstalled    <P>/.codex/agents/alpha-agent.toml
+uninstalled    <P>/.codex/agents/plain.toml
+uninstalled    <P>/.codex/hooks/gate.sh
+done -> <P>/.codex
+== stderr ==
+== result ==
+ok
+
+### tree
+.claude/skills-lock.json

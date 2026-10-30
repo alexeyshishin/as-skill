@@ -1,0 +1,8 @@
+### step 1: doctor -p <P> --harness-root <H>
+== stdout ==
+no entries tracked in skills-lock.json
+doctor: 9 checks, 9/9 ok, 0 failed
+== stderr ==
+== result ==
+ok
+

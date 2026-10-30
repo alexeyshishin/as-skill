@@ -1,0 +1,24 @@
+### step 1: add alpha-one -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (1 file)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+
+### step 2: add alpha-one beta-one -y --copy -p <P> --harness-root <H>
+== stdout ==
+platforms: detected from .claude
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (2 files)
+installed     beta     skill   -> <P>/.claude/skills/beta-one (1 file)
+done -> <P>/.claude
+== stderr ==
+as-skill: warning: <P>/.claude/skills/alpha-one was installed via "link", replacing with a copy — mixed channels may cause confusion
+== result ==
+ok
+
+### tree
+.claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
+.claude/skills/beta-one/SKILL.md
+.claude/skills-lock.json
