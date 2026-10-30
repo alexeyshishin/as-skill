@@ -95,12 +95,18 @@ func (p *huhPrompter) MultiSelect(id, title string, opts []Option, validate func
 	var vals []string
 	var ms *huh.MultiSelect[string]
 	hovered := ""
+	preselected := false
+	for _, o := range opts {
+		if o.Selected {
+			preselected = true
+		}
+	}
 	ms = huh.NewMultiSelect[string]().Title(title).
 		Description("space/x toggle · enter confirm · shift+tab back").
 		Options(huhOptions(opts)...).Value(&vals).
 		Validate(func(v []string) error {
 			v = dedupe(v)
-			if len(v) == 0 {
+			if len(v) == 0 && !preselected {
 				if h, ok := ms.Hovered(); ok {
 					if validate != nil {
 						if err := validate([]string{h}); err != nil {

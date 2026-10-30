@@ -83,3 +83,58 @@ func TestHuhShiftTabYieldsErrBack(t *testing.T) {
 		t.Fatalf("got %v want ErrBack\n%s", err, out.String())
 	}
 }
+
+func TestHuhMultiSelectPreselectedUntickAllReachesValidator(t *testing.T) {
+	var emptyCalls int
+	nonEmpty := func(v []string) error {
+		if len(v) == 0 {
+			emptyCalls++
+			return errors.New("select at least one")
+		}
+		return nil
+	}
+	opts := []Option{{"a", "A", true}, {"b", "B", true}}
+	var out bytes.Buffer
+	// untick b then a (cursor ends on a), Enter on the empty list (blocked), tick b, Enter
+	p := &huhPrompter{in: strings.NewReader("\x1b[B \x1b[A \r\x1b[B \r"), out: &out}
+	got, err := p.MultiSelect("d", "Pick", opts, nonEmpty)
+	if err != nil {
+		t.Fatalf("err %v\n%s", err, out.String())
+	}
+	if !reflect.DeepEqual(got, []string{"b"}) {
+		t.Fatalf("hovered fallback swallowed the empty set: got %v", got)
+	}
+	if emptyCalls == 0 {
+		t.Fatal("validator never saw the empty set")
+	}
+}
+
+func TestHuhMultiSelectPreselectedUntickAllReturnsEmpty(t *testing.T) {
+	var out bytes.Buffer
+	p := &huhPrompter{in: strings.NewReader("\x1b[B \x1b[A \r"), out: &out}
+	got, err := p.MultiSelect("d", "Pick", []Option{{"a", "A", true}, {"b", "B", true}}, nil)
+	if err != nil {
+		t.Fatalf("err %v\n%s", err, out.String())
+	}
+	if len(got) != 0 {
+		t.Fatalf("got %v, want empty", got)
+	}
+}
+
+func TestHuhMultiSelectPreselectedUntickOneKeepsRest(t *testing.T) {
+	nonEmpty := func(v []string) error {
+		if len(v) == 0 {
+			return errors.New("empty")
+		}
+		return nil
+	}
+	var out bytes.Buffer
+	p := &huhPrompter{in: strings.NewReader(" \r"), out: &out}
+	got, err := p.MultiSelect("d", "Pick", []Option{{"a", "A", true}, {"b", "B", true}, {"c", "C", true}}, nonEmpty)
+	if err != nil {
+		t.Fatalf("err %v\n%s", err, out.String())
+	}
+	if !reflect.DeepEqual(got, []string{"b", "c"}) {
+		t.Fatalf("got %v", got)
+	}
+}
