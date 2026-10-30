@@ -92,10 +92,20 @@ func huhOptions(opts []Option) []huh.Option[string] {
 }
 
 func (p *huhPrompter) MultiSelect(id, title string, opts []Option, validate func([]string) error) ([]string, error) {
+	return p.multiSelect(title, opts, validate, false)
+}
+
+// MultiSelectOptional is MultiSelect where submitting nothing means "none":
+// no hovered-option fallback.
+func (p *huhPrompter) MultiSelectOptional(id, title string, opts []Option) ([]string, error) {
+	return p.multiSelect(title, opts, nil, true)
+}
+
+func (p *huhPrompter) multiSelect(title string, opts []Option, validate func([]string) error, optional bool) ([]string, error) {
 	var vals []string
 	var ms *huh.MultiSelect[string]
 	hovered := ""
-	preselected := false
+	preselected := optional
 	for _, o := range opts {
 		if o.Selected {
 			preselected = true

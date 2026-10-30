@@ -82,6 +82,10 @@ func (f *fakePrompt) MultiSelect(id, title string, opts []prompt.Option, validat
 	return a.([]string), nil
 }
 
+func (f *fakePrompt) MultiSelectOptional(id, title string, opts []prompt.Option) ([]string, error) {
+	return f.MultiSelect(id, title, opts, nil)
+}
+
 func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) (string, error) {
 	a := f.answer(id)
 	f.options[id] = opts

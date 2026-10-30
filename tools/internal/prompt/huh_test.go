@@ -138,3 +138,32 @@ func TestHuhMultiSelectPreselectedUntickOneKeepsRest(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestHuhMultiSelectOptional(t *testing.T) {
+	opts := []Option{{"a", "A", false}, {"b", "B", false}}
+	for _, tc := range []struct {
+		name, in string
+		want     []string
+		back     bool
+	}{
+		{"enter with nothing toggled is none", "\r", nil, false},
+		{"toggle one", "\x1b[B \r", []string{"b"}, false},
+		{"shift+tab is back", "\x1b[Z", nil, true},
+	} {
+		var out bytes.Buffer
+		p := &huhPrompter{in: strings.NewReader(tc.in), out: &out}
+		got, err := p.MultiSelectOptional("d", "Pick", opts)
+		if tc.back {
+			if err != ErrBack {
+				t.Fatalf("%s: got %v want ErrBack", tc.name, err)
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatalf("%s: err %v\n%s", tc.name, err, out.String())
+		}
+		if len(got) != len(tc.want) || (len(got) > 0 && !reflect.DeepEqual(got, tc.want)) {
+			t.Fatalf("%s: got %v want %v", tc.name, got, tc.want)
+		}
+	}
+}

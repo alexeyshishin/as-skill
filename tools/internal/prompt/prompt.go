@@ -18,6 +18,8 @@ type Option struct {
 type Prompter interface {
 	Input(id, title, def string, validate func(string) error) (string, error)
 	MultiSelect(id, title string, opts []Option, validate func([]string) error) ([]string, error)
+	// MultiSelectOptional accepts an empty submission as "none" (no hovered fallback).
+	MultiSelectOptional(id, title string, opts []Option) ([]string, error)
 	Select(id, title string, opts []Option, def string) (string, error)
 	Confirm(id, title, desc string, def bool) (bool, error)
 }
