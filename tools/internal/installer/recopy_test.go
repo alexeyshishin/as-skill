@@ -266,3 +266,50 @@ func TestRecopyRealCoreOverlayWithChangedSource(t *testing.T) {
 		t.Fatal("changed skill not refreshed")
 	}
 }
+
+func installAlphaPlats(t *testing.T, root, project string, lock *lockfile.Lockfile, reg *registry.Registry, exclude map[string]bool, plats ...platform.ID) {
+	t.Helper()
+	in := newInst(root, project, "copy", lock, plats...)
+	in.ExcludeSkills = exclude
+	var err error
+	captureStderr(t, func() {
+		_, err = captureStdout(t, func() error { return in.InstallDomain(reg, "alpha", true) })
+	})
+	if err != nil {
+		t.Fatalf("install alpha (exclude=%v, plats=%v): %v", exclude, plats, err)
+	}
+}
+
+func TestRecopyExclusionsThenFullKeepsPlatformUnion(t *testing.T) {
+	reg, root := exHarness(t)
+	project := t.TempDir()
+	lock := &lockfile.Lockfile{}
+	installAlphaPlats(t, root, project, lock, reg, map[string]bool{"alpha/sk2": true}, platform.Claude, platform.Cursor)
+	installAlphaPlats(t, root, project, lock, reg, nil, platform.Claude)
+
+	assertLockClean(t, lock)
+	parent, ok := lock.Find("alpha", "skills", "")
+	if !ok || strings.Join(parent.Platforms, ",") != "claude,cursor" {
+		t.Fatalf("kind-level platforms = %+v ok=%v", parent.Platforms, ok)
+	}
+}
+
+func TestRecopyFullThenExclusionsKeepsPlatformUnion(t *testing.T) {
+	reg, root := exHarness(t)
+	project := t.TempDir()
+	lock := &lockfile.Lockfile{}
+	installAlphaPlats(t, root, project, lock, reg, nil, platform.Claude, platform.Cursor)
+	installAlphaPlats(t, root, project, lock, reg, map[string]bool{"alpha/sk2": true}, platform.Claude)
+
+	assertLockClean(t, lock)
+	n := 0
+	for _, e := range skillRows(lock) {
+		if strings.Join(e.Platforms, ",") != "claude,cursor" {
+			t.Fatalf("row %q/%s platforms = %v", e.Name, e.Path, e.Platforms)
+		}
+		n++
+	}
+	if n == 0 {
+		t.Fatal("no skill rows")
+	}
+}

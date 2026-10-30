@@ -155,11 +155,14 @@ func under(root, p string) bool {
 
 func (in *Installer) snapshotPlatforms(domain, kind, dest string) map[string][]string {
 	out := map[string][]string{}
+	var all []string
 	for _, e := range in.Lock.Entries {
 		if e.Domain == domain && e.Kind == kind && under(dest, e.Path) {
 			out[filepath.Clean(e.Path)] = e.Platforms
+			all = unionPlats(all, e.Platforms)
 		}
 	}
+	out[filepath.Clean(dest)] = all
 	return out
 }
 
@@ -169,7 +172,11 @@ func (in *Installer) applyPlatforms(domain, kind, dest string, plats []platform.
 	}
 	for i, e := range in.Lock.Entries {
 		if e.Domain == domain && e.Kind == kind && under(dest, e.Path) {
-			in.Lock.Entries[i].Platforms = unionPlats(prior[filepath.Clean(e.Path)], strs(plats))
+			p, ok := prior[filepath.Clean(e.Path)]
+			if !ok {
+				p = prior[filepath.Clean(dest)]
+			}
+			in.Lock.Entries[i].Platforms = unionPlats(p, strs(plats))
 		}
 	}
 }
