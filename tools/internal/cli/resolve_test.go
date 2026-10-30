@@ -7,15 +7,15 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
-func realRegistry(t *testing.T) (string, *registry.Registry) {
+func realRegistry(t *testing.T) (string, *harness.Registry) {
 	t.Helper()
 	h := realHarness(t)
-	reg, err := registry.LoadRegistry(h)
+	reg, err := harness.LoadRegistry(h)
 	if err != nil {
 		t.Fatal(err)
 	}

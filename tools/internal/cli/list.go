@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func runList(args []string) error {
@@ -52,11 +52,11 @@ func runList(args []string) error {
 		return fmt.Errorf("unknown list target %q (want domains|skills|platforms)", what)
 	}
 
-	harnessRoot, err := registry.ResolveHarnessRootAuto(harnessFlag)
+	harnessRoot, err := harness.ResolveHarnessRootAuto(harnessFlag)
 	if err != nil {
 		return err
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		return err
 	}

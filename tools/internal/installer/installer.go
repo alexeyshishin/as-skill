@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -156,7 +156,7 @@ func (in *Installer) dropLinksUnder(kind, src, dst string) {
 	}
 }
 
-func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict bool) error {
+func (in *Installer) InstallDomain(reg *harness.Registry, name string, strict bool) error {
 	m, ok := reg.Domains[name]
 	if !ok {
 		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
@@ -186,7 +186,7 @@ func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict b
 	if err := in.Preflight(reg, []string{name}); err != nil {
 		return err
 	}
-	for _, kind := range registry.DomainKinds {
+	for _, kind := range harness.DomainKinds {
 		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
 		if !fsutil.DirExists(srcDir) {
 			continue
@@ -198,7 +198,7 @@ func (in *Installer) InstallDomain(reg *registry.Registry, name string, strict b
 	return nil
 }
 
-func (in *Installer) claudeKind(m *registry.Manifest, name, kind, srcDir string, plats []platform.ID) error {
+func (in *Installer) claudeKind(m *harness.Manifest, name, kind, srcDir string, plats []platform.ID) error {
 	destPath, err := in.resolveTarget(m, kind)
 	if err != nil {
 		return fmt.Errorf("domain %q: %w", name, err)
@@ -231,7 +231,7 @@ func (in *Installer) claudeKind(m *registry.Manifest, name, kind, srcDir string,
 	return nil
 }
 
-func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
+func (in *Installer) InstallSkill(reg *harness.Registry, name string) error {
 	owner := ""
 	for _, dname := range reg.DomainNames() {
 		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {
@@ -285,7 +285,7 @@ func (in *Installer) InstallSkill(reg *registry.Registry, name string) error {
 	return nil
 }
 
-func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error {
+func (in *Installer) UninstallDomain(reg *harness.Registry, name string) error {
 	m, ok := reg.Domains[name]
 	if !ok {
 		return fmt.Errorf("unknown domain %q (available: %s)", name, strings.Join(reg.DomainNames(), ", "))
@@ -302,8 +302,8 @@ func (in *Installer) UninstallDomain(reg *registry.Registry, name string) error 
 	return nil
 }
 
-func (in *Installer) uninstallClaudeDomain(m *registry.Manifest, name string) error {
-	for _, kind := range registry.DomainKinds {
+func (in *Installer) uninstallClaudeDomain(m *harness.Manifest, name string) error {
+	for _, kind := range harness.DomainKinds {
 		srcDir := filepath.Join(in.HarnessRoot, "domains", name, kind)
 		if !fsutil.DirExists(srcDir) {
 			continue
@@ -348,7 +348,7 @@ func (e *PartOfDomainError) Error() string {
 	return fmt.Sprintf("skill %q installed as part of domain %s (%s); remove the domain", e.Skill, e.Domain, e.Mode)
 }
 
-func (in *Installer) UninstallSkill(reg *registry.Registry, name string) error {
+func (in *Installer) UninstallSkill(reg *harness.Registry, name string) error {
 	owner := ""
 	for _, dname := range reg.DomainNames() {
 		if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", dname, "skills", name)) {

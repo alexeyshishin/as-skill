@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 // HookInfo describes one registerable hook of a domain, read from source.
@@ -25,7 +25,7 @@ type srcHook struct {
 
 // sourceHooks lists hooks with a `# register:` header in the domains' source
 // hooks dirs (the destination is never read), deduped by name, in domain order.
-func (in *Installer) sourceHooks(reg *registry.Registry, domains []string) ([]srcHook, error) {
+func (in *Installer) sourceHooks(reg *harness.Registry, domains []string) ([]srcHook, error) {
 	var out []srcHook
 	seen := map[string]bool{}
 	for _, d := range domains {
@@ -68,7 +68,7 @@ func (in *Installer) sourceHooks(reg *registry.Registry, domains []string) ([]sr
 }
 
 // DomainHooks lists the registerable hooks of the domains from source.
-func (in *Installer) DomainHooks(reg *registry.Registry, domains []string) ([]HookInfo, error) {
+func (in *Installer) DomainHooks(reg *harness.Registry, domains []string) ([]HookInfo, error) {
 	hs, err := in.sourceHooks(reg, domains)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (in *Installer) DomainHooks(reg *registry.Registry, domains []string) ([]Ho
 // DomainHookNames returns the hooks of the domains registerable on p: they
 // carry a `# register:` header and `# platforms:` allows p. Nil for a
 // platform without hook support.
-func (in *Installer) DomainHookNames(reg *registry.Registry, domains []string, p platform.ID) ([]string, error) {
+func (in *Installer) DomainHookNames(reg *harness.Registry, domains []string, p platform.ID) ([]string, error) {
 	hs, err := in.DomainHooks(reg, domains)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (in *Installer) DomainHookNames(reg *registry.Registry, domains []string, p
 // RegisterHooks registers the named hooks of the domains on p. A real run
 // reads the placed hook files like EnableHooks; a dry run builds the entries
 // from the domains' source, so it needs no prior placement.
-func (in *Installer) RegisterHooks(reg *registry.Registry, domains []string, p platform.ID, names []string) error {
+func (in *Installer) RegisterHooks(reg *harness.Registry, domains []string, p platform.ID, names []string) error {
 	if !in.DryRun {
 		return in.EnableHooks(p, names)
 	}

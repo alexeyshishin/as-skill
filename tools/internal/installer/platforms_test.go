@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func write(t *testing.T, p, content string, perm os.FileMode) {
@@ -24,7 +24,7 @@ func write(t *testing.T, p, content string, perm os.FileMode) {
 	}
 }
 
-func platHarness(t *testing.T) (*registry.Registry, string) {
+func platHarness(t *testing.T) (*harness.Registry, string) {
 	t.Helper()
 	root := t.TempDir()
 	d := filepath.Join(root, "domains", "alpha")
@@ -34,7 +34,7 @@ func platHarness(t *testing.T) (*registry.Registry, string) {
 	write(t, filepath.Join(d, "rules", "r1.md"), "# rule one\n", 0o644)
 	write(t, filepath.Join(d, "hooks", "gate.sh"), "#!/bin/sh\n# register: Stop\n", 0o755)
 	write(t, filepath.Join(d, "hooks", "fmt.sh"), "#!/bin/sh\n# register: PostToolUse Edit|Bash\n", 0o755)
-	reg, err := registry.LoadRegistry(root)
+	reg, err := harness.LoadRegistry(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -526,13 +526,13 @@ func captureStderr(t *testing.T, fn func()) string {
 	return <-done
 }
 
-func twoDomainHarness(t *testing.T) (*registry.Registry, string) {
+func twoDomainHarness(t *testing.T) (*harness.Registry, string) {
 	t.Helper()
 	_, root := platHarness(t)
 	d := filepath.Join(root, "domains", "beta")
 	write(t, filepath.Join(d, "manifest.yaml"), "name: beta\ndescription: d\n", 0o644)
 	write(t, filepath.Join(d, "skills", "sk2", "SKILL.md"), "---\nname: sk2\ndescription: d\n---\nbody\n", 0o644)
-	reg, err := registry.LoadRegistry(root)
+	reg, err := harness.LoadRegistry(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -784,7 +784,7 @@ func TestPreflightForeignTargetBeforeAnyWrite(t *testing.T) {
 func TestHooksPlatformsHeaderFiltersPlacement(t *testing.T) {
 	reg, root := platHarness(t)
 	write(t, filepath.Join(root, "domains", "alpha", "hooks", "only-claude.sh"), "#!/bin/sh\n# platforms: claude\n# register: Stop\n", 0o755)
-	reg, err := registry.LoadRegistry(root)
+	reg, err := harness.LoadRegistry(root)
 	if err != nil {
 		t.Fatal(err)
 	}

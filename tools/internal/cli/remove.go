@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -119,7 +119,7 @@ func runRemove(args []string) error {
 		prevPlats                []platform.ID
 		lock                     *lockfile.Lockfile
 		targets                  []removeTarget
-		reg                      *registry.Registry
+		reg                      *harness.Registry
 		plats                    []platform.ID
 	)
 	nameArgs := len(opts.names) > 0
@@ -163,7 +163,7 @@ func runRemove(args []string) error {
 			harnessRoot, herr = resolveHarness(opts.harnessRoot)
 			reg = nil
 			if herr == nil {
-				r, rerr := registry.LoadRegistry(harnessRoot)
+				r, rerr := harness.LoadRegistry(harnessRoot)
 				if rerr == nil {
 					reg = r
 				} else if opts.harnessRoot != "" {
@@ -287,7 +287,7 @@ func checkPartOfDomain(t removeTarget, plats []platform.ID) error {
 	return nil
 }
 
-func removeOne(in *installer.Installer, reg *registry.Registry, rm *remover, t removeTarget) error {
+func removeOne(in *installer.Installer, reg *harness.Registry, rm *remover, t removeTarget) error {
 	if reg != nil {
 		var err error
 		handled := false

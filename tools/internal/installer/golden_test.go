@@ -9,23 +9,23 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
 )
 
 func snapshotInstall(t *testing.T, mode string) string {
 	t.Helper()
-	harness, err := registry.ResolveHarnessRoot(".")
+	hRoot, err := harness.ResolveHarnessRoot(".")
 	if err != nil {
 		t.Fatal(err)
 	}
-	reg, err := registry.LoadRegistry(harness)
+	reg, err := harness.LoadRegistry(hRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
 	project := t.TempDir()
 	lock := &lockfile.Lockfile{}
-	in := &Installer{HarnessRoot: harness, ProjectRoot: project, Mode: mode, Lock: lock}
+	in := &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: mode, Lock: lock}
 	for _, d := range []string{"code", "git", "core"} {
 		if err := in.InstallDomain(reg, d, true); err != nil {
 			t.Fatal(err)
@@ -56,7 +56,7 @@ func snapshotInstall(t *testing.T, mode string) string {
 			if err != nil {
 				return err
 			}
-			lines = append(lines, "L "+r+" -> "+rel(target, harness))
+			lines = append(lines, "L "+r+" -> "+rel(target, hRoot))
 			return nil
 		}
 		if d.IsDir() {
@@ -91,7 +91,7 @@ func snapshotInstall(t *testing.T, mode string) string {
 	}
 	var entries []normEntry
 	for _, e := range lf.Entries {
-		entries = append(entries, normEntry{e.Domain, e.Kind, e.Name, e.Mode, rel(e.Path, project), rel(e.Source, harness), e.SHA256 != "", e.Platforms, e.SrcSHA256})
+		entries = append(entries, normEntry{e.Domain, e.Kind, e.Name, e.Mode, rel(e.Path, project), rel(e.Source, hRoot), e.SHA256 != "", e.Platforms, e.SrcSHA256})
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Path < entries[j].Path })
 	lockJSON, err := json.MarshalIndent(entries, "", "  ")

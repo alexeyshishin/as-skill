@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func runHooks(args []string) error {
@@ -61,11 +61,11 @@ func runHooksDomain(in *installer.Installer, verb string, names []string, opts i
 	if opts.harnessSet {
 		root = opts.harnessRoot
 	}
-	harness, err := registry.ResolveHarnessRootAuto(root)
+	hRoot, err := harness.ResolveHarnessRootAuto(root)
 	if err != nil {
 		return err
 	}
-	reg, err := registry.LoadRegistry(harness)
+	reg, err := harness.LoadRegistry(hRoot)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func runHooksDomain(in *installer.Installer, verb string, names []string, opts i
 			return fmt.Errorf("unknown domain %q (domains: %s)", d, strings.Join(reg.DomainNames(), ", "))
 		}
 	}
-	in.HarnessRoot = harness
+	in.HarnessRoot = hRoot
 	all := len(names) == 0
 	for _, n := range names {
 		if n == "all" {

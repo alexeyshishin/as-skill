@@ -8,12 +8,12 @@ import (
 	"slices"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/registry"
 )
 
 var interactive = prompt.IsInteractive
@@ -88,21 +88,21 @@ func askProject(p prompt.Prompter, o addOpts, prev string) (string, error) {
 	return resolveProject(v)
 }
 
-func gatedLabel(m *registry.Manifest) string {
+func gatedLabel(m *harness.Manifest) string {
 	for _, e := range m.RequiresEnv {
 		if os.Getenv(e) == "" {
 			return "needs $" + e
 		}
 	}
 	for _, b := range m.RequiresBin {
-		if gatedReason(&registry.Manifest{RequiresBin: []string{b}}) != "" {
+		if gatedReason(&harness.Manifest{RequiresBin: []string{b}}) != "" {
 			return "needs " + b + " on $PATH"
 		}
 	}
 	return ""
 }
 
-func askDomains(p prompt.Prompter, harnessRoot string, reg *registry.Registry, lock *lockfile.Lockfile, prev []string) ([]string, error) {
+func askDomains(p prompt.Prompter, harnessRoot string, reg *harness.Registry, lock *lockfile.Lockfile, prev []string) ([]string, error) {
 	var opts []prompt.Option
 	for _, n := range reg.DomainNames() {
 		m := reg.Domains[n]
@@ -242,7 +242,7 @@ func confirm(p prompt.Prompter, title, summary string) error {
 
 type addPlan struct {
 	project, harness string
-	reg              *registry.Registry
+	reg              *harness.Registry
 	sel              selection
 	lock             *lockfile.Lockfile
 	plats            []platform.ID
@@ -282,10 +282,10 @@ func addDialog(opts addOpts) (*addPlan, error) {
 		},
 		func() (bool, error) {
 			var err error
-			if pl.harness, err = registry.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+			if pl.harness, err = harness.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
 				return false, err
 			}
-			if pl.reg, err = registry.LoadRegistry(pl.harness); err != nil {
+			if pl.reg, err = harness.LoadRegistry(pl.harness); err != nil {
 				return false, err
 			}
 			pl.lock, err = lockfile.Load(pl.project)
@@ -390,8 +390,8 @@ func addSummary(opts addOpts, pl *addPlan, platSrc string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "harness:   %s\n", pl.harness)
 	if opts.harnessRoot == "" {
-		c, cok := registry.CwdHarnessRoot()
-		e, eok := registry.ExecutableHarnessRoot()
+		c, cok := harness.CwdHarnessRoot()
+		e, eok := harness.ExecutableHarnessRoot()
 		if cok && eok && !sameDir(c, e) {
 			fmt.Fprintf(&b, "warning:   cwd checkout %s differs from binary checkout %s; using %s\n", c, e, pl.harness)
 		}

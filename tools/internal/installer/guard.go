@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -99,7 +99,7 @@ func InsideRoots(projectRoot, p string) error {
 // preflightUninstall refuses, before anything is removed, when any lockfile row
 // of domain (narrowed to skill when non-empty) or any computed claude target
 // lies outside the platform roots.
-func (in *Installer) preflightUninstall(reg *registry.Registry, domain, skill string) error {
+func (in *Installer) preflightUninstall(reg *harness.Registry, domain, skill string) error {
 	kinds := map[string]bool{"rules": true, "skills": true, "skill": true, "agents": true, "hooks": true, "prompts": true}
 	var bad []string
 	check := func(p string) {
@@ -123,7 +123,7 @@ func (in *Installer) preflightUninstall(reg *registry.Registry, domain, skill st
 	}
 	if in.hasClaude() {
 		if m, ok := reg.Domains[domain]; ok {
-			kindList := registry.DomainKinds
+			kindList := harness.DomainKinds
 			if skill != "" {
 				kindList = []string{"skills"}
 			}

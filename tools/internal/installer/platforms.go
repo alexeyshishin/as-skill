@@ -14,9 +14,9 @@ import (
 
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/render"
 	"claude-harness/tools/internal/transfer"
 )
@@ -315,7 +315,7 @@ func (in *Installer) GuardRoots(kinds ...string) error {
 	return nil
 }
 
-func (in *Installer) runnable(m *registry.Manifest) bool {
+func (in *Installer) runnable(m *harness.Manifest) bool {
 	for _, e := range m.RequiresEnv {
 		if os.Getenv(e) == "" {
 			return false
@@ -329,14 +329,14 @@ func (in *Installer) runnable(m *registry.Manifest) bool {
 	return true
 }
 
-func (in *Installer) Preflight(reg *registry.Registry, domains []string) error {
+func (in *Installer) Preflight(reg *harness.Registry, domains []string) error {
 	for _, name := range domains {
 		m, ok := reg.Domains[name]
 		if !ok || !in.runnable(m) {
 			continue
 		}
 		kinds := map[string]bool{}
-		for _, kind := range registry.DomainKinds {
+		for _, kind := range harness.DomainKinds {
 			if fsutil.DirExists(filepath.Join(in.HarnessRoot, "domains", name, kind)) {
 				kinds[kind] = true
 			}
@@ -457,7 +457,7 @@ func (in *Installer) checkReserved(srcDir string) error {
 	return nil
 }
 
-func (in *Installer) installKind(m *registry.Manifest, name, kind, srcDir string) error {
+func (in *Installer) installKind(m *harness.Manifest, name, kind, srcDir string) error {
 	switch kind {
 	case "skills":
 		locs, _ := platform.SkillLocations(in.plats())

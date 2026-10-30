@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func runAdd(args []string) error {
@@ -89,10 +89,10 @@ func planNonInteractive(opts addOpts) (*addPlan, error) {
 	if pl.project, err = resolveProject(opts.project); err != nil {
 		return nil, err
 	}
-	if pl.harness, err = registry.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
+	if pl.harness, err = harness.ResolveHarnessRootAuto(opts.harnessRoot); err != nil {
 		return nil, err
 	}
-	if pl.reg, err = registry.LoadRegistry(pl.harness); err != nil {
+	if pl.reg, err = harness.LoadRegistry(pl.harness); err != nil {
 		return nil, err
 	}
 	if pl.sel, err = resolveNames(pl.harness, pl.reg, opts.names); err != nil {

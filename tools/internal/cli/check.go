@@ -10,14 +10,14 @@ import (
 
 	"claude-harness/tools/internal/frontmatter"
 	"claude-harness/tools/internal/fsutil"
-	"claude-harness/tools/internal/registry"
+	"claude-harness/tools/internal/harness"
 )
 
 func runCheck(args []string) error {
 	if len(args) != 0 {
 		return fmt.Errorf("check takes no arguments (got %s)", strings.Join(args, " "))
 	}
-	harnessRoot, err := registry.ResolveHarnessRootAuto("")
+	harnessRoot, err := harness.ResolveHarnessRootAuto("")
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func runCheck(args []string) error {
 			failures = append(failures, fmt.Sprintf("%s: missing manifest.yaml", manifestPath))
 			continue
 		}
-		m, err := registry.ParseManifest(manifestPath)
+		m, err := harness.ParseManifest(manifestPath)
 		if err != nil {
 			failures = append(failures, err.Error())
 			continue

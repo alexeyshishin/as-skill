@@ -4,17 +4,17 @@ import (
 	"reflect"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
-func realHarnessReg(t *testing.T) (*Installer, *registry.Registry) {
+func realHarnessReg(t *testing.T) (*Installer, *harness.Registry) {
 	t.Helper()
-	h, err := registry.ResolveHarnessRoot(".")
+	h, err := harness.ResolveHarnessRoot(".")
 	if err != nil {
 		t.Fatal(err)
 	}
-	reg, err := registry.LoadRegistry(h)
+	reg, err := harness.LoadRegistry(h)
 	if err != nil {
 		t.Fatal(err)
 	}

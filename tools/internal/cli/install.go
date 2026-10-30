@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 type installOpts struct {
@@ -108,7 +108,7 @@ func runInstall(args []string) error {
 		mode = "copy"
 	}
 
-	harnessRoot, err := registry.ResolveHarnessRoot(opts.harnessRoot)
+	harnessRoot, err := harness.ResolveHarnessRoot(opts.harnessRoot)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func runInstall(args []string) error {
 	if err != nil {
 		return err
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func runInstall(args []string) error {
 	return nil
 }
 
-func installDomains(in *installer.Installer, reg *registry.Registry, names []string, strict bool) error {
+func installDomains(in *installer.Installer, reg *harness.Registry, names []string, strict bool) error {
 	for _, name := range names {
 		if err := in.InstallDomain(reg, name, strict); err != nil {
 			return err

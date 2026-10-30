@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/frontmatter"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 var (
@@ -189,7 +189,7 @@ func lintHarness(harnessRoot string) lintResult {
 	}
 	for _, path := range skillMDs {
 		skillDir := filepath.Dir(path)
-		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
+		name, hasName, hasDescription, err := harness.ParseSkillFrontmatter(path)
 		if err != nil {
 			raw, _ := os.ReadFile(path)
 			if issues := plainScalarIssues(path, string(raw)); len(issues) > 0 {

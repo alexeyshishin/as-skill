@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
-func exHarness(t *testing.T) (*registry.Registry, string) {
+func exHarness(t *testing.T) (*harness.Registry, string) {
 	t.Helper()
 	_, root := platHarness(t)
 	write(t, filepath.Join(root, "domains", "alpha", "skills", "sk2", "SKILL.md"), "---\nname: sk2\ndescription: d\n---\nbody\n", 0o644)
@@ -23,7 +23,7 @@ func exHarness(t *testing.T) (*registry.Registry, string) {
 	write(t, filepath.Join(b, "skills", "sk3", "SKILL.md"), "---\nname: sk3\ndescription: d\n---\nbody\n", 0o644)
 	write(t, filepath.Join(b, "skills", "sk4", "SKILL.md"), "---\nname: sk4\ndescription: d\n---\nbody\n", 0o644)
 	write(t, filepath.Join(b, "rules", "r2.md"), "# rule two\n", 0o644)
-	reg, err := registry.LoadRegistry(root)
+	reg, err := harness.LoadRegistry(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +306,7 @@ func TestUninstallAfterPartialInstallNoNotTrackedNoiseForAbsentExcluded(t *testi
 	}
 }
 
-func collectAlpha(in *Installer, reg *registry.Registry) ([]ConflictError, error) {
+func collectAlpha(in *Installer, reg *harness.Registry) ([]ConflictError, error) {
 	return in.Collect(func() error {
 		if err := in.Preflight(reg, []string{"alpha"}); err != nil {
 			return err

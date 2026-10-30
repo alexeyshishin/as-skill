@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
-var resolveHarness = registry.ResolveHarnessRootAuto
+var resolveHarness = harness.ResolveHarnessRootAuto
 
 func runDoctor(args []string) error {
 	opts, err := parseStatusArgs(args)

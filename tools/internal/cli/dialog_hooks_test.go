@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/registry"
 )
 
 func hookAnswers(p string, doms, plats, hooks []string) map[string]any {
@@ -245,7 +245,7 @@ func TestDialogHooksCodexRegistersCodexCapableOnly(t *testing.T) {
 }
 
 func TestRegisterSelectedNoHooksSkipsSources(t *testing.T) {
-	reg, err := registry.LoadRegistry(realHarness(t))
+	reg, err := harness.LoadRegistry(realHarness(t))
 	if err != nil {
 		t.Fatal(err)
 	}

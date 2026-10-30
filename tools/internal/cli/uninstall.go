@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func runUninstall(args []string) error {
@@ -27,7 +27,7 @@ func runUninstall(args []string) error {
 		return err
 	}
 
-	harnessRoot, err := registry.ResolveHarnessRoot(opts.harnessRoot)
+	harnessRoot, err := harness.ResolveHarnessRoot(opts.harnessRoot)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func runUninstall(args []string) error {
 	if err != nil {
 		return err
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		return err
 	}

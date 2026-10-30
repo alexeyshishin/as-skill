@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
 )
 
 func TestUninstallOneRemovesOnlyTrackedEntriesMatchingRecordedMode(t *testing.T) {
@@ -98,7 +98,7 @@ func TestUninstallDomainCopyModeRemovesOnlyThisDomainsItems(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		t.Fatalf("LoadRegistry: %v", err)
 	}
@@ -147,8 +147,8 @@ func TestRequiresBinGating(t *testing.T) {
 		t.Skipf("test binary %q unexpectedly found on $PATH", missingBin)
 	}
 
-	m := &registry.Manifest{Name: "testdomain", RequiresBin: []string{missingBin}, Targets: map[string]string{}}
-	reg := &registry.Registry{Domains: map[string]*registry.Manifest{"testdomain": m}, Order: []string{"testdomain"}}
+	m := &harness.Manifest{Name: "testdomain", RequiresBin: []string{missingBin}, Targets: map[string]string{}}
+	reg := &harness.Registry{Domains: map[string]*harness.Manifest{"testdomain": m}, Order: []string{"testdomain"}}
 
 	dir := t.TempDir()
 
@@ -185,8 +185,8 @@ func TestRequiresBinGatingSkillOwnerDomainAlwaysStrict(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	m := &registry.Manifest{Name: "testdomain", RequiresBin: []string{missingBin}, Targets: map[string]string{}}
-	reg := &registry.Registry{Domains: map[string]*registry.Manifest{"testdomain": m}, Order: []string{"testdomain"}}
+	m := &harness.Manifest{Name: "testdomain", RequiresBin: []string{missingBin}, Targets: map[string]string{}}
+	reg := &harness.Registry{Domains: map[string]*harness.Manifest{"testdomain": m}, Order: []string{"testdomain"}}
 
 	projectRoot := t.TempDir()
 	in := &Installer{HarnessRoot: harnessRoot, ProjectRoot: projectRoot, Mode: "copy", Lock: &lockfile.Lockfile{}}

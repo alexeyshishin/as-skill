@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 )
 
 func assertLockClean(t *testing.T, lock *lockfile.Lockfile) {
@@ -36,7 +36,7 @@ func assertLockClean(t *testing.T, lock *lockfile.Lockfile) {
 	}
 }
 
-func installAlpha(t *testing.T, root, project, mode string, lock *lockfile.Lockfile, reg *registry.Registry, exclude map[string]bool) {
+func installAlpha(t *testing.T, root, project, mode string, lock *lockfile.Lockfile, reg *harness.Registry, exclude map[string]bool) {
 	t.Helper()
 	in := newInst(root, project, mode, lock, platform.Claude)
 	in.ExcludeSkills = exclude
@@ -212,7 +212,7 @@ func TestRecopyDryRunLeavesLockUntouched(t *testing.T) {
 }
 
 func TestRecopyRealCoreOverlayWithChangedSource(t *testing.T) {
-	realRoot, err := registry.ResolveHarnessRoot(".")
+	realRoot, err := harness.ResolveHarnessRoot(".")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +220,7 @@ func TestRecopyRealCoreOverlayWithChangedSource(t *testing.T) {
 	if err := os.CopyFS(filepath.Join(root, "domains", "core"), os.DirFS(filepath.Join(realRoot, "domains", "core"))); err != nil {
 		t.Fatal(err)
 	}
-	reg, err := registry.LoadRegistry(root)
+	reg, err := harness.LoadRegistry(root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,7 +267,7 @@ func TestRecopyRealCoreOverlayWithChangedSource(t *testing.T) {
 	}
 }
 
-func installAlphaPlats(t *testing.T, root, project string, lock *lockfile.Lockfile, reg *registry.Registry, exclude map[string]bool, plats ...platform.ID) {
+func installAlphaPlats(t *testing.T, root, project string, lock *lockfile.Lockfile, reg *harness.Registry, exclude map[string]bool, plats ...platform.ID) {
 	t.Helper()
 	in := newInst(root, project, "copy", lock, plats...)
 	in.ExcludeSkills = exclude

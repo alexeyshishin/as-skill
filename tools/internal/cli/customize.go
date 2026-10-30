@@ -3,22 +3,22 @@ package cli
 import (
 	"errors"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/registry"
 )
 
 type skillDomain struct {
 	name   string
-	skills []registry.SkillInfo
+	skills []harness.SkillInfo
 }
 
-func customizableDomains(harness string, reg *registry.Registry, sel selection) []skillDomain {
+func customizableDomains(harnessRoot string, reg *harness.Registry, sel selection) []skillDomain {
 	var out []skillDomain
 	for _, d := range sel.Domains {
 		if m, ok := reg.Domains[d.Name]; !ok || gatedReason(m) != "" {
 			continue
 		}
-		sk, err := registry.Skills(harness, d.Name)
+		sk, err := harness.Skills(harnessRoot, d.Name)
 		if err != nil || len(sk) == 0 {
 			continue
 		}
@@ -27,7 +27,7 @@ func customizableDomains(harness string, reg *registry.Registry, sel selection) 
 	return out
 }
 
-func skillLabel(s registry.SkillInfo) string {
+func skillLabel(s harness.SkillInfo) string {
 	label := s.Name
 	if s.Description != "" {
 		d := []rune(s.Description)

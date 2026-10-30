@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
 )
 
 const registeredSettings = `{
@@ -166,7 +166,7 @@ func TestRemoveHookRegistrationsKeepsKeyBytes(t *testing.T) {
 	}
 }
 
-func hooksHarness(t *testing.T) (*registry.Registry, string) {
+func hooksHarness(t *testing.T) (*harness.Registry, string) {
 	t.Helper()
 	harnessRoot := t.TempDir()
 	hooksDir := filepath.Join(harnessRoot, "domains", "alpha", "hooks")
@@ -181,7 +181,7 @@ func hooksHarness(t *testing.T) (*registry.Registry, string) {
 	if err := os.WriteFile(filepath.Join(harnessRoot, "domains", "alpha", "manifest.yaml"), []byte("name: alpha\ndescription: d\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	reg, err := registry.LoadRegistry(harnessRoot)
+	reg, err := harness.LoadRegistry(harnessRoot)
 	if err != nil {
 		t.Fatalf("LoadRegistry: %v", err)
 	}

@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -126,7 +126,7 @@ func platformDirs(plats []platform.ID) []string {
 			dirs = append(dirs, d)
 		}
 	}
-	for _, kind := range registry.DomainKinds {
+	for _, kind := range harness.DomainKinds {
 		add(".claude/" + kind)
 	}
 	for _, id := range plats {

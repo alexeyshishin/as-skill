@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/fsutil"
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
@@ -23,7 +23,7 @@ type selection struct {
 	Skills  []string
 }
 
-func gatedReason(m *registry.Manifest) string {
+func gatedReason(m *harness.Manifest) string {
 	for _, e := range m.RequiresEnv {
 		if os.Getenv(e) == "" {
 			return "$" + e + " is not set"
@@ -37,7 +37,7 @@ func gatedReason(m *registry.Manifest) string {
 	return ""
 }
 
-func skillOwner(harnessRoot string, reg *registry.Registry, name string) string {
+func skillOwner(harnessRoot string, reg *harness.Registry, name string) string {
 	for _, d := range reg.DomainNames() {
 		if fsutil.DirExists(filepath.Join(harnessRoot, "domains", d, "skills", name)) {
 			return d
@@ -46,7 +46,7 @@ func skillOwner(harnessRoot string, reg *registry.Registry, name string) string 
 	return ""
 }
 
-func resolveNames(harnessRoot string, reg *registry.Registry, names []string) (selection, error) {
+func resolveNames(harnessRoot string, reg *harness.Registry, names []string) (selection, error) {
 	var sel selection
 	explicit := map[string]bool{}
 	all := false
@@ -214,7 +214,7 @@ func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
 		return false
 	}
 	total := 0
-	for _, kind := range registry.DomainKinds {
+	for _, kind := range harness.DomainKinds {
 		names, err := transfer.TopNames(filepath.Join(harnessRoot, "domains", domain, kind), kind)
 		if err != nil {
 			continue

@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"claude-harness/tools/internal/registry"
+	"claude-harness/tools/internal/harness"
 )
 
 func realHarness(t *testing.T) string {
 	t.Helper()
-	h, err := registry.ResolveHarnessRoot(".")
+	h, err := harness.ResolveHarnessRoot(".")
 	if err != nil {
 		t.Fatal(err)
 	}

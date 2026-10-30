@@ -6,24 +6,24 @@ import (
 	"path/filepath"
 	"testing"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
 	"claude-harness/tools/internal/transfer"
 )
 
-func rerunSetup(t *testing.T, mode string) (*Installer, *registry.Registry, string) {
+func rerunSetup(t *testing.T, mode string) (*Installer, *harness.Registry, string) {
 	t.Helper()
-	harness, err := registry.ResolveHarnessRoot(".")
+	hRoot, err := harness.ResolveHarnessRoot(".")
 	if err != nil {
 		t.Fatal(err)
 	}
-	reg, err := registry.LoadRegistry(harness)
+	reg, err := harness.LoadRegistry(hRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
 	project := t.TempDir()
-	return &Installer{HarnessRoot: harness, ProjectRoot: project, Mode: mode, Lock: &lockfile.Lockfile{}}, reg, project
+	return &Installer{HarnessRoot: hRoot, ProjectRoot: project, Mode: mode, Lock: &lockfile.Lockfile{}}, reg, project
 }
 
 func TestRerunWithoutForce(t *testing.T) {

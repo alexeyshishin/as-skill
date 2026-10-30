@@ -6,22 +6,22 @@ import (
 	"slices"
 	"strings"
 
+	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/installer"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
-	"claude-harness/tools/internal/registry"
 )
 
 const agentPromptsRoot = ".agents"
 
-func preflightAll(in *installer.Installer, reg *registry.Registry, sel selection) error {
+func preflightAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
 	if len(sel.Domains) == 0 {
 		return nil
 	}
 	return in.Preflight(reg, sel.domainNames())
 }
 
-func installAll(in *installer.Installer, reg *registry.Registry, sel selection) error {
+func installAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
 	for _, d := range sel.Domains {
 		if err := in.InstallDomain(reg, d.Name, d.Strict); err != nil {
 			return err
@@ -35,7 +35,7 @@ func installAll(in *installer.Installer, reg *registry.Registry, sel selection) 
 	return nil
 }
 
-func collectConflicts(in *installer.Installer, reg *registry.Registry, sel selection) ([]installer.ConflictError, error) {
+func collectConflicts(in *installer.Installer, reg *harness.Registry, sel selection) ([]installer.ConflictError, error) {
 	return in.Collect(func() error {
 		if err := preflightAll(in, reg, sel); err != nil {
 			return err
