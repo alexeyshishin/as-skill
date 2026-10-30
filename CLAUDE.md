@@ -53,7 +53,7 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-The installer entrypoint is `tools/main.go` (dispatcher and `spf13/pflag`-based flag parsing in `tools/internal/cli`; engine in `tools/internal/{harness,install,render,hookcfg,doctor,lint,platform,lockfile,fsys,iostreams}`),
+The installer entrypoint is `tools/main.go` (dispatcher and `spf13/pflag`-based flag parsing in `tools/internal/cli`; engine in `tools/internal/{harness,install,render,hookcfg,doctor,lint,platform,lockfile,fsys,frontmatter,iostreams,prompt}`),
 CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.

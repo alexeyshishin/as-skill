@@ -72,11 +72,11 @@ go build -o as-skill ./tools
 
 ### Legacy
 
-Старые формы работают, но скрыты из help: `install domain|domains|all|skill ...`, `uninstall ...`, `status` (только таблица, exit 0) и флаги `--platform`, `--force`, `--harness-root`. Пишущие `install`/`uninstall` и `hooks enable|disable` проверяют `-p` как `add`/`remove` (`~` раскрывается, путь должен существовать, `$HOME` отклоняется); `status` только читает и не ограничен.
+Старые формы работают, но скрыты из help: `install domain|domains|all|skill ...`, `uninstall ...`, `status` (только таблица, exit 0) и флаги `--platform`, `--force`, `--harness-root`. Пишущие `install`/`uninstall` и `hooks enable|disable` отклоняют `-p`, равный `$HOME` (тем же текстом, что `add`); остальная обработка пути прежняя; `status` только читает и не ограничен.
 
 ## Пакеты
 
-`internal/`: `cli` (диспетчер, разбор флагов на `spf13/pflag`) → `doctor`, `lint` → `install` → `render`, `hookcfg` → `harness` → листья `platform`, `lockfile`, `fsys`, `frontmatter`, `iostreams`; плюс `prompt` (диалог) и `hooktest` (тесты хуков).
+`internal/`: `cli` (диспетчер, разбор флагов на `spf13/pflag`; напрямую импортирует `doctor`, `harness`, `install`, `lint`, `fsys`, `iostreams`, `lockfile`, `platform`, `prompt`); `doctor`, `lint`, `install` опираются на `harness`; `install` ещё на `render` и `hookcfg`; `render` импортирует `lockfile` и `platform`, `hookcfg` — только `platform`; `harness` — `frontmatter`, `fsys`, `lockfile`; листья `platform`, `lockfile`, `fsys`, `frontmatter`, `iostreams`; плюс `hooktest` (тесты хуков).
 
 ## Флаги
 
