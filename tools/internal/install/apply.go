@@ -33,6 +33,9 @@ func (in *Installer) Apply(p *Plan) error {
 	if p.rm != nil {
 		return in.applyRemove(p)
 	}
+	if err := in.ValidateInstall(p); err != nil {
+		return err
+	}
 	if p.git == nil {
 		p.git = gitCache{}
 	}
