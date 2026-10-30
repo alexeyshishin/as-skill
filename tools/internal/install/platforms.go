@@ -328,30 +328,24 @@ func (in *Installer) placeOne(c gitCache, domain string, kind lockfile.Kind, nam
 	if prior, ok := in.Lock.FindAt(domain, kind, name, dst); ok {
 		pl = unionPlats(prior.Platforms, pl)
 	}
-	if !in.DryRun {
-		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-			return err
-		}
+	if err := in.mkdirParent(dst); err != nil {
+		return err
 	}
 	if in.Mode == lockfile.ModeLink {
 		if err := in.linkOne(src, dst); err != nil {
 			return err
 		}
-		if !in.DryRun {
-			in.Lock.Record(lockfile.Entry{
-				Domain: domain, Kind: kind, Name: name, Mode: lockfile.ModeLink,
-				Path: dst, Source: src, Platforms: pl, InstalledAt: time.Now(),
-			})
-		}
+		in.record(lockfile.Entry{
+			Domain: domain, Kind: kind, Name: name, Mode: lockfile.ModeLink,
+			Path: dst, Source: src, Platforms: pl, InstalledAt: time.Now(),
+		})
 		return nil
 	}
 	if err := in.refuseForeign(dst); err != nil {
 		return err
 	}
-	if !in.DryRun {
-		if err := os.RemoveAll(dst); err != nil {
-			return err
-		}
+	if err := in.removeDst(dst); err != nil {
+		return err
 	}
 	fi, err := os.Stat(src)
 	if err != nil {
@@ -361,14 +355,8 @@ func (in *Installer) placeOne(c gitCache, domain string, kind lockfile.Kind, nam
 		if _, err := fsys.CopyTreeRoot(kind.SkipsReadme(), src, dst, in.HarnessRoot, in.DryRun); err != nil {
 			return err
 		}
-	} else if !in.DryRun {
-		data, err := os.ReadFile(src)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(dst, data, fi.Mode().Perm()); err != nil {
-			return err
-		}
+	} else if err := in.copyFile(src, dst, fi.Mode().Perm()); err != nil {
+		return err
 	}
 	if in.DryRun {
 		return nil
@@ -382,6 +370,24 @@ func (in *Installer) placeOne(c gitCache, domain string, kind lockfile.Kind, nam
 		Path: dst, Source: src, SHA256: hash, Platforms: pl, InstalledAt: time.Now(),
 	})
 	return nil
+}
+
+func (in *Installer) removeDst(dst string) error {
+	if in.DryRun {
+		return nil
+	}
+	return os.RemoveAll(dst)
+}
+
+func (in *Installer) copyFile(src, dst string, perm os.FileMode) error {
+	if in.DryRun {
+		return nil
+	}
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, perm)
 }
 
 func (in *Installer) isForeign(dst string) bool {

@@ -80,10 +80,8 @@ func (in *Installer) applyOp(c gitCache, op Op) error {
 		}
 		return nil
 	case op.Type == OpHook:
-		if !in.DryRun && op.Mode == lockfile.ModeCopy {
-			if err := fsys.MakeShellScriptsExecutable(op.Dst); err != nil {
-				return &OpError{op, stageChmod, err}
-			}
+		if op.Mode == lockfile.ModeCopy {
+			return in.chmodHooks(op)
 		}
 		return nil
 	}
@@ -95,9 +93,7 @@ func (in *Installer) applyOp(c gitCache, op Op) error {
 		if err := in.placeItems(c, op.Domain, op.Kind, op.Src, op.Dst, op.Platforms); err != nil {
 			return &OpError{op, stagePlace, err}
 		}
-		if !in.DryRun {
-			in.keepExcluded(op.Domain, op.Kind, op.Dst, func(item string) bool { return in.excluded(op.Domain, op.Kind, item) })
-		}
+		in.keepExcluded(op.Domain, op.Kind, op.Dst, func(item string) bool { return in.excluded(op.Domain, op.Kind, item) })
 		return nil
 	}
 	n, err := in.place(op.Domain, op.Kind, op.Name, op.Src, op.Dst)
@@ -108,10 +104,18 @@ func (in *Installer) applyOp(c gitCache, op Op) error {
 		in.applyPlatforms(op.Domain, op.Kind, op.Dst, op.Platforms, prior)
 	}
 	in.report(op.Domain, string(op.Kind), op.Dst, n)
-	if op.Kind == lockfile.KindHooks && op.Type == OpCopy && !in.DryRun {
-		if err := fsys.MakeShellScriptsExecutable(op.Dst); err != nil {
-			return &OpError{op, stageChmod, err}
-		}
+	if op.Kind == lockfile.KindHooks && op.Type == OpCopy {
+		return in.chmodHooks(op)
+	}
+	return nil
+}
+
+func (in *Installer) chmodHooks(op Op) error {
+	if in.DryRun {
+		return nil
+	}
+	if err := fsys.MakeShellScriptsExecutable(op.Dst); err != nil {
+		return &OpError{op, stageChmod, err}
 	}
 	return nil
 }

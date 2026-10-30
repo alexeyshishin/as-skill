@@ -30,21 +30,17 @@ type Installer struct {
 func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst string) (int, error) {
 	if in.Mode == lockfile.ModeLink {
 		if kind == lockfile.KindSkill {
-			if !in.DryRun {
-				if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-					return 0, err
-				}
+			if err := in.mkdirParent(dst); err != nil {
+				return 0, err
 			}
 			if err := in.linkOne(src, dst); err != nil {
 				return 0, err
 			}
-			if !in.DryRun {
-				in.Lock.Record(lockfile.Entry{
-					Domain: domain, Kind: kind, Name: name,
-					Mode: lockfile.ModeLink, Path: dst, Source: src,
-					InstalledAt: time.Now(),
-				})
-			}
+			in.record(lockfile.Entry{
+				Domain: domain, Kind: kind, Name: name,
+				Mode: lockfile.ModeLink, Path: dst, Source: src,
+				InstalledAt: time.Now(),
+			})
 			return 1, nil
 		}
 		var skip func(string) bool
@@ -53,66 +49,93 @@ func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst str
 		}
 		linked, err := fsys.LinkTreeWith(kind.SkipsReadme(), src, dst, in.DryRun, skip, in.linkOne)
 		n := len(linked)
-		if !in.DryRun {
-			for _, l := range linked {
-				in.Lock.Record(lockfile.Entry{
-					Domain:      domain,
-					Kind:        kind,
-					Name:        l.Name,
-					Mode:        lockfile.ModeLink,
-					Path:        l.Dst,
-					Source:      l.Src,
-					InstalledAt: time.Now(),
-				})
-			}
+		for _, l := range linked {
+			in.record(lockfile.Entry{
+				Domain:      domain,
+				Kind:        kind,
+				Name:        l.Name,
+				Mode:        lockfile.ModeLink,
+				Path:        l.Dst,
+				Source:      l.Src,
+				InstalledAt: time.Now(),
+			})
 		}
-		if err == nil && !in.DryRun && name == "" {
-			if skip == nil {
-				in.Lock.RemoveAt(domain, kind, "", dst)
-			} else {
-				in.keepExcluded(domain, kind, dst, skip)
-			}
+		if err == nil && name == "" {
+			in.settleParent(domain, kind, dst, skip)
 		}
 		return n, err
 	}
 
-	if !in.DryRun && name == "" {
+	if name == "" {
 		in.dropLinksUnder(kind, src, dst)
 	}
 	n, err := fsys.CopyTreeRoot(kind.SkipsReadme(), src, dst, in.HarnessRoot, in.DryRun)
 	if err != nil {
 		return n, err
 	}
-	if !in.DryRun {
-		var hash string
-		var items []string
-		if name == "" {
-			names, nerr := fsys.TopNames(src, kind.SkipsReadme())
-			items = append(items, names...)
-			sort.Strings(items)
-			if nerr != nil {
-				return n, nerr
-			}
-			hash, err = fsys.HashNames(dst, names)
-		} else {
-			hash, err = fsys.HashTree(dst)
-		}
-		if err != nil {
-			return n, fmt.Errorf("hashing %s: %w", dst, err)
-		}
-		for _, it := range items {
-			in.Lock.RemoveAllAt(filepath.Join(dst, it))
-		}
-		in.Lock.Record(lockfile.Entry{
-			Domain: domain, Kind: kind, Name: name,
-			Mode: lockfile.ModeCopy, Path: dst, Source: src, SHA256: hash, Items: items,
-			InstalledAt: time.Now(),
-		})
+	return n, in.recordCopy(domain, kind, name, src, dst)
+}
+
+func (in *Installer) recordCopy(domain string, kind lockfile.Kind, name, src, dst string) error {
+	if in.DryRun {
+		return nil
 	}
-	return n, nil
+	var hash string
+	var items []string
+	var err error
+	if name == "" {
+		names, nerr := fsys.TopNames(src, kind.SkipsReadme())
+		items = append(items, names...)
+		sort.Strings(items)
+		if nerr != nil {
+			return nerr
+		}
+		hash, err = fsys.HashNames(dst, names)
+	} else {
+		hash, err = fsys.HashTree(dst)
+	}
+	if err != nil {
+		return fmt.Errorf("hashing %s: %w", dst, err)
+	}
+	for _, it := range items {
+		in.Lock.RemoveAllAt(filepath.Join(dst, it))
+	}
+	in.Lock.Record(lockfile.Entry{
+		Domain: domain, Kind: kind, Name: name,
+		Mode: lockfile.ModeCopy, Path: dst, Source: src, SHA256: hash, Items: items,
+		InstalledAt: time.Now(),
+	})
+	return nil
+}
+
+func (in *Installer) record(e lockfile.Entry) {
+	if !in.DryRun {
+		in.Lock.Record(e)
+	}
+}
+
+func (in *Installer) mkdirParent(dst string) error {
+	if in.DryRun {
+		return nil
+	}
+	return os.MkdirAll(filepath.Dir(dst), 0o755)
+}
+
+func (in *Installer) settleParent(domain string, kind lockfile.Kind, dst string, skip func(string) bool) {
+	if in.DryRun {
+		return
+	}
+	if skip == nil {
+		in.Lock.RemoveAt(domain, kind, "", dst)
+	} else {
+		in.keepExcluded(domain, kind, dst, skip)
+	}
 }
 
 func (in *Installer) keepExcluded(domain string, kind lockfile.Kind, dst string, skip func(string) bool) {
+	if in.DryRun {
+		return
+	}
 	parent, ok := in.Lock.FindAt(domain, kind, "", dst)
 	if !ok {
 		return
@@ -139,6 +162,9 @@ func (in *Installer) keepExcluded(domain string, kind lockfile.Kind, dst string,
 }
 
 func (in *Installer) dropLinksUnder(kind lockfile.Kind, src, dst string) {
+	if in.DryRun {
+		return
+	}
 	names, err := fsys.TopNames(src, kind.SkipsReadme())
 	if err != nil {
 		return
