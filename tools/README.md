@@ -36,6 +36,19 @@ go build -o as-skill ./tools
 | `as-skill list [domains\|skills\|platforms]` | Что можно поставить; установленное в проекте `-p` помечено `installed`; `platforms` — матрица платформ |
 | `as-skill doctor [-p PATH] [-a P]` | Таблица записей lockfile (режим, платформы, путь, здоровье OK/MISSING/BROKEN) и проверки: SOURCE-GONE, DRIFTED, UNTRACKED, STALE. Предупреждения без влияния на exit: DUPLICATE-SKILL, UNVERIFIED, HOOKS-TRUST. Ненулевой exit при любой находке — годится для CI. Без копии репозитория lint и SOURCE-GONE пропускаются |
 
+Примеры:
+
+```bash
+as-skill add all -y                                  # все домены, symlink
+as-skill add code core -p <path> --copy -y           # code в чужой проект, снэпшот
+as-skill add git core -p <path> -a codex,cursor -y   # другие платформы
+as-skill list                                        # что можно поставить
+as-skill doctor -p <path>                            # что стоит и в каком состоянии
+as-skill remove code -p <path> -y                    # снять
+```
+
+Режимы: **symlink** (по умолчанию) — правки в `domains/` видны в проекте сразу, так живёт корневой `.claude/` этого репозитория (см. [`CONTRIBUTING.md`](../CONTRIBUTING.md)); **`--copy`** — статический снэпшот, не зависит от чекаута.
+
 Продвинутые:
 
 | Команда | Что делает |
