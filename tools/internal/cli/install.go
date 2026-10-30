@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -125,7 +125,7 @@ func runInstall(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	in := &installer.Installer{
+	in := &install.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Force: opts.force, Mode: mode, Lock: lock, Platforms: plats,
 	}
@@ -156,7 +156,7 @@ func runInstall(args []string, d Deps) error {
 		return fmt.Errorf("unknown install verb %q (want domain|domains|all|skill)", verb)
 	}
 
-	var pre *installer.PreflightError
+	var pre *install.PreflightError
 	if errors.As(runErr, &pre) {
 		return runErr
 	}
@@ -175,10 +175,10 @@ func runInstall(args []string, d Deps) error {
 	return nil
 }
 
-func installDomains(in *installer.Installer, reg *harness.Registry, names []string, strict bool) error {
-	reqs := make([]installer.DomainReq, len(names))
+func installDomains(in *install.Installer, reg *harness.Registry, names []string, strict bool) error {
+	reqs := make([]install.DomainReq, len(names))
 	for k, name := range names {
-		reqs[k] = installer.DomainReq{Name: name, Strict: strict}
+		reqs[k] = install.DomainReq{Name: name, Strict: strict}
 	}
 	return in.InstallAll(reg, reqs, nil)
 }

@@ -10,7 +10,7 @@ import (
 
 	"claude-harness/tools/internal/harness"
 	"claude-harness/tools/internal/health"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
@@ -155,10 +155,10 @@ func unignoredRoots(project string, copyMode, force bool) map[platform.ID]string
 		return out
 	}
 	for _, id := range platform.IDs() {
-		in := &installer.Installer{ProjectRoot: project, Mode: lockfile.ModeLink, Platforms: []platform.ID{id}}
+		in := &install.Installer{ProjectRoot: project, Mode: lockfile.ModeLink, Platforms: []platform.ID{id}}
 		var roots []string
 		for _, c := range in.PlanRoots(lockfile.KindSkills, lockfile.KindAgents, lockfile.KindRules, lockfile.KindHooks).Conflicts {
-			if c.Reason == installer.ReasonNotIgnored {
+			if c.Reason == install.ReasonNotIgnored {
 				roots = append(roots, c.Path)
 			}
 		}
@@ -513,7 +513,7 @@ const (
 )
 
 func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
-	in := &installer.Installer{HarnessRoot: pl.harness}
+	in := &install.Installer{HarnessRoot: pl.harness}
 	infos, err := in.DomainHooks(pl.reg, pl.sel.domainNames())
 	if err != nil {
 		return nil, err
@@ -538,7 +538,7 @@ func hookOptions(pl *addPlan, prev []string) ([]prompt.Option, error) {
 	return opts, nil
 }
 
-func registerSelected(in *installer.Installer, pl *addPlan) error {
+func registerSelected(in *install.Installer, pl *addPlan) error {
 	if len(pl.hooks) == 0 {
 		return nil
 	}

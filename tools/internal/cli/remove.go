@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
@@ -55,7 +55,7 @@ func runRemove(args []string, d Deps) error {
 		prevNames                []string
 		prevPlats                []platform.ID
 		lock                     *lockfile.Lockfile
-		targets                  []installer.RemoveTarget
+		targets                  []install.RemoveTarget
 		reg                      *harness.Registry
 		plats                    []platform.ID
 	)
@@ -92,7 +92,7 @@ func runRemove(args []string, d Deps) error {
 		},
 		func() (bool, error) {
 			var err error
-			targets, err = installer.ResolveRemoveTargets(lock, projectRoot, names)
+			targets, err = install.ResolveRemoveTargets(lock, projectRoot, names)
 			if err != nil {
 				return false, err
 			}
@@ -149,7 +149,7 @@ func runRemove(args []string, d Deps) error {
 	}
 	fmt.Fprintf(ios.Stdout(), "platforms: %s\n", strings.Join(platformDirNames(plats), ", "))
 
-	in := &installer.Installer{
+	in := &install.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Lock: lock, Platforms: plats,
 		Out: ios.Stdout(), Err: ios.Stderr(),

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -36,7 +36,7 @@ func runHooks(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	in := &installer.Installer{ProjectRoot: projectRoot, DryRun: opts.dryRun, Lock: &lockfile.Lockfile{}}
+	in := &install.Installer{ProjectRoot: projectRoot, DryRun: opts.dryRun, Lock: &lockfile.Lockfile{}}
 	if len(opts.domains) > 0 {
 		return runHooksDomain(in, verb, positionals, opts, plats, d)
 	}
@@ -56,7 +56,7 @@ func runHooks(args []string, d Deps) error {
 	return nil
 }
 
-func runHooksDomain(in *installer.Installer, verb string, names []string, opts installOpts, plats []platform.ID, d Deps) error {
+func runHooksDomain(in *install.Installer, verb string, names []string, opts installOpts, plats []platform.ID, d Deps) error {
 	ios := d.IO
 	root := ""
 	if opts.harnessSet {

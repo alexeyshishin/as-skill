@@ -1,4 +1,4 @@
-package installer
+package install
 
 import (
 	"claude-harness/tools/internal/platform"

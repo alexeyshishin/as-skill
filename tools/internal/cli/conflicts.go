@@ -7,35 +7,35 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
 )
 
-func domainReqs(sel selection) []installer.DomainReq {
-	reqs := make([]installer.DomainReq, len(sel.Domains))
+func domainReqs(sel selection) []install.DomainReq {
+	reqs := make([]install.DomainReq, len(sel.Domains))
 	for i, d := range sel.Domains {
-		reqs[i] = installer.DomainReq{Name: d.Name, Strict: d.Strict}
+		reqs[i] = install.DomainReq{Name: d.Name, Strict: d.Strict}
 	}
 	return reqs
 }
 
-func installAll(in *installer.Installer, reg *harness.Registry, sel selection) error {
+func installAll(in *install.Installer, reg *harness.Registry, sel selection) error {
 	return in.InstallAll(reg, domainReqs(sel), sel.Skills)
 }
 
-func collectConflicts(in *installer.Installer, reg *harness.Registry, sel selection) ([]installer.ConflictError, error) {
+func collectConflicts(in *install.Installer, reg *harness.Registry, sel selection) ([]install.ConflictError, error) {
 	plan, err := in.PlanInstall(reg, domainReqs(sel), sel.Skills)
 	return plan.Conflicts, err
 }
 
-func conflictsError(cs []installer.ConflictError) error {
+func conflictsError(cs []install.ConflictError) error {
 	var lines []string
 	var guard, foreign bool
 	for _, c := range cs {
 		lines = append(lines, c.Error())
-		if c.Reason == installer.ReasonNotIgnored {
+		if c.Reason == install.ReasonNotIgnored {
 			guard = true
 		} else {
 			foreign = true
@@ -51,8 +51,8 @@ func conflictsError(cs []installer.ConflictError) error {
 	return fmt.Errorf("%s\nhint: %s (nothing written)", strings.Join(lines, "\n"), strings.Join(hints, "; "))
 }
 
-func (pl *addPlan) newInstaller(opts addOpts) *installer.Installer {
-	return &installer.Installer{
+func (pl *addPlan) newInstaller(opts addOpts) *install.Installer {
+	return &install.Installer{
 		HarnessRoot: pl.harness, ProjectRoot: pl.project,
 		DryRun: opts.dryRun, Force: opts.force, Mode: pl.mode, Lock: pl.lock, Platforms: pl.plats,
 		ExcludeSkills: pl.exclude, Overwrite: pl.overwrite,
@@ -102,7 +102,7 @@ func resolveConflicts(p prompt.Prompter, opts addOpts, pl *addPlan, prev map[str
 		}
 		var roots, foreign []string
 		for _, c := range cs {
-			if c.Reason == installer.ReasonNotIgnored {
+			if c.Reason == install.ReasonNotIgnored {
 				roots = append(roots, c.Path)
 			} else {
 				foreign = append(foreign, filepath.Clean(c.Path))

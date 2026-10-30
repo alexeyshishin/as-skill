@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/platform"
 	"claude-harness/tools/internal/prompt"
 )
@@ -253,7 +253,7 @@ func TestRegisterSelectedNoHooksSkipsSources(t *testing.T) {
 	if err := os.WriteFile(bogus, nil, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	in := &installer.Installer{HarnessRoot: bogus, ProjectRoot: t.TempDir()}
+	in := &install.Installer{HarnessRoot: bogus, ProjectRoot: t.TempDir()}
 	pl := &addPlan{reg: reg, sel: selection{Domains: []domainSel{{Name: "code"}}}, plats: []platform.ID{"claude"}}
 	if err := registerSelected(in, pl); err != nil {
 		t.Errorf("nil hooks must not read sources: %v", err)

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"claude-harness/tools/internal/harness"
-	"claude-harness/tools/internal/installer"
+	"claude-harness/tools/internal/install"
 	"claude-harness/tools/internal/lockfile"
 	"claude-harness/tools/internal/platform"
 )
@@ -44,7 +44,7 @@ func runUninstall(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	in := &installer.Installer{
+	in := &install.Installer{
 		HarnessRoot: harnessRoot, ProjectRoot: projectRoot,
 		DryRun: opts.dryRun, Lock: lock, Platforms: plats,
 	}
