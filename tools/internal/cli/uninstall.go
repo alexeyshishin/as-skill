@@ -32,7 +32,7 @@ func runUninstall(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	projectRoot, err := filepath.Abs(opts.project)
+	projectRoot, err := resolveProject(opts.project)
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"claude-harness/tools/internal/harness"
@@ -32,7 +31,7 @@ func runHooks(args []string, d Deps) error {
 	if err != nil {
 		return err
 	}
-	projectRoot, err := filepath.Abs(opts.project)
+	projectRoot, err := resolveProject(opts.project)
 	if err != nil {
 		return err
 	}
