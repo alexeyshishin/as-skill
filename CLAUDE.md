@@ -53,7 +53,7 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-The installer entrypoint is `tools/main.go` (dispatcher in `tools/internal/cli`),
+The installer entrypoint is `tools/main.go` (dispatcher and `spf13/pflag`-based flag parsing in `tools/internal/cli`; engine in `tools/internal/{harness,install,render,hookcfg,doctor,lint,platform,lockfile,fsys,iostreams}`),
 CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.
@@ -92,7 +92,7 @@ instead skips it with a warning and installs the rest. Right now only
 `obsidian` declares `requires_env`; no domain currently declares a
 `requires_bin` gate.
 
-Other verbs: `as-skill list [domains|skills|platforms]` (marks installed), `as-skill doctor` (status table + checks). Legacy `install|uninstall|status` and `--platform`/`--force`/`--harness-root` still work, hidden from help. Harness checkout is auto-resolved (`--harness-root` → cwd walk-up → binary's real path), so a binary built here works from any project.
+Other verbs: `as-skill list [domains|skills|platforms]` (marks installed), `as-skill doctor` (status table + checks). Legacy `install|uninstall|status` and `--platform`/`--force`/`--harness-root` still work, hidden from help (the write verbs `install`/`uninstall`/`hooks enable|disable` refuse a `$HOME` project like `add`/`remove`; `status` is unrestricted). Harness checkout is auto-resolved (`--harness-root` → cwd walk-up → binary's real path), so a binary built here works from any project.
 
 `code` is a separate case: it's a portable dev-loop harness meant to be installed
 into *other* projects, not just this repo's own `.claude/`. From a clone of this
