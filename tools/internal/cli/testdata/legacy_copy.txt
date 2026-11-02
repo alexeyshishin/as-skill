@@ -2,7 +2,7 @@ installed     code     skills  -> <P>/.claude/skills (23 files)
 installed     code     agents  -> <P>/.claude/agents (7 files)
 installed     code     hooks   -> <P>/.claude/hooks (4 files)
 installed     git      rules   -> <P>/.claude/rules (1 file)
-installed     git      skills  -> <P>/.claude/skills (13 files)
+installed     git      skills  -> <P>/.claude/skills (15 files)
 installed     git      agents  -> <P>/.claude/agents (1 file)
 installed     core     skills  -> <P>/.claude/skills (8 files)
 installed     core     hooks   -> <P>/.claude/hooks (2 files)
@@ -94,7 +94,7 @@ done -> <P>/.claude
       "mode": "copy",
       "path": "<P>/.claude/skills",
       "source": "<H>/domains/git/skills",
-      "sha256": "badf38527486b3da2efd41a8a7e09750ce47561f3f6222590bda5500fbc12af6",
+      "sha256": "e668d7b654195a07a82eba4268ddb6c71c3eabac4cbca8bea4e0f438da521892",
       "platforms": [
         "claude"
       ],
