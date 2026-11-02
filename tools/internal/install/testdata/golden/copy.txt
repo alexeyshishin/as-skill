@@ -26,6 +26,7 @@ D .claude/skills/git-conventional-commits/scripts
 D .claude/skills/git-pr-description
 D .claude/skills/git-pr-description/references
 D .claude/skills/git-pr-description/references/rules
+D .claude/skills/git-pr-description/scripts
 D .claude/skills/git-release-tag
 D .claude/skills/git-release-tag/references
 D .claude/skills/git-release-tag/references/rules
@@ -81,7 +82,9 @@ F .claude/skills/git-conventional-commits/references/rules/git-conventions.md -r
 F .claude/skills/git-conventional-commits/scripts/lint-commit-msg.py -rwxr-xr-x
 F .claude/skills/git-pr-description/README.md -rw-r--r--
 F .claude/skills/git-pr-description/SKILL.md -rw-r--r--
+F .claude/skills/git-pr-description/references/pr-examples.md -rw-r--r--
 F .claude/skills/git-pr-description/references/rules/git-conventions.md -rw-r--r--
+F .claude/skills/git-pr-description/scripts/lint-pr.py -rwxr-xr-x
 F .claude/skills/git-release-tag/README.md -rw-r--r--
 F .claude/skills/git-release-tag/SKILL.md -rw-r--r--
 F .claude/skills/git-release-tag/references/release-notes.md -rw-r--r--
