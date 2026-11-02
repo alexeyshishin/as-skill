@@ -13,7 +13,7 @@ description: >
 
 Goal: the version number comes from the commits, not from a guess, and the release notes read like a changelog, not like a press release.
 
-Before starting, read `~/.claude/rules/git-conventions.md` — the "Semver and tags" section is the contract this skill executes.
+Before starting, read `references/rules/git-conventions.md` — the "Semver and tags" section is the contract this skill executes.
 
 Two assets ship with this skill:
 - [`scripts/release.py`](scripts/release.py) — `next` (last tag → next version, commits grouped), `notes` (notes skeleton), `lint` (slop and structure check). No dependencies, Python 3.8+.

@@ -2,83 +2,30 @@ package cli
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 
-	"claude-harness/tools/internal/fsutil"
-	"claude-harness/tools/internal/registry"
+	"claude-harness/tools/internal/lint"
 )
 
-func runCheck(args []string) error {
+func runCheck(args []string, d Deps) error {
+	ios := d.IO
 	if len(args) != 0 {
 		return fmt.Errorf("check takes no arguments (got %s)", strings.Join(args, " "))
 	}
-	harnessRoot, err := registry.ResolveHarnessRoot(".")
+	harnessRoot, err := d.Locator.Locate("")
 	if err != nil {
 		return err
 	}
-
-	var failures []string
-
-	domainsDir := filepath.Join(harnessRoot, "domains")
-	domainEntries, err := os.ReadDir(domainsDir)
+	res, err := lint.Check(harnessRoot)
 	if err != nil {
-		return fmt.Errorf("reading %s: %w", domainsDir, err)
+		return err
 	}
-	var domainNames []string
-	for _, de := range domainEntries {
-		if !de.IsDir() {
-			continue
+	if len(res.Findings) > 0 {
+		for _, f := range res.Findings {
+			fmt.Fprintln(ios.Stderr(), "as-skill: check:", f)
 		}
-		domainNames = append(domainNames, de.Name())
-		manifestPath := filepath.Join(domainsDir, de.Name(), "manifest.yaml")
-		if !fsutil.FileExists(manifestPath) {
-			failures = append(failures, fmt.Sprintf("%s: missing manifest.yaml", manifestPath))
-			continue
-		}
-		m, err := registry.ParseManifest(manifestPath)
-		if err != nil {
-			failures = append(failures, err.Error())
-			continue
-		}
-		if strings.TrimSpace(m.Description) == "" {
-			failures = append(failures, fmt.Sprintf("%s: missing top-level \"description:\"", manifestPath))
-		}
+		return fmt.Errorf("check: %d failure(s)", len(res.Findings))
 	}
-	sort.Strings(domainNames)
-
-	var skillMDs []string
-	for _, name := range domainNames {
-		matches, _ := filepath.Glob(filepath.Join(domainsDir, name, "skills", "*", "SKILL.md"))
-		skillMDs = append(skillMDs, matches...)
-	}
-	sort.Strings(skillMDs)
-
-	for _, path := range skillMDs {
-		dirName := filepath.Base(filepath.Dir(path))
-		name, hasName, hasDescription, err := registry.ParseSkillFrontmatter(path)
-		if err != nil {
-			failures = append(failures, fmt.Sprintf("%s: %v", path, err))
-			continue
-		}
-		if !hasName {
-			failures = append(failures, fmt.Sprintf("%s: frontmatter missing \"name:\"", path))
-		} else if name != dirName {
-			failures = append(failures, fmt.Sprintf("%s: frontmatter name %q does not match directory name %q", path, name, dirName))
-		}
-		if !hasDescription {
-			failures = append(failures, fmt.Sprintf("%s: frontmatter missing \"description:\"", path))
-		}
-	}
-
-	if len(failures) > 0 {
-		for _, f := range failures {
-			fmt.Fprintln(os.Stderr, "as-skill: check:", f)
-		}
-		return fmt.Errorf("check: %d failure(s)", len(failures))
-	}
-	fmt.Printf("check: OK — %d manifest(s), %d SKILL.md(s)\n", len(domainNames), len(skillMDs))
+	fmt.Fprintf(ios.Stdout(), "check: OK — %d manifest(s), %d SKILL.md(s)\n", res.Domains, res.Skills)
 	return nil
 }

@@ -1,5 +1,5 @@
 ---
-name: security
+name: devops-security
 description: >
   Consilium role. Reviews infrastructure security: K8s RBAC, network policies, secrets management (Vault/ESO), container security, supply chain, CIS benchmarks, OWASP for APIs. Does NOT write code.
 ---

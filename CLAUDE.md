@@ -53,19 +53,19 @@ Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
 ## Where things deploy
 
-The installer entrypoint is `tools/main.go` (dispatcher in `tools/internal/cli`),
+The installer entrypoint is `tools/main.go` (dispatcher and `spf13/pflag`-based flag parsing in `tools/internal/cli`; engine in `tools/internal/{harness,install,render,hookcfg,doctor,lint,platform,lockfile,fsys,frontmatter,iostreams,prompt}`),
 CLI name `as-skill` (see `tools/README.md`). It
 installs into a target *project's* `.claude/` — not the user's global
 `~/.claude/` — per each manifest's declared `targets`.
 
-One verb, two modes: `as-skill install ...` defaults to **symlink** — edits under
+One verb, two modes: `as-skill add ...` defaults to **symlink** — edits under
 `domains/` show up in the target immediately, no reinstall; this is
 how this repo's own root `.claude/` stays live (`rm -rf .claude && ./as-skill
-install domains code git core --project .`). `as-skill install ... --copy` instead
+add code git core -p . -y`). `as-skill add ... --copy` instead
 writes a static snapshot, independent of this checkout's lifetime — for sharing,
 or for projects that shouldn't depend on a harness checkout sticking around.
-`as-skill uninstall ...` mirrors `install`'s positional shapes and removes only
-what a prior `install`/`install --copy` placed (symlink or files, matching the
+In a terminal, bare `as-skill add` (or `remove`) opens an interactive dialog (project → domains → customize skills → platforms → mode → conflicts → hooks → summary + confirm); names/flags pre-answer their question and `-y` takes all defaults with no prompts — the dialog needs stdin and stderr both terminals (`add git | cat` still opens it); `</dev/null`, `2>file`, `CI`, `TERM=dumb` are non-interactive and still need names and `-y` (or `--dry-run`). `as-skill remove ...` is lockfile-driven and removes only
+what a prior `add`/`add --copy` placed (symlink or files, matching the
 mode it was recorded under), never foreign content. Uninstalling a domain's `hooks`
 also drops their registrations from the project's `.claude/settings.json` (only
 entries pointing at the hook files it just removed; `settings.local.json` is
@@ -86,23 +86,27 @@ the vault root (`.claude/rules/<file>.md`), so install it with `--project`
 pointed at the vault root — otherwise the project's `.claude/` and the vault
 are different directories and that reference won't resolve.
 
-If a domain's `requires_env` isn't satisfied, an explicit `as-skill install
-domain`/`domains`/`skill` request fails outright; `as-skill install all`
+If a domain's `requires_env` isn't satisfied, an explicit `as-skill add
+<name>` request fails outright; `as-skill add all`
 instead skips it with a warning and installs the rest. Right now only
 `obsidian` declares `requires_env`; no domain currently declares a
 `requires_bin` gate.
 
+Other verbs: `as-skill list [domains|skills|platforms]` (marks installed), `as-skill doctor` (status table + checks). Legacy `install|uninstall|status` and `--platform`/`--force`/`--harness-root` still work, hidden from help (the write verbs `install`/`uninstall`/`hooks enable|disable` refuse a `$HOME` project like `add`/`remove`; `status` is unrestricted). Harness checkout is auto-resolved (`--harness-root` → cwd walk-up → binary's real path), so a binary built here works from any project.
+
 `code` is a separate case: it's a portable dev-loop harness meant to be installed
 into *other* projects, not just this repo's own `.claude/`. From a clone of this
-repo, run `as-skill install domains code core --project <target> --copy` to
+repo, run `as-skill add code core -p <target> --copy -y` to
 place it (agents, skills, hooks, plus core skills) into a target
 project directory. `--copy` here is deliberate, not the default: the target is an
 unrelated project elsewhere on the user's machine, and coupling it to this
 checkout's lifetime via a symlink (the installer's default) would be wrong.
 
+`-a/--agent claude|codex|cursor|opencode[,…]|all` picks target hosts (default: autodetected from existing `.codex/ .cursor/ .opencode/ .claude/` dirs and the lockfile, else `claude`; `add -y` fails before writing if a detected link root isn't git-ignored — use `-a claude` or `--copy`). Skills are placed once per location by set cover; agents are symlinked on claude and rendered natively for the others; rules go via `.agents/rules` plus an `AGENTS.md` block, or a Cursor `.mdc` stub. Hook adapters for codex/cursor are Phase 3; opencode hooks are unsupported. claude+codex together warns about duplicate skills. Hook platform support: `test-gate`, `prettier-format`, `memory-bank-load` — claude/codex/cursor; `memory-bank-logger` — claude only; opencode none. Non-claude adapters (hooks, rendered agents, rules) are doc-derived, unverified against real CLIs; only claude is verified.
+
 ## What to do before your first action
 
-1. **Identify which domain the task belongs to.** Skill/rule names carry the domain prefix (`obsidian-ingest`, `git-conventional-commits`, `content-tg-post`, `code-plan`); `devops` agent files do too (`devops-sre.md`), though a few agents' internal `name:` is shorter (`sre`, `architect`, `ci-agent`) — go by the file path when unsure.
+1. **Identify which domain the task belongs to.** Skill/rule names carry the domain prefix (`obsidian-ingest`, `git-conventional-commits`, `content-tg-post`, `code-plan`); `devops` agent files do too (`devops-sre.md`), each agent's `name:` equals its filename stem.
 2. **Read your domain's rules.** Skills and agents name which rules they need at the top of the file. `code` and `devops` currently have none — for `code`, read `.memory-bank/index.md` and the relevant `swarm-report/` file instead.
 3. **If the task spans multiple domains** (e.g. write up an incident and publish it as a Telegram post), chain skills from each domain in sequence, respecting each one's rules.
 4. **If the task fits neither a skill nor an agent**, act manually on the general principles below. Afterward, ask the user whether it's worth turning into a skill.
@@ -130,9 +134,9 @@ Not a single blanket rule — it's domain-dependent:
 ### When a domain overlaps with another
 
 Examples:
-- **Incident root-cause (devops's `sre`/`diagnostics` agents)** → write it up and ingest it into the **knowledge base (obsidian)** via `obsidian-ingest`.
+- **Incident root-cause (devops's `devops-sre`/`devops-diagnostic` agents)** → write it up and ingest it into the **knowledge base (obsidian)** via `obsidian-ingest`.
 - **A PR or release (`git-flow`)** → can become a **Telegram post (`content-tg-post`)** announcing it.
-- **A tutorial (`content-documentation`)** → may embed runbook logic reviewed by devops's `sre` Consilium agent.
+- **A tutorial (`content-documentation`)** → may embed runbook logic reviewed by devops's `devops-sre` Consilium agent.
 - **An article (`content-article-draft`)** → can expand into a full package via **`content-factory`**.
 
 In these cases follow both domains' rules — they complement, not contradict, each other.
@@ -188,19 +192,19 @@ In these cases follow both domains' rules — they complement, not contradict, e
 ### domain: devops
 
 No `rules/` or `skills/` yet — agents only. Two roles:
-- **Consilium** (`architect`, `security`, `sre`, `diagnostics`) — advisory, read-only, never touches code or configs
-- **Executing** (`ci-agent`, `helm-agent`, `k8s-agent`) — writes pipelines, charts, and manifests within its own file scope
+- **Consilium** (`devops-architecture`, `devops-security`, `devops-sre`, `devops-diagnostic`) — advisory, read-only, never touches code or configs
+- **Executing** (`devops-ci`, `devops-helm`, `devops-k8s`) — writes pipelines, charts, and manifests within its own file scope
 
 GitOps rule: production changes go through ArgoCD only.
 
 **Agents:**
-- `devops-architecture` (`architect`) — platform/service topology, K8s workload design, IaC structure
-- `devops-security` (`security`) — RBAC, network policies, secrets, container/supply-chain security
-- `devops-sre` (`sre`) — SLOs/error budgets, observability, alerting, runbooks, postmortems
-- `devops-diagnostic` (`diagnostics`) — root-cause analysis: crashes, OOMKills, network, ArgoCD sync, pipeline failures
-- `devops-ci` (`ci-agent`) — GitLab CI/CD pipelines and shared templates
-- `devops-helm` (`helm-agent`) — Helm charts (`Chart.yaml`, `templates/`, `values.yaml`)
-- `devops-k8s` (`k8s-agent`) — Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets
+- `devops-architecture` — platform/service topology, K8s workload design, IaC structure
+- `devops-security` — RBAC, network policies, secrets, container/supply-chain security
+- `devops-sre` — SLOs/error budgets, observability, alerting, runbooks, postmortems
+- `devops-diagnostic` — root-cause analysis: crashes, OOMKills, network, ArgoCD sync, pipeline failures
+- `devops-ci` — GitLab CI/CD pipelines and shared templates
+- `devops-helm` — Helm charts (`Chart.yaml`, `templates/`, `values.yaml`)
+- `devops-k8s` — Kubernetes manifests, Kustomize overlays, ArgoCD ApplicationSets
 
 ### domain: code
 
@@ -215,7 +219,7 @@ A dev-loop harness meant to be installed into other projects (see the install co
 
 **Agents:** `code-planner`, `code-skeptic`, `code-reviewer`, `code-debugger` — orchestrator-side TERSE subagents, spawned only by the skills above, never invoked directly. `backend`, `frontend`, `devops` — executing agents `/code-build` routes `affected_files` to by scope (per the `## Исполнители для /code-build` table that `/code-init` writes into the target project's `CLAUDE.md`); they write code/config, not plans. All seven carry a `## Code navigation` block: `ast-index` first when `test -f "$(ast-index db-path)"` succeeds (index exists; `ast-index stats` exits 0 even without one), Grep otherwise — a soft dependency, no `requires_bin` gate; the harness ships no ast-index hooks (the plugin brings its own). (A `mobile` exec agent doesn't exist yet — add it the same way if a target project needs it.)
 
-**Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit). `prettier-format.sh` — PostToolUse hook (`Edit|Write|MultiEdit|Bash`); runs prettier only once the test-gate condition is met (test command already ran, or project has none); no-op without a prettier config. Both source `test-gate-lib.sh`, the single definition of that condition. (`memory-bank-load.sh` lives in `core`.) Hooks are copied by the installer, then registered in the project's `.claude/settings.json` by `/code-init` via `skills/code-init/scripts/register-hooks.sh` — each hook declares its own event/matcher in a `# register: <Event> [<matcher>]` header line, so a new hook needs no script change.
+**Hooks:** `test-gate.sh` — Stop hook; blocks declaring a task done if code files were edited but no test command ran this session (fail-open, capped at 2 blocks per commit). `prettier-format.sh` — PostToolUse hook (`Edit|Write|MultiEdit|Bash`); runs prettier only once the test-gate condition is met (test command already ran, or project has none); no-op without a prettier config. Both source `test-gate-lib.sh`, the single definition of that condition. (`memory-bank-load.sh` lives in `core`.) Hooks are copied by the installer, then registered in the project's `.claude/settings.json` by `/code-init` via `skills/code-init/scripts/register-hooks.sh` (the `add` dialog can also register explicitly selected hooks: default none, `-y` never) — each hook declares its own event/matcher in a `# register: <Event> [<matcher>]` header line, so a new hook needs no script change. On codex/cursor use `as-skill hooks enable`; adapters are doc-derived, unverified.
 
 ### domain: core
 

@@ -1,0 +1,179 @@
+### step 1: list -p <P> --harness-root <H>
+== stdout ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+skills:
+  alpha-one                      (alpha)
+  alpha-two                      (alpha)
+  beta-one                       (beta)
+  gated-one                      (gated)
+== stderr ==
+== result ==
+ok
+== combined ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+skills:
+  alpha-one                      (alpha)
+  alpha-two                      (alpha)
+  beta-one                       (beta)
+  gated-one                      (gated)
+
+### step 2: list domains -p <P> --harness-root <H>
+== stdout ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+== stderr ==
+== result ==
+ok
+== combined ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+
+### step 3: list skills -p <P> --harness-root <H>
+== stdout ==
+skills:
+  alpha-one                      (alpha)
+  alpha-two                      (alpha)
+  beta-one                       (beta)
+  gated-one                      (gated)
+== stderr ==
+== result ==
+ok
+== combined ==
+skills:
+  alpha-one                      (alpha)
+  alpha-two                      (alpha)
+  beta-one                       (beta)
+  gated-one                      (gated)
+
+### step 4: list platforms -p <P> --harness-root <H>
+== stdout ==
+PLATFORM  KIND    LOCATION                           MODE         VERIFIED
+claude    skills  .claude/skills                     link         verified 2026-10-27
+claude    agents  .claude/agents                     link         verified 2026-10-27
+claude    rules   .claude/rules                      link         verified 2026-10-27
+claude    hooks   .claude/hooks -> .claude/settings.json link         verified 2026-10-27
+codex     skills  .agents/skills                     link         unverified
+codex     agents  .codex/agents                      render       unverified
+codex     rules   .agents/rules + AGENTS.md          block        unverified
+codex     hooks   .codex/hooks -> .codex/hooks.json  link         unverified
+cursor    skills  .agents/skills                     link         unverified
+cursor    agents  .cursor/agents                     render       unverified
+cursor    rules   .cursor/rules                      render       unverified
+cursor    hooks   .cursor/hooks -> .cursor/hooks.json link         unverified
+opencode  skills  .agents/skills                     link         unverified
+opencode  agents  .opencode/agents                   render       unverified
+opencode  rules   .agents/rules + AGENTS.md          block        unverified
+opencode  hooks   -                                  unsupported  -
+== stderr ==
+== result ==
+ok
+== combined ==
+PLATFORM  KIND    LOCATION                           MODE         VERIFIED
+claude    skills  .claude/skills                     link         verified 2026-10-27
+claude    agents  .claude/agents                     link         verified 2026-10-27
+claude    rules   .claude/rules                      link         verified 2026-10-27
+claude    hooks   .claude/hooks -> .claude/settings.json link         verified 2026-10-27
+codex     skills  .agents/skills                     link         unverified
+codex     agents  .codex/agents                      render       unverified
+codex     rules   .agents/rules + AGENTS.md          block        unverified
+codex     hooks   .codex/hooks -> .codex/hooks.json  link         unverified
+cursor    skills  .agents/skills                     link         unverified
+cursor    agents  .cursor/agents                     render       unverified
+cursor    rules   .cursor/rules                      render       unverified
+cursor    hooks   .cursor/hooks -> .cursor/hooks.json link         unverified
+opencode  skills  .agents/skills                     link         unverified
+opencode  agents  .opencode/agents                   render       unverified
+opencode  rules   .agents/rules + AGENTS.md          block        unverified
+opencode  hooks   -                                  unsupported  -
+
+### step 5: add alpha-one beta -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (1 file)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: default (claude)
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+installed     alpha    skill   -> <P>/.claude/skills/alpha-one (1 file)
+done -> <P>/.claude
+
+### step 6: list -p <P> --harness-root <H>
+== stdout ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain installed
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+skills:
+  alpha-one                      (alpha) installed
+  alpha-two                      (alpha)
+  beta-one                       (beta) installed
+  gated-one                      (gated)
+== stderr ==
+== result ==
+ok
+== combined ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain installed
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+skills:
+  alpha-one                      (alpha) installed
+  alpha-two                      (alpha)
+  beta-one                       (beta) installed
+  gated-one                      (gated)
+
+### step 7: list domains -p <P> --harness-root <H>
+== stdout ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain installed
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+== stderr ==
+== result ==
+ok
+== combined ==
+domains:
+  alpha      [available]              alpha domain
+  beta       [available]              beta domain installed
+  gated      [blocked — needs $GOLDEN_GATE_VAR] gated domain
+
+### step 8: list skills -p <P> --harness-root <H>
+== stdout ==
+skills:
+  alpha-one                      (alpha) installed
+  alpha-two                      (alpha)
+  beta-one                       (beta) installed
+  gated-one                      (gated)
+== stderr ==
+== result ==
+ok
+== combined ==
+skills:
+  alpha-one                      (alpha) installed
+  alpha-two                      (alpha)
+  beta-one                       (beta) installed
+  gated-one                      (gated)
+
+### step 9: list bogus -p <P> --harness-root <H>
+== stdout ==
+== stderr ==
+== result ==
+unknown list target "bogus" (want domains|skills|platforms)
+== combined ==
+

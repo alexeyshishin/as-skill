@@ -1,0 +1,127 @@
+{
+  "entries": [
+    {
+      "domain": "code",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/skills",
+      "source": "/tmp/harness/domains/code/skills",
+      "sha256": "d472bc3caed2083b9600a8164d705e55aaa1f9a2b41fd5817a504d8f0f1ce786",
+      "items": [
+        "code-build",
+        "code-debug",
+        "code-init",
+        "code-plan",
+        "code-review"
+      ],
+      "installed_at": "2026-10-30T14:10:10.664313+01:00"
+    },
+    {
+      "domain": "code",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/agents",
+      "source": "/tmp/harness/domains/code/agents",
+      "sha256": "011cab291985256f9aa579a932203084cdb259ae96f1a8fe942464a9f452a05f",
+      "items": [
+        "backend.md",
+        "code-debugger.md",
+        "code-planner.md",
+        "code-reviewer.md",
+        "code-skeptic.md",
+        "devops.md",
+        "frontend.md"
+      ],
+      "installed_at": "2026-10-30T14:10:10.665341+01:00"
+    },
+    {
+      "domain": "code",
+      "kind": "hooks",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/hooks",
+      "source": "/tmp/harness/domains/code/hooks",
+      "sha256": "9dd48dcf9e7e1245c32fc04af5c41c27e93ad7d9a06595336aeacd9b765c1b58",
+      "items": [
+        "prettier-format.sh",
+        "test-gate-lib.sh",
+        "test-gate-record.sh",
+        "test-gate.sh"
+      ],
+      "installed_at": "2026-10-30T14:10:10.666139+01:00"
+    },
+    {
+      "domain": "git",
+      "kind": "rules",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/rules",
+      "source": "/tmp/harness/domains/git/rules",
+      "sha256": "cbd1e3fd6ae0e624af2da40f1f10930f74346e85f8a31d0cf40176dc81271388",
+      "items": [
+        "git-conventions.md"
+      ],
+      "installed_at": "2026-10-30T14:10:10.66659+01:00"
+    },
+    {
+      "domain": "git",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/skills",
+      "source": "/tmp/harness/domains/git/skills",
+      "sha256": "badf38527486b3da2efd41a8a7e09750ce47561f3f6222590bda5500fbc12af6",
+      "items": [
+        "git-conventional-commits",
+        "git-pr-description",
+        "git-release-tag"
+      ],
+      "installed_at": "2026-10-30T14:10:10.670148+01:00"
+    },
+    {
+      "domain": "git",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/agents",
+      "source": "/tmp/harness/domains/git/agents",
+      "sha256": "6de9fe574f72a79cb3489d7baa8a2f935fbcc10cedf7ae9bdb3c9b1b83a507de",
+      "items": [
+        "git-flow.md"
+      ],
+      "installed_at": "2026-10-30T14:10:10.670527+01:00"
+    },
+    {
+      "domain": "core",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/skills",
+      "source": "/tmp/harness/domains/core/skills",
+      "sha256": "bfef6978d590029749c70e1285aff124b3c21d49a31a9c237e41ffd96b129ef1",
+      "items": [
+        "advanced-search",
+        "caveman",
+        "memory-bank",
+        "memory-bank-defrag"
+      ],
+      "installed_at": "2026-10-30T14:10:10.673078+01:00"
+    },
+    {
+      "domain": "core",
+      "kind": "hooks",
+      "name": "",
+      "mode": "copy",
+      "path": "/tmp/proj/.claude/hooks",
+      "source": "/tmp/harness/domains/core/hooks",
+      "sha256": "4cc30021a08fd6ed973154595ed3708a5bd2ff51f0c0465ca59e1c0b1c15bc31",
+      "items": [
+        "memory-bank-load.sh",
+        "memory-bank-logger.sh"
+      ],
+      "installed_at": "2026-10-30T14:10:10.673626+01:00"
+    }
+  ]
+}

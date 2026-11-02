@@ -1,0 +1,102 @@
+### step 1: add alpha -y -p <P> --harness-root <H>
+== stdout ==
+platforms: detected from .claude
+== stderr ==
+== result ==
+<P>/.claude/agents/alpha-agent.md exists, not tracked by as-skill, use --force
+<P>/.claude/skills/alpha-one exists, not tracked by as-skill, use --force
+hint: remove or move the untracked paths, or run the interactive dialog to overwrite them (nothing written)
+== combined ==
+platforms: detected from .claude
+
+### step 2: add alpha -y --copy -p <P> --harness-root <H>
+== stdout ==
+platforms: detected from .claude
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: detected from .claude
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (4 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+
+### tree
+.claude/agents/alpha-agent.md
+.claude/agents/plain.md
+.claude/hooks/claude-only.sh
+.claude/hooks/gate.sh
+.claude/rules/alpha-rule.md
+.claude/skills/alpha-one/README.md
+.claude/skills/alpha-one/SKILL.md
+.claude/skills/alpha-two/README.md
+.claude/skills/alpha-two/SKILL.md
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "alpha",
+      "kind": "rules",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/rules",
+      "source": "<H>/domains/alpha/rules",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-rule.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/skills",
+      "source": "<H>/domains/alpha/skills",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-one",
+        "alpha-two"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "agents",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/agents",
+      "source": "<H>/domains/alpha/agents",
+      "sha256": "<SHA256>",
+      "items": [
+        "alpha-agent.md",
+        "plain.md"
+      ],
+      "installed_at": "<TIME>"
+    },
+    {
+      "domain": "alpha",
+      "kind": "hooks",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/hooks",
+      "source": "<H>/domains/alpha/hooks",
+      "sha256": "<SHA256>",
+      "items": [
+        "claude-only.sh",
+        "gate.sh"
+      ],
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+

@@ -1,0 +1,63 @@
+### step 1: add alpha -y -p <P> --harness-root <H>
+== stdout ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: default (claude)
+installed     alpha    rules   -> <P>/.claude/rules (1 file)
+installed     alpha    skills  -> <P>/.claude/skills (2 files)
+installed     alpha    agents  -> <P>/.claude/agents (2 files)
+installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
+done -> <P>/.claude
+
+### step 2: add beta -y --copy -p <P> --harness-root <H>
+== stdout ==
+platforms: detected from .claude
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: detected from .claude
+installed     beta     skills  -> <P>/.claude/skills (1 file)
+installed     beta     agents  -> <P>/.claude/agents (1 file)
+done -> <P>/.claude
+
+### step 3: doctor -p <P> --harness-root <H>
+== stdout ==
+DOMAIN     KIND     NAME                     MODE   HEALTH      PLATFORMS              PATH
+alpha      agents   alpha-agent.md           link   OK          claude                 <P>/.claude/agents/alpha-agent.md
+alpha      agents   plain.md                 link   OK          claude                 <P>/.claude/agents/plain.md
+alpha      hooks    claude-only.sh           link   OK          claude                 <P>/.claude/hooks/claude-only.sh
+alpha      hooks    gate.sh                  link   OK          claude                 <P>/.claude/hooks/gate.sh
+alpha      rules    alpha-rule.md            link   OK          claude                 <P>/.claude/rules/alpha-rule.md
+alpha      skills   alpha-one                link   OK          claude                 <P>/.claude/skills/alpha-one
+alpha      skills   alpha-two                link   OK          claude                 <P>/.claude/skills/alpha-two
+beta       agents                            copy   OK          claude                 <P>/.claude/agents
+beta       skills                            copy   OK          claude                 <P>/.claude/skills
+doctor: 18 checks, 18/18 ok, 0 failed
+== stderr ==
+== result ==
+ok
+== combined ==
+DOMAIN     KIND     NAME                     MODE   HEALTH      PLATFORMS              PATH
+alpha      agents   alpha-agent.md           link   OK          claude                 <P>/.claude/agents/alpha-agent.md
+alpha      agents   plain.md                 link   OK          claude                 <P>/.claude/agents/plain.md
+alpha      hooks    claude-only.sh           link   OK          claude                 <P>/.claude/hooks/claude-only.sh
+alpha      hooks    gate.sh                  link   OK          claude                 <P>/.claude/hooks/gate.sh
+alpha      rules    alpha-rule.md            link   OK          claude                 <P>/.claude/rules/alpha-rule.md
+alpha      skills   alpha-one                link   OK          claude                 <P>/.claude/skills/alpha-one
+alpha      skills   alpha-two                link   OK          claude                 <P>/.claude/skills/alpha-two
+beta       agents                            copy   OK          claude                 <P>/.claude/agents
+beta       skills                            copy   OK          claude                 <P>/.claude/skills
+doctor: 18 checks, 18/18 ok, 0 failed
+

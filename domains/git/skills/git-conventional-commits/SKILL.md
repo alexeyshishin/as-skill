@@ -10,9 +10,9 @@ description: >
 
 # git-conventional-commits — Conventional Commit message for the current diff
 
-Goal: instead of the user writing the commit message themselves, you analyze the diff and build a message following the convention in `~/.claude/rules/git-conventions.md`.
+Goal: instead of the user writing the commit message themselves, you analyze the diff and build a message following the convention in `references/rules/git-conventions.md`.
 
-Before starting, read `~/.claude/rules/git-conventions.md` — it has the full list of allowed `type` values, the scope format, and the principles.
+Before starting, read `references/rules/git-conventions.md` — it has the full list of allowed `type` values, the scope format, and the principles.
 
 Two assets ship with this skill:
 - [`references/commit-examples.md`](references/commit-examples.md) — the author's real commit corpus: observed type/scope distribution, clean examples per type, and the anti-patterns that actually recur in this history, ranked. Read it when choosing the type/scope or when a subject feels generic.
@@ -66,7 +66,7 @@ Good: `feat(auth): add POST /login endpoint`
 
 ## Step 5. No body, no footer
 
-The message is the subject line and nothing else. No body, no description, no bullet list, no `BREAKING CHANGE:` / `Refs:` footer, no trailers (see "Subject only" in `~/.claude/rules/git-conventions.md`). 84% of this author's commits are already one line (123 of 147), and the ones with a body are the ones that read worst.
+The message is the subject line and nothing else. No body, no description, no bullet list, no `BREAKING CHANGE:` / `Refs:` footer, no trailers (see "Subject only" in `references/rules/git-conventions.md`). 84% of this author's commits are already one line (123 of 147), and the ones with a body are the ones that read worst.
 
 Format:
 ```

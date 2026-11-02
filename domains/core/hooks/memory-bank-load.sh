@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # register: SessionStart startup|clear|compact
+# platforms: claude,codex,cursor
 set -Eeuo pipefail
 trap 'exit 0' ERR
 
@@ -37,5 +38,10 @@ $SHOWN"
   fi
 fi
 
-jq -nc --arg c "$MSG" '{hookSpecificOutput:{hookEventName:"SessionStart", additionalContext:$c}}'
+PLATFORM_DIR="$(basename "$(cd "$(dirname "$0")/.." && pwd)")"
+if [ "$PLATFORM_DIR" = ".cursor" ]; then
+  jq -nc --arg c "$MSG" '{additional_context:$c}'
+else
+  jq -nc --arg c "$MSG" '{hookSpecificOutput:{hookEventName:"SessionStart", additionalContext:$c}}'
+fi
 exit 0

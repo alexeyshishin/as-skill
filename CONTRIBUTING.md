@@ -8,10 +8,10 @@
 
 ```bash
 rm -rf .claude
-./as-skill install domains code git core --project .
+./as-skill add code git core -p . -y
 ```
 
-`as-skill install ... --copy` вместо symlink делает независимый снэпшот — этим режимом ставят, например, домен `code` в чужой проект (`as-skill install domains code core --project <path> --copy`). Подробности обоих режимов — в `CLAUDE.md` и `tools/README.md`.
+`as-skill add ... --copy` вместо symlink делает независимый снэпшот — этим режимом ставят, например, домен `code` в чужой проект (`as-skill add code core -p <path> --copy -y`). Подробности обоих режимов — в `CLAUDE.md` и `tools/README.md`.
 
 ## SKILL.md и README.md — разные документы
 
@@ -28,14 +28,14 @@ rm -rf .claude
 3. `README.md` рядом.
 4. Если скиллу нужен исполняемый помощник или справочный материал — `scripts/` и `references/` рядом с `SKILL.md` (так устроены `git-conventional-commits`, `git-release-tag`, `content-humanizer`). `SKILL.md` ссылается на них относительным путём и не дублирует их содержимое.
 5. Обнови счётчик скиллов/агентов/правил/хуков домена в таблице «Домены» корневого `README.md`.
-6. `go build -o as-skill ./tools && ./as-skill check && go test ./...` — собрать, прогнать self-check манифестов и `SKILL.md`, прогнать тесты `tools/`. Если правишь домен, установленный в корневой `.claude/` (сейчас это `code`, `git` и `core`), и хочешь увидеть новый скилл там же — `as-skill install` симлинкует записи поштучно, так что новый файл подхватится только после повторного `./as-skill install domains code git core --project .`.
+6. `go build -o as-skill ./tools && ./as-skill check && go test ./...` — собрать, прогнать self-check манифестов и `SKILL.md`, прогнать тесты `tools/`. Если правишь домен, установленный в корневой `.claude/` (сейчас это `code`, `git` и `core`), и хочешь увидеть новый скилл там же — `as-skill add` симлинкует записи поштучно, так что новый файл подхватится только после повторного `./as-skill add code git core -p . -y`.
 
 `description` — единственное, по чему модель решает, звать скилл или нет. Пиши туда триггерные формулировки живым языком («написать постмортем», «разобрать инцидент»), а не абстрактное описание возможностей. Если два скилла могут сработать на одну фразу — разведи их описания явно, взаимными отсылками.
 
 ## Добавление хука
 
 1. `domains/<домен>/hooks/<имя>.sh`, исполняемый (`chmod +x`). Хуки сейчас есть только у `code` и `core`.
-2. В шапке — строка `# register: <Event> [<matcher>]` (например `# register: PostToolUse Edit|Write|MultiEdit|Bash`). По ней `/code-init` через `code-init/scripts/register-hooks.sh` прописывает хук в `.claude/settings.json` проекта — сам скрипт для нового хука не правится.
+2. В шапке — строка `# register: <Event> [<matcher>]` (например `# register: PostToolUse Edit|Write|MultiEdit|Bash`). Её читает и шаг `hooks` диалога `as-skill add`. По ней `/code-init` через `code-init/scripts/register-hooks.sh` прописывает хук в `.claude/settings.json` проекта — сам скрипт для нового хука не правится.
 3. Fail-open: `set -Eeuo pipefail` + `trap 'exit 0' ERR`, нет нужного бинаря (`jq`, `claude`, …) или входных данных — `exit 0`.
 4. Общая для нескольких хуков логика — в отдельный `*-lib.sh`, который хуки `source`-ят (пример — `test-gate-lib.sh`); у библиотеки нет строки `# register:`.
 5. Опиши хук в `domains/<домен>/hooks/README.md` и добавь строку в таблицу «Хуки» корневого `README.md`. Если хук ходит в сеть или запускает что-то в фоне — раздел в `SECURITY.md`.
@@ -49,7 +49,7 @@ rm -rf .claude
 
 ## Требования домена
 
-`requires_env` — переменная окружения. Не задана — `as-skill install all` пропускает домен целиком, с предупреждением; явный `as-skill install domain|domains|skill` по этому домену вместо этого падает с ошибкой.
+`requires_env` — переменная окружения. Не задана — `as-skill add all` пропускает домен целиком, с предупреждением; явный `as-skill add <имя>` по этому домену вместо этого падает с ошибкой.
 
 `requires_bin` — та же логика поверх `exec.LookPath`, для внешнего CLI. Нужна, когда часть домена работает поверх внешнего инструмента, а часть — нет: без неё отсутствие одного бинаря уносило бы весь домен.
 

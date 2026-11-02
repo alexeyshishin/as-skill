@@ -14,8 +14,8 @@ description: >
 Goal: give the reader a **reproducible** path from their starting state to the goal. Not theory, not an essay — a step-by-step set of instructions where every step is verifiable.
 
 Before starting, read:
-- `~/.claude/rules/content-voice.md`
-- `~/.claude/rules/content-formatting.md` — the tutorials section
+- `references/rules/content-voice.md`
+- `references/rules/content-formatting.md` — the tutorials section
 
 ## Step 1. Define the scope
 

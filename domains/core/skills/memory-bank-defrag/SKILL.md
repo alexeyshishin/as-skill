@@ -9,7 +9,7 @@ description: >
   then shows a diff for review. Use when the user says "defrag the memory bank",
   "привести memory bank в порядок", "дефрагментация памяти", "актуализируй
   .assistant", "причеши базу знаний", or runs /memory-bank-defrag.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 argument-hint: "[baseline-ref]  (optional: e.g. HEAD~20 or a commit SHA to override auto-detected baseline)"
 ---
 
@@ -23,7 +23,7 @@ memory bank is three things:
    stakeholders, glossary). Structure varies per project; operate on whatever
    files exist, don't assume a fixed layout.
 2. **Auto-memory** — the cross-session memory at
-   `~/.claude/projects/<slugified-cwd>/memory/` (an `MEMORY.md` index plus one
+   `~/.claude/projects/<slugified-cwd>/memory/` (Claude Code only — skip on other hosts; an `MEMORY.md` index plus one
    file per fact). Local only — **absent on cloud/headless runs**; skip silently
    if the directory doesn't exist.
 3. **Repo current-state docs** — files that assert *what is true now* and drift

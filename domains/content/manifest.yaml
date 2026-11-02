@@ -1,8 +1,8 @@
 # Content / writing domain — skills for Telegram posts, articles, technical tutorials.
-# Requires no env. Global in ~/.claude/.
+# Requires no env. Installed into the target project's platform dirs.
 
 name: content
-description: Content — Telegram posts, articles, technical tutorials.
+description: Telegram posts, articles, technical tutorials.
 
 requires_env: []
 

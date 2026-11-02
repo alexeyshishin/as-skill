@@ -1,0 +1,220 @@
+package lint
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func joinFindings(fs []Finding) string {
+	var out []string
+	for _, f := range fs {
+		out = append(out, f.String())
+	}
+	return strings.Join(out, "\n")
+}
+
+func TestLintHarness(t *testing.T) {
+	good := "---\nname: s1\ndescription: d\n---\n"
+	agd := "---\nname: ag\ndescription: d\n---\n"
+	tests := []struct {
+		name  string
+		files map[string]string
+		want  []string
+	}{
+		{"clean", map[string]string{
+			"d/skills/s1/SKILL.md":      good + "run scripts/go.sh and .claude/agents/ag.md <!-- claude-path-ok -->",
+			"d/skills/s1/scripts/go.sh": "",
+			"d/agents/ag.md":            agd,
+			"d/hooks/h.sh":              "#!/bin/sh\n# register: Stop\n",
+			"d/hooks/test-gate-lib.sh":  "",
+		}, nil},
+		{"name mismatch and empty description", map[string]string{
+			"d/skills/s1/SKILL.md": "---\nname: other\ndescription:\n---\n",
+		}, []string{`does not match directory name "s1"`, `missing "description:"`}},
+		{"missing name", map[string]string{
+			"d/skills/s1/SKILL.md": "---\ndescription: d\n---\n",
+		}, []string{`missing "name:"`}},
+		{"missing script", map[string]string{
+			"d/skills/s1/SKILL.md": good + "scripts/nope.py scripts/nope.py",
+		}, []string{"references scripts/nope.py"}},
+		{"missing agent", map[string]string{
+			"d/skills/s1/SKILL.md": good + ".claude/agents/ghost.md <!-- claude-path-ok -->",
+		}, []string{"no domains/*/agents/ghost.md"}},
+		{"agent in other domain ok", map[string]string{
+			"d/skills/s1/SKILL.md": good + ".claude/agents/ag.md <!-- claude-path-ok -->",
+			"e/agents/ag.md":       agd,
+		}, nil},
+		{"agent description with colon", map[string]string{
+			"d/agents/ag.md": "---\nname: ag\ndescription: Scope: a/**\n---\n",
+		}, []string{`"description" is an unquoted value containing ": "`}},
+		{"skill description with colon", map[string]string{
+			"d/skills/s1/SKILL.md": "---\nname: s1\ndescription: Use when: x\n---\n",
+		}, []string{`"description" is an unquoted value containing ": "`}},
+		{"folded and quoted values ok", map[string]string{
+			"d/agents/ag.md": "---\nname: ag\ndescription: >\n  Scope: a/**\ntools: \"x: y\"\n---\n",
+		}, nil},
+		{"agent without frontmatter", map[string]string{
+			"d/agents/ag.md": "# no fm\n",
+		}, []string{"missing frontmatter"}},
+		{"agent name differs from filename", map[string]string{
+			"d/agents/ag.md": "---\nname: other\ndescription: d\n---\n",
+		}, []string{`does not match filename "ag"`}},
+		{"claude-only path in skill", map[string]string{
+			"d/skills/s1/SKILL.md": good + "use subagent_type here\n",
+		}, []string{`Claude-only reference "subagent_type"`}},
+		{"claude-only path in agent", map[string]string{
+			"d/agents/ag.md": agd + "read ~/.claude/rules/x.md\n",
+		}, []string{"Claude-only reference"}},
+		{"claude-path marker ok", map[string]string{
+			"d/skills/s1/SKILL.md":  good + "dirs .claude/agents <!-- claude-path-ok -->\nsee .claude/settings.json and .claude/skills-lock.json\n",
+			"d/skills/s1/README.md": ".claude/rules\n",
+			"d/agents/ag.md":        agd,
+		}, nil},
+		{"bare agent suffix in agent", map[string]string{
+			"d/agents/d-ag.md": "---\nname: d-ag\ndescription: d\n---\nuse `ag`\n",
+		}, []string{"bare agent name `ag`"}},
+		{"bare suffix equal to other stem ok", map[string]string{
+			"d/agents/d-ag.md": "---\nname: d-ag\ndescription: d\n---\nuse `ag`\n",
+			"d/agents/ag.md":   agd,
+		}, nil},
+		{"hook without register", map[string]string{
+			"d/hooks/h.sh": "#!/bin/sh\n",
+		}, []string{`missing "# register: <Event>"`}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			root := t.TempDir()
+			for rel, content := range tc.files {
+				p := filepath.Join(root, "domains", rel)
+				if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			got := Harness(root).Findings
+			if len(got) != len(tc.want) {
+				t.Fatalf("got %d findings %q, want %d", len(got), got, len(tc.want))
+			}
+			for _, w := range tc.want {
+				found := false
+				for _, g := range got {
+					found = found || strings.Contains(g.String(), w)
+				}
+				if !found {
+					t.Errorf("no finding containing %q in %q", w, got)
+				}
+			}
+		})
+	}
+}
+
+func TestLintReferenceSymlinks(t *testing.T) {
+	good := "---\nname: s1\ndescription: d\n---\n"
+	root := t.TempDir()
+	dom := filepath.Join(root, "domains", "d")
+	if err := os.MkdirAll(filepath.Join(dom, "skills", "s1", "references"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	os.MkdirAll(filepath.Join(dom, "shared"), 0o755)
+	os.WriteFile(filepath.Join(dom, "skills", "s1", "SKILL.md"), []byte(good), 0o644)
+	os.WriteFile(filepath.Join(dom, "shared", "ok.md"), []byte("x"), 0o644)
+	os.WriteFile(filepath.Join(root, "outside.md"), []byte("x"), 0o644)
+	refs := filepath.Join(dom, "skills", "s1", "references")
+	os.Symlink("../../../shared/ok.md", filepath.Join(refs, "ok.md"))
+	os.Symlink("../../../shared/nope.md", filepath.Join(refs, "dangling.md"))
+	os.Symlink("../../../../../outside.md", filepath.Join(refs, "escape.md"))
+	got := Harness(root).Findings
+	if len(got) != 2 {
+		t.Fatalf("got %q", got)
+	}
+	joined := joinFindings(got)
+	if !strings.Contains(joined, "dangling.md: dangling") || !strings.Contains(joined, "escape.md: symlink escapes") {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestLintSkillNameRules(t *testing.T) {
+	root := t.TempDir()
+	skill := func(domain, name string) {
+		d := filepath.Join(root, "domains", domain, "skills", name)
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(d, "SKILL.md"), []byte("---\nname: "+name+"\ndescription: d\n---\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	skill("a", "same")
+	skill("b", "same")
+	skill("a", "b")
+	skill("a", "all")
+	skill("a", "fine")
+	joined := joinFindings(Harness(root).Findings)
+	for _, want := range []string{`skill dir name "same" duplicates`, `collides with a domain name`, `"all" is reserved`} {
+		if !strings.Contains(joined, want) {
+			t.Errorf("missing finding %q in:\n%s", want, joined)
+		}
+	}
+	if strings.Contains(joined, `"fine"`) {
+		t.Errorf("fine flagged:\n%s", joined)
+	}
+}
+
+func TestCheckSkillSpec(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "my-skill")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(dir, "SKILL.md")
+	cases := map[string]struct {
+		src  string
+		want string
+	}{
+		"ok":        {"---\nname: my-skill\ndescription: d\nargument-hint: \"[x]\"\nallowed-tools: Read, Write\nmetadata:\n  k: v\n---\n", ""},
+		"extra key": {"---\nname: my-skill\ndescription: d\nmodel: x\n---\n", "line 4"},
+		"list tool": {"---\nname: my-skill\ndescription: d\nallowed-tools:\n  - Read\n---\n", "allowed-tools must be a string"},
+		"bad name":  {"---\nname: My_Skill\ndescription: d\n---\n", "does not match directory"},
+		"long desc": {"---\nname: my-skill\ndescription: " + strings.Repeat("a", 1025) + "\n---\n", "max 1024"},
+	}
+	for name, c := range cases {
+		if err := os.WriteFile(p, []byte(c.src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		got := strings.Join(checkSkillSpec(p), "\n")
+		if c.want == "" && got != "" || c.want != "" && !strings.Contains(got, c.want) {
+			t.Errorf("%s: got %q, want %q", name, got, c.want)
+		}
+	}
+}
+
+func TestCheckReportsNameMismatchOnce(t *testing.T) {
+	root := t.TempDir()
+	dom := filepath.Join(root, "domains", "d")
+	skill := filepath.Join(dom, "skills", "s1")
+	if err := os.MkdirAll(skill, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dom, "manifest.yaml"), []byte("name: d\ndescription: d\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(skill, "SKILL.md"), []byte("---\nname: other\ndescription: d\n---\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Check(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, f := range res.Findings {
+		if strings.Contains(f.Msg, "does not match directory name") {
+			n++
+		}
+	}
+	if n != 1 || len(res.Findings) != 1 {
+		t.Fatalf("got %d mismatch findings, %d total: %q", n, len(res.Findings), joinFindings(res.Findings))
+	}
+}

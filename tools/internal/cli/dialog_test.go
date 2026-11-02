@@ -1,0 +1,350 @@
+package cli
+
+import (
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+
+	"claude-harness/tools/internal/lockfile"
+	"claude-harness/tools/internal/prompt"
+)
+
+func exists(p string) bool { _, err := os.Lstat(p); return err == nil }
+
+func fullAnswers(project string) map[string]any {
+	return map[string]any{
+		"project":   project,
+		"domains":   []string{"git", "core"},
+		"customize": false,
+		"platforms": []string{"claude"},
+		"mode":      "copy",
+		"hooks":     []string{},
+		"confirm":   true,
+	}
+}
+
+func TestDialogAddFullOrderAndMultiDomain(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	fp := newFake(t, fullAnswers(p))
+	d := enableDialog(t, fp)
+	out, err := runD(t, d, "add", "--harness-root", h)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm")
+	for _, s := range []string{".claude/skills/git-conventional-commits", ".claude/skills/memory-bank", ".claude/skills-lock.json"} {
+		if !exists(filepath.Join(p, s)) {
+			t.Errorf("missing %s (out: %s)", s, out)
+		}
+	}
+	for _, want := range []string{"harness:", "project:   " + p, "domains:   git, core", "platforms: .claude (default)", "mode:      copy"} {
+		if !strings.Contains(fp.summary, want) {
+			t.Errorf("summary lacks %q:\n%s", want, fp.summary)
+		}
+	}
+}
+
+func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
+	h := realHarness(t)
+	cases := []struct {
+		name  string
+		extra func(p string) []string
+		skip  string
+	}{
+		{"names", func(p string) []string { return []string{"git"} }, "domains"},
+		{"agent", func(p string) []string { return []string{"-a", "claude"} }, "platforms"},
+		{"project", func(p string) []string { return []string{"-p", p} }, "project"},
+		{"copy", func(p string) []string { return []string{"--copy"} }, "mode"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			p := t.TempDir()
+			ans := fullAnswers(p)
+			var want []string
+			for _, id := range []string{"project", "domains", "customize", "platforms", "mode", "hooks", "confirm"} {
+				if id != c.skip && !(id == "hooks" && c.name == "names") {
+					want = append(want, id)
+				}
+			}
+			fp := newFake(t, ans)
+			d := enableDialog(t, fp)
+			args := append([]string{"add", "--harness-root", h}, c.extra(p)...)
+			if _, err := runD(t, d, args...); err != nil {
+				t.Fatal(err)
+			}
+			fp.wantAsked(want...)
+			if !exists(filepath.Join(p, ".claude", "skills-lock.json")) {
+				t.Fatal("nothing installed")
+			}
+		})
+	}
+}
+
+func TestDialogYesNeverConstructsPrompter(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	d := Deps{
+		Interactive: func() bool { return true },
+		Prompter:    func() prompt.Prompter { t.Fatal("prompter constructed under -y"); return nil },
+	}
+	if _, err := runD(t, d, "add", "git", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runD(t, d, "remove", "git", "-y", "-p", p); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runD(t, d, "add", "-y", "-p", p, "--harness-root", h); err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+		t.Fatalf("want gate error mentioning terminal, got %v", err)
+	}
+}
+
+func TestDialogDeclineWritesNothing(t *testing.T) {
+	h := realHarness(t)
+	for name, conf := range map[string]any{"no": false, "ctrl-c": prompt.ErrAborted} {
+		t.Run(name, func(t *testing.T) {
+			p := t.TempDir()
+			ans := fullAnswers(p)
+			ans["confirm"] = conf
+			fp := newFake(t, ans)
+			d := enableDialog(t, fp)
+			_, err := runD(t, d, "add", "--harness-root", h)
+			if err == nil || err.Error() != "aborted" {
+				t.Fatalf("want aborted, got %v", err)
+			}
+			ents, _ := os.ReadDir(p)
+			if len(ents) != 0 {
+				t.Fatalf("project not empty: %v", ents)
+			}
+		})
+	}
+}
+
+func TestDialogCtrlCMidwayWritesNothing(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["platforms"] = prompt.ErrAborted
+	d := enableDialog(t, newFake(t, ans))
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+		t.Fatalf("got %v", err)
+	}
+	if ents, _ := os.ReadDir(p); len(ents) != 0 {
+		t.Fatalf("project not empty: %v", ents)
+	}
+}
+
+func TestDialogGatedDomainRejectedWhileEnvUnset(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	t.Setenv("OBSIDIAN_VAULT", "")
+	ans := fullAnswers(p)
+	ans["confirm"] = false
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
+	if l := fp.labelOf("domains", "obsidian"); !strings.Contains(l, "needs $OBSIDIAN_VAULT") {
+		t.Fatalf("label %q", l)
+	}
+	v := fp.validate["domains"]
+	if v([]string{"git", "obsidian"}) == nil {
+		t.Error("gated selection accepted while env unset")
+	}
+	if v(nil) == nil {
+		t.Error("empty selection accepted")
+	}
+	if err := v([]string{"git"}); err != nil {
+		t.Errorf("git rejected: %v", err)
+	}
+	t.Setenv("OBSIDIAN_VAULT", t.TempDir())
+	if err := v([]string{"obsidian"}); err != nil {
+		t.Errorf("rejected with env set: %v", err)
+	}
+}
+
+func TestDialogInstalledLabel(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if _, err := run(t, "add", "git", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	ans := fullAnswers(p)
+	ans["confirm"] = false
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
+	if !strings.Contains(fp.labelOf("domains", "git"), "[installed]") {
+		t.Errorf("git label %q", fp.labelOf("domains", "git"))
+	}
+	if strings.Contains(fp.labelOf("domains", "core"), "[installed]") {
+		t.Errorf("core label %q", fp.labelOf("domains", "core"))
+	}
+}
+
+func TestDialogPlatformPreselectionIsDetected(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if err := os.Mkdir(filepath.Join(p, ".codex"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	ans := fullAnswers(p)
+	ans["confirm"] = false
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
+	if got := fp.selected("platforms"); !reflect.DeepEqual(got, []string{"codex"}) {
+		t.Fatalf("preselected %v", got)
+	}
+	if n := len(fp.options["platforms"]); n < 4 {
+		t.Fatalf("platform options %d", n)
+	}
+}
+
+func TestDialogRemoveOptionsFromLockfile(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if _, err := run(t, "add", "git", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := run(t, "add", "caveman", "-y", "-p", p, "--copy", "-a", "claude", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	fp := newFake(t, map[string]any{"remove": []string{"git", "caveman"}, "confirm": true})
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("remove", "confirm")
+	var vals []string
+	for _, o := range fp.options["remove"] {
+		vals = append(vals, o.Value)
+	}
+	if want := []string{"git", "caveman"}; !reflect.DeepEqual(vals, want) {
+		t.Fatalf("options %v want %v", vals, want)
+	}
+	lock, _ := lockfile.Load(p)
+	for _, e := range lock.Entries {
+		if e.Domain == "git" || e.Name == "caveman" {
+			t.Errorf("row survived: %+v", e)
+		}
+	}
+	if exists(filepath.Join(p, ".claude", "skills", "git-conventional-commits")) {
+		t.Error("git skill still on disk")
+	}
+}
+
+func TestDialogRemovePlatformsAskedOnlyWhenMultiple(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if _, err := run(t, "add", "git", "-y", "-p", p, "--copy", "-a", "claude,codex", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	fp := newFake(t, map[string]any{"remove": []string{"git"}, "platforms": []string{"claude", "codex"}, "confirm": false})
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err == nil || err.Error() != "aborted" {
+		t.Fatalf("got %v", err)
+	}
+	fp.wantAsked("remove", "platforms", "confirm")
+	if got := fp.selected("platforms"); !reflect.DeepEqual(got, []string{"claude", "codex"}) {
+		t.Fatalf("preselected %v", got)
+	}
+	lock, _ := lockfile.Load(p)
+	if len(lock.Entries) == 0 {
+		t.Fatal("declined remove wiped the lockfile")
+	}
+}
+
+func TestNonInteractiveGateMentionsTerminal(t *testing.T) {
+	_, err := run(t, "add", "git")
+	if err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestDialogRemoveStandaloneSkillOption(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if _, err := run(t, "add", "caveman", "-y", "-p", p, "--copy", "-a", "claude", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	fp := newFake(t, map[string]any{"remove": []string{"caveman"}, "confirm": true})
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "remove", "-p", p); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("remove", "confirm")
+	if got := fp.options["remove"]; len(got) != 1 || got[0].Value != "caveman" || !strings.Contains(got[0].Label, "skill") {
+		t.Fatalf("options %+v", got)
+	}
+	if exists(filepath.Join(p, ".claude", "skills", "caveman")) {
+		t.Error("skill still on disk")
+	}
+}
+
+func TestDialogPlatformNoDetectedNoteInEmptyProject(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["confirm"] = false
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
+	for _, o := range fp.options["platforms"] {
+		if strings.Contains(o.Label, "detected") {
+			t.Errorf("label %q", o.Label)
+		}
+	}
+}
+
+func TestDialogBackReasksWithPreselection(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["platforms"] = seq{prompt.ErrBack, []string{"claude", "codex"}}
+	ans["customize"] = seq{false, prompt.ErrBack, false}
+	ans["domains"] = seq{[]string{"git"}, []string{"git"}}
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("project", "domains", "customize", "platforms", "customize", "domains", "customize", "platforms", "mode")
+	if got := fp.history["domains"]; !reflect.DeepEqual(got, [][]string{nil, {"git"}}) {
+		t.Fatalf("domains preselection %v", got)
+	}
+}
+
+func TestDialogBackOnFirstStepStays(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["project"] = seq{prompt.ErrBack, p}
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("project", "project", "domains", "customize", "platforms", "mode", "hooks")
+}
+
+func TestDialogBackSkipsPreAnsweredSteps(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["domains"] = seq{prompt.ErrBack, []string{"git"}}
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h, "-p", p, "--dry-run"); err != nil {
+		t.Fatal(err)
+	}
+	fp.wantAsked("domains", "domains", "customize", "platforms", "mode")
+}
+
+func TestDialogBackFromConfirmGoesToMode(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	ans := fullAnswers(p)
+	ans["domains"] = []string{"git"}
+	ans["mode"] = seq{"copy", "link"}
+	ans["confirm"] = seq{prompt.ErrBack, false}
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	if _, err := runD(t, d, "add", "--harness-root", h); err == nil || err.Error() != "aborted" {
+		t.Fatalf("got %v", err)
+	}
+	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "confirm", "mode", "confirm")
+	if got := fp.history["mode"]; len(got) != 2 || !reflect.DeepEqual(got[1], []string{"copy"}) {
+		t.Fatalf("mode preselection %v", got)
+	}
+	if ents, _ := os.ReadDir(p); len(ents) != 0 {
+		t.Fatalf("project not empty: %v", ents)
+	}
+}

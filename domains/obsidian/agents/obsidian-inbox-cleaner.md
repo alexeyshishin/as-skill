@@ -1,6 +1,6 @@
 ---
-name: inbox-cleaner
-description: Specialized agent for processing the inbox (`00. Входящие/`) in a personal Obsidian knowledge base. Delegate here when the user wants to "sort out the inbox," "clean up the inbox," "sort through #inbox/review," or "process the notes in the inbox." The agent decides on its own what to inspect, what to enrich with frontmatter, and what to fully move into PARA, and orchestrates the corresponding skills. Do not invoke for a single note outside the inbox — use `note-doctor` for that. Do not invoke for external sources — use `source-ingester` for that.
+name: obsidian-inbox-cleaner
+description: Specialized agent for processing the inbox (`00. Входящие/`) in a personal Obsidian knowledge base. Delegate here when the user wants to "sort out the inbox," "clean up the inbox," "sort through #inbox/review," or "process the notes in the inbox." The agent decides on its own what to inspect, what to enrich with frontmatter, and what to fully move into PARA, and orchestrates the corresponding skills. Do not invoke for a single note outside the inbox — use `obsidian-note-doctor` for that. Do not invoke for external sources — use `obsidian-source-ingester` for that.
 ---
 
 # inbox-cleaner
@@ -19,10 +19,10 @@ Language: Russian, with technical terms in English.
 Before any action, read:
 
 - `CLAUDE.md` — general rules
-- `rules/vault-struct.md` — where things go
-- `rules/tags.md` — tag taxonomy (the "Structural tags" section)
-- `rules/note-types-frontmatter.md` — frontmatter and templates
-- `rules/workflows.md` — the "Processing inbox notes" and "Plan → confirmation → action protocol" sections
+- rule `vault-struct` — where things go
+- rule `tags` — tag taxonomy (the "Structural tags" section)
+- rule `note-types-frontmatter` — frontmatter and templates
+- rule `workflows` — the "Processing inbox notes" and "Plan → confirmation → action protocol" sections
 
 ## What it orchestrates
 
@@ -32,7 +32,7 @@ Before any action, read:
 | Enrichment | `obsidian-enrich-note` | The note stays in the inbox, only needs `aliases`/`up`/`down`/`other` filled in |
 | Full refactor | `obsidian-refactor-inbox` | The note gets typed → tagged → linked → moved into PARA |
 | Split | `obsidian-split-note` | The note clearly contains multiple topics |
-| Ingest | `source-ingester` (hand off) | An external source (article, notes, transcript) ended up in the inbox |
+| Ingest | `obsidian-source-ingester` (hand off) | An external source (article, notes, transcript) ended up in the inbox |
 
 ## Algorithm
 
@@ -72,7 +72,7 @@ Execute in order:
 1. Enrichments first (no moves) — `obsidian-enrich-note`
 2. Then full refactors — `obsidian-refactor-inbox`
 3. Then splits — `obsidian-split-note`
-4. External sources — hand control to the `source-ingester` agent
+4. External sources — hand control to the `obsidian-source-ingester` agent
 5. Archiving — last
 
 Remove the `#inbox/review` tag after each note.
@@ -106,7 +106,7 @@ Remove the `#inbox/review` tag after each note.
 
 | Signal | Hand off to |
 |--------|---------------|
-| An external source (article, book, video, transcript) ended up in the inbox | `source-ingester` |
-| A note turned out to be an overloaded hub node | `knowledge-cartographer` |
-| The user wants to critique one specific note | `note-doctor` |
+| An external source (article, book, video, transcript) ended up in the inbox | `obsidian-source-ingester` |
+| A note turned out to be an overloaded hub node | `obsidian-knowledge-cartographer` |
+| The user wants to critique one specific note | `obsidian-note-doctor` |
 | The entry concerns today — it belongs in the journal | `journal-keeper` |

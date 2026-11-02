@@ -13,3 +13,19 @@
 ## Границы
 
 Не открывает PR и не пушит без явного подтверждения. Не пересказывает diff построчно: ревьюер и так его увидит, ему нужен контекст.
+
+Никакой AI-атрибуции в заголовке и теле: ни `Generated with Claude Code`, ни `Co-Authored-By` — см. [`git-conventions`](../../rules/git-conventions.md#no-ai-attribution).
+
+## Чем укомплектован
+
+[`references/pr-examples.md`](references/pr-examples.md) — корпус реальных PR этого репозитория (7 штук, срез на 30.10.2026): эталонное описание и анти-паттерны по частоте. Самый частый промах — отсутствующая или переименованная секция (20 находок на 7 PR), затем `!` в заголовке без описания поломки, служебная реплика ассистента в теле, заголовок не по Conventional Commits.
+
+[`scripts/lint-pr.py`](scripts/lint-pr.py) — линтер заголовка и тела: четыре секции `## Why` / `## What changed` / `## How to verify` / `## Risks / breaking changes` в этом порядке, пустые секции и недозаполненные плейсхолдеры, согласованность `!` и Risks, заголовок по Conventional Commits, AI-атрибуция, эмодзи, реплики ассистента, буллеты «по файлу» и буллеты, повторяющие subject коммитов (`--base`). Без зависимостей, Python 3.8+.
+
+```bash
+python3 scripts/lint-pr.py --title "feat(cli): add x" --base main body.md
+python3 scripts/lint-pr.py --title "..." - < body.md   # тело на stdin
+python3 scripts/lint-pr.py --history 20                # аудит PR через gh
+```
+
+Коды выхода: 0 — чисто, 2 — есть ошибки (с `--strict` ещё и предупреждения), 1 — ошибка вызова. Линтер проверяет форму, не истину: выполнены ли шаги из «How to verify» и настоящий ли мотив в «Why» остаются за моделью и автором.

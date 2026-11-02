@@ -2,25 +2,24 @@ package cli
 
 import (
 	"fmt"
-	"path/filepath"
+	"strings"
 
-	"claude-harness/tools/internal/fsutil"
-	"claude-harness/tools/internal/health"
+	"claude-harness/tools/internal/doctor"
+	"claude-harness/tools/internal/lint"
 	"claude-harness/tools/internal/lockfile"
-	"claude-harness/tools/internal/registry"
-	"claude-harness/tools/internal/transfer"
 )
 
-func runDoctor(args []string) error {
+func runDoctor(args []string, d Deps) error {
+	ios := d.IO
 	opts, err := parseStatusArgs(args)
 	if err != nil {
 		return err
 	}
-	harnessRoot, err := registry.ResolveHarnessRoot(opts.harnessRoot)
-	if err != nil {
-		return err
+	harnessRoot, herr := d.Locator.Locate(opts.harnessRoot)
+	if herr != nil && opts.harnessRoot != "" {
+		return fmt.Errorf("doctor: --harness-root rejected: %w", herr)
 	}
-	projectRoot, err := filepath.Abs(opts.project)
+	projectRoot, err := resolveProject(opts.project)
 	if err != nil {
 		return err
 	}
@@ -29,68 +28,71 @@ func runDoctor(args []string) error {
 		return err
 	}
 
-	entries := health.SortedEntries(lock)
-	checked, failed := 0, 0
-	headerShown := false
-	for _, e := range entries {
-		checked++
-		h := health.EntryHealth(e)
-		entryFailed := h == health.HealthMissing || h == health.HealthBroken
-		if entryFailed {
-			if !headerShown {
-				fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PATH")
-				headerShown = true
-			}
-			fmt.Printf("%-10s %-8s %-24s %-6s %-11s %s\n", e.Domain, e.Kind, e.Name, e.Mode, h, e.Path)
-		}
-
-		switch e.Mode {
-		case "link":
-			if !fsutil.PathExists(e.Source) {
-				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — source %s no longer exists under harness root %s\n",
-					health.HealthSourceGone, e.Domain, e.Kind, e.Name, e.Source, harnessRoot)
-				entryFailed = true
-			}
-		case "copy":
-			if h == health.HealthMissing {
-				break
-			}
-			hash, herr := transfer.HashTree(e.Path)
-			if herr != nil {
-				fmt.Printf("as-skill: doctor: warning: %s/%s/%s — could not hash %s: %v\n", e.Domain, e.Kind, e.Name, e.Path, herr)
-				break
-			}
-			if e.SHA256 != "" && hash != e.SHA256 {
-				fmt.Printf("as-skill: doctor: %-11s %s/%s/%s — recomputed hash differs from the recorded SHA256 (ambiguous: the target may have been hand-edited, or the source in domains/ may have moved on since install — not disambiguated)\n",
-					health.HealthDrifted, e.Domain, e.Kind, e.Name)
-				entryFailed = true
-			}
-		}
-		if entryFailed {
-			failed++
-		}
-	}
-
-	untracked, err := health.FindUntracked(projectRoot, lock)
+	filter, err := platformFilter(opts.platforms)
 	if err != nil {
 		return err
 	}
-	for _, p := range untracked {
-		fmt.Printf("as-skill: doctor: %-11s %s — present on disk under .claude/, no lockfile entry\n", health.HealthUntracked, p)
+	entries := doctor.FilterEntries(doctor.SortedEntries(lock), filter)
+	doctor.PrintEntryTable(ios.Stdout(), entries, doctor.EntryHealth)
+	if herr != nil {
+		if opts.harnessRoot != "" {
+			fmt.Fprintf(ios.Stdout(), "as-skill: doctor: note: harness checkout not found (--harness-root rejected: %v); skipping SOURCE-GONE and lint checks\n", herr)
+		} else {
+			fmt.Fprintln(ios.Stdout(), "as-skill: doctor: note: harness checkout not found; skipping SOURCE-GONE and lint checks")
+		}
 	}
-	checked += len(untracked)
-	failed += len(untracked)
-
-	lint := lintHarness(harnessRoot)
-	for _, f := range lint.findings {
-		fmt.Printf("as-skill: doctor: %-11s %s\n", "lint", f)
+	res, rerr := doctor.Run(doctor.Input{
+		ProjectRoot: projectRoot,
+		HarnessRoot: harnessRoot,
+		HarnessOK:   herr == nil,
+		Lock:        lock,
+		Entries:     entries,
+	})
+	for _, f := range res.Findings {
+		fmt.Fprintln(ios.Stdout(), renderFinding(f))
 	}
-	checked += lint.checked
-	failed += lint.failed
+	if rerr != nil {
+		return rerr
+	}
+	checked, failed := res.Checked, res.Failed
 
-	fmt.Printf("doctor: %d checks, %d/%d ok, %d failed\n", checked, checked-failed, checked, failed)
+	if herr == nil {
+		res := lint.Harness(harnessRoot)
+		for _, f := range res.Findings {
+			fmt.Fprintf(ios.Stdout(), "as-skill: doctor: %-11s %s\n", "lint", f)
+		}
+		checked += res.Checked
+		failed += res.Failed
+	}
+
+	fmt.Fprintf(ios.Stdout(), "doctor: %d checks, %d/%d ok, %d failed\n", checked, checked-failed, checked, failed)
 	if failed > 0 {
 		return fmt.Errorf("doctor: %d failed", failed)
 	}
 	return nil
+}
+
+func renderFinding(f doctor.Finding) string {
+	width := 11
+	prefix := "as-skill: doctor: "
+	if f.Severity == doctor.SeverityWarning {
+		prefix += "warning: "
+		width = 15
+		if f.Code == doctor.CannotVerify {
+			width = 13
+		}
+	}
+	var b strings.Builder
+	b.WriteString(prefix)
+	if f.Code != "" {
+		fmt.Fprintf(&b, "%-*s ", width, f.Code)
+	}
+	if f.Entry == "" {
+		b.WriteString(f.Msg)
+		return b.String()
+	}
+	b.WriteString(f.Entry)
+	b.WriteString(" — ")
+	b.WriteString(f.Msg)
+	return b.String()
 }

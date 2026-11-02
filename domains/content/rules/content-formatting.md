@@ -1,6 +1,6 @@
 # content-formatting
 
-Formatting for specific platforms. Skills in the `content` domain reference this as `~/.claude/rules/content-formatting.md`.
+Formatting for specific platforms. Skills in the `content` domain reference this as `content-formatting`.
 
 ## Telegram
 
@@ -44,7 +44,7 @@ Don't use `#` headings — Telegram doesn't render them as markdown, they show u
 - **State the tutorial's goal in the first line.** "After this tutorial you'll be able to deploy a K8s cluster with a TLS cert-manager on bare metal."
 - **Prerequisites** as an explicit list: versions, access, environment.
 - **Number the steps.** Each step = one action + the expected result.
-- **Commands must be copy-pasteable** (see also `~/.claude/rules/sre-runbook-template.md`).
+- **Commands must be copy-pasteable** (see also `sre-runbook-template`).
 - **Verification commands** after every non-trivial step: "confirm the pod is Ready: `kubectl get pod ...`".
 - **A Troubleshooting section** at the end with common errors.
 - **Cleanup** — how to roll everything back if needed.

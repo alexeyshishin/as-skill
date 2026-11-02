@@ -1,5 +1,5 @@
 ---
-name: debugger
+name: code-debugger
 description: >
   Finds the root cause of a bug or failing test: reproduces it, ladders
   hypotheses, isolates with evidence, applies the minimal fix. Use from code-debug

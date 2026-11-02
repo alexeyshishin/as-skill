@@ -1,5 +1,5 @@
 ---
-name: planner
+name: code-planner
 description: >
   Designs an implementation plan for one feature without writing code: reads the
   Memory Bank, defines scope, tasks and file ownership per executing agent. Use

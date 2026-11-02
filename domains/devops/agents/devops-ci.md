@@ -1,5 +1,5 @@
 ---
-name: ci-agent
+name: devops-ci
 description: >
   Executing agent. Writes GitLab CI/CD pipelines, shared templates, Dockerfile optimizations. Scope: **/.gitlab-ci.yml, ci-templates/**, abp/ci-templates/**. Corporate registry and Nexus only.
 ---

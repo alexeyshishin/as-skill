@@ -1,0 +1,332 @@
+D .claude
+D .claude/agents
+D .claude/hooks
+D .claude/rules
+D .claude/skills
+L .claude/agents/backend.md -> domains/code/agents/backend.md
+L .claude/agents/code-debugger.md -> domains/code/agents/code-debugger.md
+L .claude/agents/code-planner.md -> domains/code/agents/code-planner.md
+L .claude/agents/code-reviewer.md -> domains/code/agents/code-reviewer.md
+L .claude/agents/code-skeptic.md -> domains/code/agents/code-skeptic.md
+L .claude/agents/devops.md -> domains/code/agents/devops.md
+L .claude/agents/frontend.md -> domains/code/agents/frontend.md
+L .claude/agents/git-flow.md -> domains/git/agents/git-flow.md
+L .claude/hooks/memory-bank-load.sh -> domains/core/hooks/memory-bank-load.sh
+L .claude/hooks/memory-bank-logger.sh -> domains/core/hooks/memory-bank-logger.sh
+L .claude/hooks/prettier-format.sh -> domains/code/hooks/prettier-format.sh
+L .claude/hooks/test-gate-lib.sh -> domains/code/hooks/test-gate-lib.sh
+L .claude/hooks/test-gate-record.sh -> domains/code/hooks/test-gate-record.sh
+L .claude/hooks/test-gate.sh -> domains/code/hooks/test-gate.sh
+L .claude/rules/git-conventions.md -> domains/git/rules/git-conventions.md
+L .claude/skills/advanced-search -> domains/core/skills/advanced-search
+L .claude/skills/caveman -> domains/core/skills/caveman
+L .claude/skills/code-build -> domains/code/skills/code-build
+L .claude/skills/code-debug -> domains/code/skills/code-debug
+L .claude/skills/code-init -> domains/code/skills/code-init
+L .claude/skills/code-plan -> domains/code/skills/code-plan
+L .claude/skills/code-review -> domains/code/skills/code-review
+L .claude/skills/git-conventional-commits -> domains/git/skills/git-conventional-commits
+L .claude/skills/git-pr-description -> domains/git/skills/git-pr-description
+L .claude/skills/git-release-tag -> domains/git/skills/git-release-tag
+L .claude/skills/memory-bank -> domains/core/skills/memory-bank
+L .claude/skills/memory-bank-defrag -> domains/core/skills/memory-bank-defrag
+--- lockfile ---
+[
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "backend.md",
+    "Mode": "link",
+    "Path": ".claude/agents/backend.md",
+    "Source": "domains/code/agents/backend.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "code-debugger.md",
+    "Mode": "link",
+    "Path": ".claude/agents/code-debugger.md",
+    "Source": "domains/code/agents/code-debugger.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "code-planner.md",
+    "Mode": "link",
+    "Path": ".claude/agents/code-planner.md",
+    "Source": "domains/code/agents/code-planner.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "code-reviewer.md",
+    "Mode": "link",
+    "Path": ".claude/agents/code-reviewer.md",
+    "Source": "domains/code/agents/code-reviewer.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "code-skeptic.md",
+    "Mode": "link",
+    "Path": ".claude/agents/code-skeptic.md",
+    "Source": "domains/code/agents/code-skeptic.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "devops.md",
+    "Mode": "link",
+    "Path": ".claude/agents/devops.md",
+    "Source": "domains/code/agents/devops.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "agents",
+    "Name": "frontend.md",
+    "Mode": "link",
+    "Path": ".claude/agents/frontend.md",
+    "Source": "domains/code/agents/frontend.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "git",
+    "Kind": "agents",
+    "Name": "git-flow.md",
+    "Mode": "link",
+    "Path": ".claude/agents/git-flow.md",
+    "Source": "domains/git/agents/git-flow.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "hooks",
+    "Name": "memory-bank-load.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/memory-bank-load.sh",
+    "Source": "domains/core/hooks/memory-bank-load.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "hooks",
+    "Name": "memory-bank-logger.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/memory-bank-logger.sh",
+    "Source": "domains/core/hooks/memory-bank-logger.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "hooks",
+    "Name": "prettier-format.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/prettier-format.sh",
+    "Source": "domains/code/hooks/prettier-format.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "hooks",
+    "Name": "test-gate-lib.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/test-gate-lib.sh",
+    "Source": "domains/code/hooks/test-gate-lib.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "hooks",
+    "Name": "test-gate-record.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/test-gate-record.sh",
+    "Source": "domains/code/hooks/test-gate-record.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "hooks",
+    "Name": "test-gate.sh",
+    "Mode": "link",
+    "Path": ".claude/hooks/test-gate.sh",
+    "Source": "domains/code/hooks/test-gate.sh",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "git",
+    "Kind": "rules",
+    "Name": "git-conventions.md",
+    "Mode": "link",
+    "Path": ".claude/rules/git-conventions.md",
+    "Source": "domains/git/rules/git-conventions.md",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "skills",
+    "Name": "advanced-search",
+    "Mode": "link",
+    "Path": ".claude/skills/advanced-search",
+    "Source": "domains/core/skills/advanced-search",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "skills",
+    "Name": "caveman",
+    "Mode": "link",
+    "Path": ".claude/skills/caveman",
+    "Source": "domains/core/skills/caveman",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "skills",
+    "Name": "code-build",
+    "Mode": "link",
+    "Path": ".claude/skills/code-build",
+    "Source": "domains/code/skills/code-build",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "skills",
+    "Name": "code-debug",
+    "Mode": "link",
+    "Path": ".claude/skills/code-debug",
+    "Source": "domains/code/skills/code-debug",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "skills",
+    "Name": "code-init",
+    "Mode": "link",
+    "Path": ".claude/skills/code-init",
+    "Source": "domains/code/skills/code-init",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "skills",
+    "Name": "code-plan",
+    "Mode": "link",
+    "Path": ".claude/skills/code-plan",
+    "Source": "domains/code/skills/code-plan",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "code",
+    "Kind": "skills",
+    "Name": "code-review",
+    "Mode": "link",
+    "Path": ".claude/skills/code-review",
+    "Source": "domains/code/skills/code-review",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "git",
+    "Kind": "skills",
+    "Name": "git-conventional-commits",
+    "Mode": "link",
+    "Path": ".claude/skills/git-conventional-commits",
+    "Source": "domains/git/skills/git-conventional-commits",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "git",
+    "Kind": "skills",
+    "Name": "git-pr-description",
+    "Mode": "link",
+    "Path": ".claude/skills/git-pr-description",
+    "Source": "domains/git/skills/git-pr-description",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "git",
+    "Kind": "skills",
+    "Name": "git-release-tag",
+    "Mode": "link",
+    "Path": ".claude/skills/git-release-tag",
+    "Source": "domains/git/skills/git-release-tag",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "skills",
+    "Name": "memory-bank",
+    "Mode": "link",
+    "Path": ".claude/skills/memory-bank",
+    "Source": "domains/core/skills/memory-bank",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  },
+  {
+    "Domain": "core",
+    "Kind": "skills",
+    "Name": "memory-bank-defrag",
+    "Mode": "link",
+    "Path": ".claude/skills/memory-bank-defrag",
+    "Source": "domains/core/skills/memory-bank-defrag",
+    "HasSHA": false,
+    "Platforms": null,
+    "SrcSHA256": ""
+  }
+]

@@ -14,8 +14,8 @@ description: >
 This agent works as an in-house editor: it helps choose the format, invokes the right skill, and takes the text all the way to "ready to publish."
 
 Before starting, read:
-- `~/.claude/rules/content-voice.md`
-- `~/.claude/rules/content-formatting.md`
+- rule `content-voice`
+- rule `content-formatting`
 
 ## Step 1. Understand the material
 

@@ -1,0 +1,51 @@
+### step 1: remove beta -y -p <P>
+== stdout ==
+platforms: .claude
+== stderr ==
+as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)
+as-skill: warning: skipping <P>/.claude/skills — legacy copy row has no item list and its source is gone
+== result ==
+remove incomplete: 1 legacy copy row(s) have no recorded item list and their source checkout is gone, so nothing was removed for them (rows kept): <P>/.claude/skills; reinstall once with the current binary (as-skill add ... --copy) and remove again, or delete the files manually
+== combined ==
+as-skill: note: harness checkout not found; removing files and lockfile rows only (hook registrations and AGENTS.md blocks are left in place)
+platforms: .claude
+as-skill: warning: skipping <P>/.claude/skills — legacy copy row has no item list and its source is gone
+
+### tree
+.claude/skills/beta-one/SKILL.md
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": [
+    {
+      "domain": "beta",
+      "kind": "skills",
+      "name": "",
+      "mode": "copy",
+      "path": "<P>/.claude/skills",
+      "source": "<H>/domains/beta/gone-skills",
+      "installed_at": "<TIME>"
+    }
+  ]
+}
+
+### step 2: remove beta -y -p <P> --harness-root <H>
+== stdout ==
+platforms: .claude
+uninstalled    <P>/.claude/skills/beta-one
+done -> <P>/.claude
+== stderr ==
+== result ==
+ok
+== combined ==
+platforms: .claude
+uninstalled    <P>/.claude/skills/beta-one
+done -> <P>/.claude
+
+### tree
+.claude/skills-lock.json
+### file .claude/skills-lock.json
+{
+  "entries": []
+}
+

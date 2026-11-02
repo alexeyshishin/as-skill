@@ -225,7 +225,7 @@ problems — so it drops into a `commit-msg` hook unchanged:
 
 ```bash
 #!/bin/sh
-exec python3 "$HOME/.claude/skills/git-conventional-commits/scripts/lint-commit-msg.py" "$1"
+exec python3 "scripts/lint-commit-msg.py" "$1"
 ```
 
 What it cannot judge, and you must: whether the type matches what the diff

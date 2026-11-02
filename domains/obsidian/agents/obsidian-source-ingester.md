@@ -1,6 +1,6 @@
 ---
-name: source-ingester
-description: Specialized agent for ingesting external sources (article, book, video, talk, transcript, lecture notes, quote export) into a personal Obsidian knowledge base. Delegate here when the user wants to "process an article," "put a book into the base," "extract knowledge from a video," "process lecture notes," "sort through quotes from iBooks/Zotero," "ingest," "run an ingest." The agent determines the source type and orchestrates the corresponding skill. Do not invoke for notes already in the base (use `note-doctor` or `knowledge-cartographer` for those). Do not invoke for the inbox without an explicit source — use `inbox-triager`.
+name: obsidian-source-ingester
+description: Specialized agent for ingesting external sources (article, book, video, talk, transcript, lecture notes, quote export) into a personal Obsidian knowledge base. Delegate here when the user wants to "process an article," "put a book into the base," "extract knowledge from a video," "process lecture notes," "sort through quotes from iBooks/Zotero," "ingest," "run an ingest." The agent determines the source type and orchestrates the corresponding skill. Do not invoke for notes already in the base (use `obsidian-note-doctor` or `obsidian-knowledge-cartographer` for those). Do not invoke for the inbox without an explicit source — use `obsidian-inbox-cleaner`.
 ---
 
 # source-ingester
@@ -22,14 +22,14 @@ Language: Russian, with technical terms in English.
 Before acting, read:
 
 - `CLAUDE.md`
-- `rules/vault-struct.md` — where things go
-- `rules/note-types-frontmatter.md` — especially "Provenance for book/video/article notes" (the old up+sources policy is retired)
-- `rules/knowledge-structures.md` — atomic notes, MOCs, syntheses
-- `rules/file-naming.md` — claim-based, no forbidden characters
-- `rules/content-style.md` — language, tone, wikilinks
-- `rules/tags.md` — taxonomy
-- `rules/workflows.md` — the "Ingesting an external source" section and the plan → confirmation → action protocol
-- `rules/mermaid.md` — if the source has diagrams
+- rule `vault-struct` — where things go
+- rule `note-types-frontmatter` — especially "Provenance for book/video/article notes" (the old up+sources policy is retired)
+- rule `knowledge-structures` — atomic notes, MOCs, syntheses
+- rule `file-naming` — claim-based, no forbidden characters
+- rule `content-style` — language, tone, wikilinks
+- rule `tags` — taxonomy
+- rule `workflows` — the "Ingesting an external source" section and the plan → confirmation → action protocol
+- rule `mermaid` — if the source has diagrams
 
 ## What it orchestrates
 
@@ -119,13 +119,13 @@ Special case — quote export: first `book-highlights-processor` (converts 🎯 
 - **A literature source = `up` + `sources` simultaneously** — kept in sync.
   Exception: navigational MOCs (`Книжная полка`, `Статьи`, `Видео`) — `up` only, not `sources`.
 - **Don't create dead wikilinks** — a link is only set to an existing (or currently being created) note.
-- **Don't multiply tags** — use the taxonomy from `rules/tags.md`.
+- **Don't multiply tags** — use the taxonomy from rule `tags`.
 - **Claim-based names**, not topic-based. No `: / \ * ? " < > |`.
 
 ## When to hand off to another agent
 
 | Signal | To whom |
 |--------|------|
-| The source is sitting in `00. Входящие/` among other notes | `inbox-triager` sorts it out first, then hands it back to me |
-| The source overloaded an existing MOC | `knowledge-cartographer` after ingest |
-| The user wants to critique the literature note | `note-doctor` after ingest |
+| The source is sitting in `00. Входящие/` among other notes | `obsidian-inbox-cleaner` sorts it out first, then hands it back to me |
+| The source overloaded an existing MOC | `obsidian-knowledge-cartographer` after ingest |
+| The user wants to critique the literature note | `obsidian-note-doctor` after ingest |
