@@ -39,7 +39,7 @@ Read it and apply the memory-bank skill: update files under .memory-bank/ only w
   cd "$ROOT"
   MEMORY_BANK_LOGGER=1 claude -p "$PROMPT" \
     --permission-mode acceptEdits \
-    --allowedTools "Read" "Glob" "Grep" "Edit" "Write" \
+    --allowedTools "Read" "Glob" "Grep" "Edit" "Write" "Skill" \
     --add-dir "$(dirname "$TRANSCRIPT")" \
     >>"$SESS_DIR/memory-bank-logger.log" 2>&1 </dev/null || true
   : >"$DONE"
