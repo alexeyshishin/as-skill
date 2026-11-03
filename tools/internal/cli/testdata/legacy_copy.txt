@@ -17,7 +17,7 @@ done -> <P>/.claude
       "mode": "copy",
       "path": "<P>/.claude/skills",
       "source": "<H>/domains/code/skills",
-      "sha256": "d472bc3caed2083b9600a8164d705e55aaa1f9a2b41fd5817a504d8f0f1ce786",
+      "sha256": "a8b2d6b56dcb5e67bcc834cae73b338101671aab999d03eefcb1c4e63fe37941",
       "platforms": [
         "claude"
       ],
@@ -147,7 +147,7 @@ done -> <P>/.claude
       "mode": "copy",
       "path": "<P>/.claude/hooks",
       "source": "<H>/domains/core/hooks",
-      "sha256": "4cc30021a08fd6ed973154595ed3708a5bd2ff51f0c0465ca59e1c0b1c15bc31",
+      "sha256": "ac79ed9d4b6af8f9eaf2f4c55ae54265236749e8c070e5c292ee46aa9c319a24",
       "platforms": [
         "claude"
       ],
