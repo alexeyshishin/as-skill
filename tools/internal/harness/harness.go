@@ -311,12 +311,19 @@ func (l Locator) ExecutableRoot() (string, bool) {
 }
 
 func (r *Registry) SkillOwner(harnessRoot, name string) string {
+	if !plainName(name) {
+		return ""
+	}
 	for _, d := range r.DomainNames() {
 		if fsys.DirExists(SkillDir(harnessRoot, d, name)) {
 			return d
 		}
 	}
 	return ""
+}
+
+func plainName(n string) bool {
+	return n != "" && n != "." && n != ".." && !strings.ContainsAny(n, `/\`)
 }
 
 func DomainsDir(harnessRoot string) string { return filepath.Join(harnessRoot, "domains") }

@@ -34,7 +34,7 @@ Shell-хуки Claude Code для домена `code`. Хуки Memory Bank жи
 # register: <Event> [<matcher>]
 ```
 
-`skills/code-init/scripts/register-hooks.sh [--project DIR] [--dry-run]` читает эти строки и дописывает недостающие записи в `<project>/.claude/settings.json`. Идемпотентен, чужие ключи не трогает, глобальный `~/.claude/settings.json` не пишет. Новый хук = новый файл с `# register:`, правки скрипта не нужны.
+`skills/code-init/scripts/register-hooks.sh [--project DIR] [--dry-run]` читает эти строки и дописывает недостающие записи в `<project>/.claude/settings.json`; хуки, у которых в `# platforms:` нет `claude` (например `test-gate-record.sh`), пропускает. Идемпотентен, чужие ключи не трогает, глобальный `~/.claude/settings.json` не пишет. Новый хук = новый файл с `# register:`, правки скрипта не нужны.
 
 ## Установка
 

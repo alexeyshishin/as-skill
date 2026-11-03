@@ -62,6 +62,11 @@ func TestResolveNamesMatrix(t *testing.T) {
 			t.Fatalf("%s gated: %v", n, err)
 		}
 	}
+	for _, n := range []string{".", "..", "code/.."} {
+		if _, err := resolveNames(h, reg, []string{n}); err == nil || !strings.Contains(err.Error(), "unknown name") {
+			t.Fatalf("%q must be unknown: %v", n, err)
+		}
+	}
 	_, err = resolveNames(h, reg, []string{"zzz"})
 	if err == nil || !strings.Contains(err.Error(), "as-skill list skills") || !strings.Contains(err.Error(), "devops") {
 		t.Fatalf("unknown: %v", err)
