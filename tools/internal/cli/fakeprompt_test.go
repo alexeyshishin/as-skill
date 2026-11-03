@@ -22,12 +22,13 @@ type fakePrompt struct {
 	descs    map[string]string
 	confDef  map[string]bool
 	selDef   map[string]string
+	titles   map[string]string
 }
 
 func newFake(t *testing.T, answers map[string]any) *fakePrompt {
 	return &fakePrompt{
 		t: t, answers: answers, options: map[string][]prompt.Option{}, validate: map[string]func([]string) error{},
-		descs: map[string]string{}, confDef: map[string]bool{}, selDef: map[string]string{},
+		descs: map[string]string{}, confDef: map[string]bool{}, selDef: map[string]string{}, titles: map[string]string{},
 	}
 }
 
@@ -57,6 +58,7 @@ func (f *fakePrompt) answer(id string) any {
 
 func (f *fakePrompt) Input(id, title, def string, validate func(string) error) (string, error) {
 	a := f.answer(id)
+	f.titles[id] = title
 	if err, ok := a.(error); ok {
 		return "", err
 	}
@@ -65,6 +67,7 @@ func (f *fakePrompt) Input(id, title, def string, validate func(string) error) (
 
 func (f *fakePrompt) MultiSelect(id, title string, opts []prompt.Option, validate func([]string) error) ([]string, error) {
 	a := f.answer(id)
+	f.titles[id] = title
 	f.options[id] = opts
 	f.validate[id] = validate
 	f.record(id, opts)
@@ -80,6 +83,7 @@ func (f *fakePrompt) MultiSelectOptional(id, title string, opts []prompt.Option)
 
 func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) (string, error) {
 	a := f.answer(id)
+	f.titles[id] = title
 	f.options[id] = opts
 	f.selDef[id] = def
 	f.record(id, opts)
@@ -91,6 +95,7 @@ func (f *fakePrompt) Select(id, title string, opts []prompt.Option, def string) 
 
 func (f *fakePrompt) Confirm(id, title, desc string, def bool) (bool, error) {
 	a := f.answer(id)
+	f.titles[id] = title
 	f.descs[id] = desc
 	f.confDef[id] = def
 	if id == "confirm" {

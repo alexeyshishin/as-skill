@@ -45,10 +45,6 @@ func runRemove(args []string, d Deps) error {
 	if !dlg && (len(opts.names) == 0 || !(opts.yes || opts.dryRun)) {
 		return gateError(opts)
 	}
-	var pr prompt.Prompter
-	if dlg {
-		pr = d.newPrompter()
-	}
 	var (
 		projectRoot, harnessRoot string
 		prevProj                 string
@@ -59,6 +55,10 @@ func runRemove(args []string, d Deps) error {
 		reg                      *harness.Registry
 		plats                    []platform.ID
 	)
+	var pr prompt.Prompter
+	if dlg {
+		pr = withProject(d.newPrompter(), &projectRoot)
+	}
 	nameArgs := len(opts.names) > 0
 	names := opts.names
 	err = runSteps([]func() (bool, error){
