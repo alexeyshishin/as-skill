@@ -34,6 +34,15 @@ has_entry() {
     '[(.hooks[$ev]? // []) | .[]? | .hooks[]? | .command? | strings | select(contains($n))] | length > 0' >/dev/null 2>&1
 }
 
+targets_claude() {
+  local line
+  line="$(grep -m1 '^# platforms: ' "$1" || true)"
+  [ -n "$line" ] || return 0
+  line="$(printf '%s' "${line#\# platforms: }" | tr ' ' ',')"
+  case ",$line," in *,claude,*) return 0 ;; esac
+  return 1
+}
+
 shopt -s nullglob
 ADDED=0
 for f in "$CLAUDE_DIR"/hooks/*.sh; do
@@ -41,6 +50,7 @@ for f in "$CLAUDE_DIR"/hooks/*.sh; do
   [ -n "$LINE" ] || continue
   read -r EVENT MATCHER <<<"${LINE#\# register: }"
   [ -n "$EVENT" ] || continue
+  targets_claude "$f" || continue
   NAME="$(basename "$f")"
 
   if has_entry "$JSON" "$EVENT" "$NAME" || has_entry "$LOCAL_JSON" "$EVENT" "$NAME"; then

@@ -65,7 +65,7 @@ Gather only what you can observe — never invent commands:
   exists): from the project root run
   `bash <skill-dir>/scripts/register-hooks.sh --dry-run`, where `<skill-dir>` is the
   directory containing this SKILL.md. It writes nothing and
-  prints one line per installed hook, `present` or `would-add`, then hook name and event
+  prints one line per installed hook that targets claude (a hook whose `# platforms:` header omits `claude` is skipped), `present` or `would-add`, then hook name and event
   (`present` also covers an entry in `.claude/settings.local.json`). No output → no hooks
   installed, nothing to register. Any `would-add` → ask the user once, before composing:
   register those hooks in the project's `.claude/settings.json`? Claude Code runs a hook
@@ -283,7 +283,7 @@ The script does the whole job — no hand edits to `settings.json`, no re-readin
 afterwards. It writes only the project's own `.claude/settings.json` (it refuses when the
 project is `$HOME`, so the global file is never touched), appends the missing entries under
 `hooks.<Event>` with the matcher each hook declares in its `# register: <Event> [<matcher>]`
-header line, skips hooks already listed in `settings.json` or `settings.local.json`, and
+header line, skips hooks whose `# platforms:` header omits `claude` and hooks already listed in `settings.json` or `settings.local.json`, and
 leaves every other key and entry alone. Re-running is safe. A new hook dropped into
 `domains/code/hooks/` needs only that header line — nothing changes here.
 
