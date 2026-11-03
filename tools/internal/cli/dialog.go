@@ -240,8 +240,8 @@ type addPlan struct {
 }
 
 func addDialog(opts addOpts, d Deps) (*addPlan, error) {
-	p := d.newPrompter()
 	pl := &addPlan{dialog: true}
+	p := withProject(d.newPrompter(), &pl.project)
 	var (
 		projRaw   string
 		prevDoms  []string
