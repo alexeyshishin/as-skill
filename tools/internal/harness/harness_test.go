@@ -100,6 +100,23 @@ func TestSkills(t *testing.T) {
 	}
 }
 
+func TestSkillOwnerRejectsPathLikeNames(t *testing.T) {
+	dir := t.TempDir()
+	writeHarness(t, dir, "claude-harness")
+	reg, err := LoadRegistry(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := reg.SkillOwner(dir, "s1"); got != "x" {
+		t.Fatalf("s1 owner %q", got)
+	}
+	for _, n := range []string{"", ".", "..", "s1/..", "../x/skills/s1", `s1\..`} {
+		if got := reg.SkillOwner(dir, n); got != "" {
+			t.Errorf("SkillOwner(%q) = %q, want empty", n, got)
+		}
+	}
+}
+
 func chdir(t *testing.T, dir string) {
 	t.Helper()
 	old, err := os.Getwd()
