@@ -6,34 +6,36 @@
 
 # as-skill
 
-Репозиторий шаблонов агентов, скиллов, правил и хуков для AI-агентов для кода — Claude Code, Codex, Cursor, OpenCode, — разложенных по доменам. Платформа выбирается флагом `-a` (по умолчанию автоопределение, иначе `claude`), см. [Платформы](#платформы).
+🇷🇺 [Русская версия](README_RUS.md)
 
-## Оглавление
+A repository of templates for agents, skills, rules and hooks for AI coding agents — Claude Code, Codex, Cursor, OpenCode — organized by domain. The platform is chosen with the `-a` flag (autodetected by default, otherwise `claude`), see [Platforms](#platforms).
 
-- [Домены](#домены)
-- [Структура репозитория](#структура-репозитория)
-- [Хуки](#хуки)
-- [Установка (CLI `as-skill`)](#установка-cli-as-skill)
-- [Платформы](#платформы)
-- [Контрибьютинг и безопасность](#контрибьютинг-и-безопасность)
-- [Лицензия](#лицензия)
+## Table of contents
 
-## Домены
+- [Domains](#domains)
+- [Repository structure](#repository-structure)
+- [Hooks](#hooks)
+- [Installation (the `as-skill` CLI)](#installation-the-as-skill-cli)
+- [Platforms](#platforms)
+- [Contributing and security](#contributing-and-security)
+- [License](#license)
 
-
-| Домен                               | Требования           | Описание                                                                                                                                                                                     |
-| ----------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**`obsidian`**](domains/obsidian/) | env `OBSIDIAN_VAULT` | PKB на Obsidian по PARA — приём источников в базу, разбор inbox, обогащение фронтматтера, критика заметок, разбиение больших заметок и лекций, распутывание хабов-MOC.                       |
-| [**`git`**](domains/git/)           | —                    | Git workflow — Conventional Commits (только subject, без AI-атрибуции), описания PR, semver-релизы с тегом и GitHub release.                                                                 |
-| [**`content`**](domains/content/)   | —                    | Контент — Telegram-посты, статьи, техническая документация, контент-завод, очеловечивание русскоязычного текста.                                                                             |
-| [**`code`**](domains/code/)         | —                    | Цикл разработки: план → билд → ревью → дебаг. Портативный мини-харнесс — ставится в любой другой проект.                                                                                     |
-| [**`core`**](domains/core/)         | —                    | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения (`caveman`), project memory bank, дефрагментация memory bank, фактчекинг-поиск в вебе (`advanced-search`).          |
-| [**`devops`**](domains/devops/)     | —                    | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). |
+## Domains
 
 
-`obsidian` ставится только при заданном `OBSIDIAN_VAULT` — путь до корня хранилища (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, например в `~/.zshrc`). Без неё `install all` пропускает домен с предупреждением, явный `install domain obsidian` падает с ошибкой. Остальные домены ставятся всегда.
+| Domain                              | Requirements         | Description                                                                                                                                                                                                      |
+| ----------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**`obsidian`**](domains/obsidian/) | env `OBSIDIAN_VAULT` | A PKB on Obsidian following PARA — ingesting sources into the vault, inbox triage, frontmatter enrichment, note critique, splitting large notes and lectures, untangling MOC hubs.                               |
+| [**`git`**](domains/git/)           | —                    | Git workflow — Conventional Commits (subject only, no AI attribution), PR descriptions, semver releases with a tag and a GitHub release.                                                                         |
+| [**`content`**](domains/content/)   | —                    | Content — Telegram posts, articles, technical documentation, a content factory, humanizing Russian-language text.                                                                                                |
+| [**`code`**](domains/code/)         | —                    | The development loop: plan → build → review → debug. A portable mini-harness — installs into any other project.                                                                                                  |
+| [**`core`**](domains/core/)         | —                    | Skills not tied to a specific area: an ultra-compressed communication mode (`caveman`), a project memory bank, memory bank defragmentation, fact-checking web search (`advanced-search`).                        |
+| [**`devops`**](domains/devops/)     | —                    | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium agents (architecture, security, SRE, diagnostics; read-only, advisory) and Executing agents (CI, Helm, K8s; write pipelines, charts and manifests).              |
 
-## Структура репозитория
+
+`obsidian` is installed only when `OBSIDIAN_VAULT` is set — the path to the vault root (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, for example in `~/.zshrc`). Without it, `install all` skips the domain with a warning, while an explicit `install domain obsidian` fails with an error. The other domains are always installed.
+
+## Repository structure
 
 ```
 as-skill/
@@ -41,7 +43,7 @@ as-skill/
 │   ├── obsidian/
 │   │   ├── manifest.yaml    # targets, requires_env
 │   │   ├── rules/
-│   │   ├── skills/<имя>/{SKILL.md, README.md}
+│   │   ├── skills/<name>/{SKILL.md, README.md}
 │   │   └── agents/
 │   ├── git/     {manifest, rules, skills, agents}
 │   ├── content/ {manifest, rules, skills, agents}
@@ -50,76 +52,76 @@ as-skill/
 │   └── devops/  {manifest, agents}
 │
 ├── tools/
-│   ├── main.go             # Точка входа CLI as-skill, см. tools/README.md
-│   ├── internal/           # Диспетчер команд и логика инсталлятора
+│   ├── main.go             # as-skill CLI entry point, see tools/README.md
+│   ├── internal/           # Command dispatcher and installer logic
 │   └── README.md
 │
-├── install.sh              # Собирает as-skill и кладёт в PATH текущей оболочки (source install.sh)
-├── CLAUDE.md               # Точка входа для AI-агента
-├── CONTRIBUTING.md         # Как править репозиторий: добавление доменов/скиллов
-├── SECURITY.md             # Модель угроз, что делает инсталлятор с данными
+├── install.sh              # Builds as-skill and puts it on the PATH of the current shell (source install.sh)
+├── CLAUDE.md               # Entry point for AI agents
+├── CONTRIBUTING.md         # How to edit the repository: adding domains/skills
+├── SECURITY.md             # Threat model, what the installer does with data
 ├── LICENSE
 └── README.md
 ```
 
-## Хуки
+## Hooks
 
-Хуки лежат в `domains/<домен>/hooks/` и копируются инсталлятором в `.claude/hooks/` проекта (для `-a codex|cursor` — в `.codex/hooks/` и `.cursor/hooks/`, регистрация через `as-skill hooks enable`; для opencode хуков нет); в `.claude/settings.json` их регистрирует скилл `/code-init` либо шаг `hooks` диалога `as-skill add` (opt-in: выбираются явно, по умолчанию ни один, `-y` хуки не регистрирует; каждый хук сам объявляет событие и matcher в заголовке `# register:`). При `as-skill remove` регистрации снимаются автоматически.
-
-
-| Хук                  | Домен  | Событие      | Что делает                                                                                                                          |
-| -------------------- | ------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `test-gate`          | `code` | Stop         | Не даёт завершить задачу, если правились файлы кода, а тесты за сессию не запускались (fail-open, максимум 2 блокировки на коммит). |
-| `prettier-format`    | `code` | PostToolUse  | Запускает prettier, когда условие test-gate выполнено; без конфига prettier — no-op.                                                |
-| `memory-bank-load`   | `core` | SessionStart | Подгружает `.memory-bank/index.md` (до 16 КБ) и список остальных файлов Memory Bank в контекст.                                     |
-| `memory-bank-logger` | `core` | SessionEnd   | Фоновый `claude -p` читает транскрипт сессии и обновляет `.memory-bank/` через скилл `memory-bank` (короткие сессии пропускает).    |
+Hooks live in `domains/<domain>/hooks/` and are copied by the installer into the project's `.claude/hooks/` (for `-a codex|cursor` — into `.codex/hooks/` and `.cursor/hooks/`, registered via `as-skill hooks enable`; opencode has no hooks). They are registered in `.claude/settings.json` by the `/code-init` skill or by the `hooks` step of the `as-skill add` dialog (opt-in: you select them explicitly, none by default, `-y` registers no hooks; each hook declares its own event and matcher in the `# register:` header). `as-skill remove` removes the registrations automatically.
 
 
-Подробнее — `domains/code/hooks/README.md` и `domains/core/hooks/README.md`.
+| Hook                 | Domain | Event        | What it does                                                                                                                                  |
+| -------------------- | ------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test-gate`          | `code` | Stop         | Blocks finishing the task if code files were edited but no tests were run during the session (fail-open, at most 2 blocks per commit).        |
+| `prettier-format`    | `code` | PostToolUse  | Runs prettier once the test-gate condition is met; a no-op without a prettier config.                                                         |
+| `memory-bank-load`   | `core` | SessionStart | Loads `.memory-bank/index.md` (up to 16 KB) and the list of the other Memory Bank files into the context.                                     |
+| `memory-bank-logger` | `core` | SessionEnd   | A background `claude -p` reads the session transcript and updates `.memory-bank/` through the `memory-bank` skill (skips short sessions).     |
 
-## Установка (CLI `as-skill`)
 
-Из корня репозитория (нужен Go ≥ 1.25, на macOS — `brew install go`; первая сборка один раз качает зависимости из Go module proxy, нужна сеть):
+For more details see `domains/code/hooks/README.md` and `domains/core/hooks/README.md`.
+
+## Installation (the `as-skill` CLI)
+
+From the repository root (needs Go ≥ 1.25, on macOS `brew install go`; the first build downloads dependencies from the Go module proxy once, so a network connection is required):
 
 ```bash
-source install.sh   # соберёт as-skill и добавит в PATH (текущий и новые терминалы)
+source install.sh   # builds as-skill and adds it to PATH (current and new terminals)
 ```
 
-Без скрипта: `go build -o as-skill ./tools`.
+Without the script: `go build -o as-skill ./tools`.
 
-Быстрый старт — в проекте, который оснащаете:
+Quick start — in the project you are equipping:
 
 ```bash
 as-skill add
 ```
 
-Откроется диалог: проект → домены → платформы → режим → подтверждение. Все команды, флаги и режимы (`symlink` / `--copy`) — в [`tools/README.md`](tools/README.md).
+A dialog opens: project → domains → platforms → mode → confirmation. All commands, flags and modes (`symlink` / `--copy`) are described in [`tools/README.md`](tools/README.md).
 
-## Платформы
+## Platforms
 
-`-a claude|codex|cursor|opencode[,…]|all` (по умолчанию автоопределение по существующим каталогам платформ, иначе `claude`). Матрица — вывод `as-skill list platforms`:
-
-
-| Платформа | skills                  | agents                      | rules                                | hooks                                         | Статус                                                                            |
-| --------- | ----------------------- | --------------------------- | ------------------------------------ | --------------------------------------------- | --------------------------------------------------------------------------------- |
-| claude    | `.claude/skills` (link) | `.claude/agents` (link)     | `.claude/rules` (link)               | `.claude/hooks` -> `.claude/settings.json` | проверено 2026-10-27                                                              |
-| codex     | `.agents/skills` (link) | `.codex/agents` (render)    | `.agents/rules` + блок в `AGENTS.md` | `.codex/hooks` -> `.codex/hooks.json`      | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
-| cursor    | `.agents/skills` (link) | `.cursor/agents` (render)   | `.cursor/rules` (render, `.mdc`)     | `.cursor/hooks` -> `.cursor/hooks.json`    | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
-| opencode  | `.agents/skills` (link) | `.opencode/agents` (render) | `.agents/rules` + блок в `AGENTS.md` | не поддерживается                             | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
+`-a claude|codex|cursor|opencode[,…]|all` (by default autodetected from existing platform directories, otherwise `claude`). The matrix is the output of `as-skill list platforms`:
 
 
-- **link vs render.** Скиллы и правила claude — symlink (или копия при `--copy`). Агенты на не-claude платформах генерируются в нативном формате: правки тела подхватываются сразу, правки frontmatter требуют переустановки (`as-skill doctor` покажет STALE).
-- **Дубли скиллов.** claude+codex вместе: скиллы видны из двух каталогов. Cursor и opencode читают и `.claude/skills`, и `.agents/skills` — видят скиллы дважды; `doctor` предупреждает DUPLICATE-SKILL.
-- **Вызов:** `/code-plan` — Claude и Cursor, `$code-plan` — Codex. В OpenCode скилл подхватывается агентом по описанию; `/`-вызов в его документации не описан.
-- **Хуки.** Codex: после `hooks enable` подтвердить хуки через `/hooks` (trust). Cursor: `stop` не умеет блокировать — используется `followup_message`, максимум 2 раза. opencode: хуки не поддерживаются. Каталоги сессий (`.claude/sessions` и аналоги) стоит добавить в `.gitignore`.
-- **Гард для link-установки.** Symlink-записи указывают на эту копию репозитория: добавьте в `.gitignore` целевого проекта `/.agents /.codex /.cursor /.opencode` (по строке) или ставьте с `--copy`.
-- **Известная проблема:** `doctor` показывает DRIFTED после `--copy` двух и более доменов.
+| Platform | skills                  | agents                      | rules                                | hooks                                         | Status                                                                                       |
+| -------- | ----------------------- | --------------------------- | ------------------------------------ | --------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| claude   | `.claude/skills` (link) | `.claude/agents` (link)     | `.claude/rules` (link)               | `.claude/hooks` -> `.claude/settings.json`    | verified 2026-10-27                                                                          |
+| codex    | `.agents/skills` (link) | `.codex/agents` (render)    | `.agents/rules` + a block in `AGENTS.md` | `.codex/hooks` -> `.codex/hooks.json`     | not verified — based on vendor documentation as of 2026-10-27, the real CLI was not run      |
+| cursor   | `.agents/skills` (link) | `.cursor/agents` (render)   | `.cursor/rules` (render, `.mdc`)     | `.cursor/hooks` -> `.cursor/hooks.json`       | not verified — based on vendor documentation as of 2026-10-27, the real CLI was not run      |
+| opencode | `.agents/skills` (link) | `.opencode/agents` (render) | `.agents/rules` + a block in `AGENTS.md` | not supported                             | not verified — based on vendor documentation as of 2026-10-27, the real CLI was not run      |
 
-## Контрибьютинг и безопасность
 
-- Как править репозиторий, добавлять домены и скиллы — [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- Модель угроз, что делает инсталлятор с данными, как сообщить об уязвимости — [`SECURITY.md`](SECURITY.md).
+- **link vs render.** Skills and rules for claude are symlinks (or copies with `--copy`). Agents on non-claude platforms are generated in the native format: edits to the body are picked up immediately, edits to the frontmatter require a reinstall (`as-skill doctor` will show STALE).
+- **Duplicate skills.** claude+codex together: skills are visible from two directories. Cursor and opencode read both `.claude/skills` and `.agents/skills`, so they see skills twice; `doctor` warns with DUPLICATE-SKILL.
+- **Invocation:** `/code-plan` — Claude and Cursor, `$code-plan` — Codex. In OpenCode the agent picks up a skill by its description; `/` invocation is not described in its documentation.
+- **Hooks.** Codex: after `hooks enable`, confirm the hooks via `/hooks` (trust). Cursor: `stop` cannot block, so `followup_message` is used, at most 2 times. opencode: hooks are not supported. It is worth adding session directories (`.claude/sessions` and the like) to `.gitignore`.
+- **Guard for link installs.** Symlink entries point to this copy of the repository: add `/.agents /.codex /.cursor /.opencode` (one per line) to the target project's `.gitignore`, or install with `--copy`.
+- **Known issue:** `doctor` shows DRIFTED after a `--copy` install of two or more domains.
 
-## Лицензия
+## Contributing and security
 
-MIT — см. [`LICENSE`](LICENSE).
+- How to edit the repository and add domains and skills — [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- The threat model, what the installer does with data, and how to report a vulnerability — [`SECURITY.md`](SECURITY.md).
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
