@@ -1,0 +1,13 @@
+# University domain — graduation thesis (ВКР) writing, GOST 7.32 .docx formatting, and review.
+# Requires nothing from the environment; the md→docx skill needs python3 with python-docx at execution time.
+# rules, skills, agents go to the target project's platform dirs (see `as-skill add -a`).
+
+name: university
+description: Graduation thesis (ВКР) — writer and reviewer agents, Markdown to GOST 7.32 .docx skill.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
