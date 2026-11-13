@@ -31,6 +31,7 @@ A repository of templates for agents, skills, rules and hooks for AI coding agen
 | [**`code`**](domains/code/)         | —                    | The development loop: plan → build → review → debug. A portable mini-harness — installs into any other project.                                                                                                  |
 | [**`core`**](domains/core/)         | —                    | Skills not tied to a specific area: an ultra-compressed communication mode (`caveman`), a project memory bank, memory bank defragmentation, fact-checking web search (`advanced-search`).                        |
 | [**`devops`**](domains/devops/)     | —                    | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium agents (architecture, security, SRE, diagnostics; read-only, advisory) and Executing agents (CI, Helm, K8s; write pipelines, charts and manifests).              |
+| [**`university`**](domains/university/) | —                    | Graduation thesis (ВКР) — a writer agent, a reviewer agent, and a skill that turns a Markdown thesis into a GOST 7.32 `.docx` (title page, TOC, page numbers, figure and table captions) and checks it. |
 
 
 `obsidian` is installed only when `OBSIDIAN_VAULT` is set — the path to the vault root (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, for example in `~/.zshrc`). Without it, `install all` skips the domain with a warning, while an explicit `install domain obsidian` fails with an error. The other domains are always installed.
@@ -49,7 +50,8 @@ as-skill/
 │   ├── content/ {manifest, rules, skills, agents}
 │   ├── code/    {manifest, skills, agents, hooks}
 │   ├── core/    {manifest, skills, hooks}
-│   └── devops/  {manifest, agents}
+│   ├── devops/  {manifest, agents}
+│   └── university/ {manifest, rules, skills, agents}
 │
 ├── tools/
 │   ├── main.go             # as-skill CLI entry point, see tools/README.md

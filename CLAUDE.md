@@ -26,7 +26,8 @@ as-skill/
     ├── core/
     ├── devops/
     ├── git/
-    └── obsidian/
+    ├── obsidian/
+    └── university/
 ```
 
 Each `domains/<name>/manifest.yaml` declares:
@@ -48,6 +49,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
+| `university` | — | Graduation thesis (ВКР) — writer and reviewer agents, Markdown → GOST 7.32 `.docx` skill |
 
 Details live in each `domains/<name>/manifest.yaml` and the files inside it.
 
@@ -121,6 +123,7 @@ checkout's lifetime via a symlink (the installer's default) would be wrong.
 
 Not a single blanket rule — it's domain-dependent:
 - **`content`, `obsidian`**: output is in Russian, technical terms stay in English (`SRE`, `Kubernetes`, `goroutine`, `Pod`); informal "you" or impersonal phrasing; personal, authorial voice — not Wikipedia, not corporate copy. See `content-voice.md` / `content-style.md`.
+- **`university`**: thesis text and review findings are in Russian, technical terms stay in English; formal impersonal academic register, not an authorial voice. See `university-gost.md`.
 - **`code`, `git`, `devops`**: output is in English, terse and technical (commit subjects, PR descriptions, YAML, agent findings as `path:line — SEVERITY: problem. fix.`). See each domain's own rule/agent files.
 
 ### Don't, in any domain
@@ -174,6 +177,17 @@ In these cases follow both domains' rules — they complement, not contradict, e
 
 **Agents:**
 - `git-flow` — orchestrates branch → commits → PR → merge, calling the three skills above at the right moments
+
+### domain: university
+
+**Rules:** `university-gost` — GOST 7.32 structure, page layout, headings, figures/tables/formulas, sources, appendices, writing rules (no fabricated data or sources)
+
+**Skills:**
+- `university-md-to-docx` — Markdown thesis → `.docx` per GOST 7.32 (title page, TOC field, page numbers, captions, appendices) via `scripts/md2docx.py`, then a mechanical check via `scripts/check-docx.py`; needs `python3` + `python-docx` at run time
+
+**Agents:**
+- `university-writer` — outline → chapter-by-chapter Markdown draft → converts via the skill; missing data stays a `[ДАННЫЕ: …]` placeholder
+- `university-reviewer` — read-only; runs the `.docx` check, then reviews goal–tasks–conclusions, citations, register; reports ship/rework with severity-tagged findings
 
 ### domain: content
 
