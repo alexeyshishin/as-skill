@@ -1,0 +1,13 @@
+# Resume domain — resume review, ATS optimization and job-search skills.
+# Skills adapted from https://github.com/Paramchoudhary/ResumeSkills (MIT, see LICENSE-ResumeSkills).
+# Requires nothing from the environment.
+
+name: resume
+description: Resume review, ATS optimization, tailoring, cover letters, interview prep.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
