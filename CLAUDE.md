@@ -27,6 +27,7 @@ as-skill/
     ├── devops/
     ├── git/
     ├── obsidian/
+    ├── resume/
     └── university/
 ```
 
@@ -49,6 +50,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
+| `resume` | — | Resume review and job search — ATS optimization, bullets, tailoring, cover letters, interview prep (22 skills adapted from Paramchoudhary/ResumeSkills, MIT) |
 | `university` | — | Graduation thesis (ВКР) — writer and reviewer agents, Markdown → GOST 7.32 `.docx` skill |
 
 Details live in each `domains/<name>/manifest.yaml` and the files inside it.
@@ -188,6 +190,12 @@ In these cases follow both domains' rules — they complement, not contradict, e
 **Agents:**
 - `university-writer` — outline → chapter-by-chapter Markdown draft → converts via the skill; missing data stays a `[ДАННЫЕ: …]` placeholder
 - `university-reviewer` — read-only; runs the `.docx` check, then reviews goal–tasks–conclusions, citations, register; reports ship/rework with severity-tagged findings
+
+### domain: resume
+
+No `rules/` or `agents/` — skills only, prefixed `resume-`. Adapted from [Paramchoudhary/ResumeSkills](https://github.com/Paramchoudhary/ResumeSkills) (MIT, `LICENSE-ResumeSkills`). English-language resumes.
+
+**Skills:** review/optimize — `resume-ats-optimizer`, `resume-bullet-writer`, `resume-quantifier`, `resume-formatter`, `resume-section-builder`, `resume-tech-resume-optimizer`, `resume-executive-resume-writer`, `resume-academic-cv-builder`, `resume-creative-portfolio-resume`, `resume-career-changer-translator` · job match — `resume-tailor`, `resume-job-description-analyzer`, `resume-version-manager`, `resume-application-form-filler` · outreach/prep — `resume-cover-letter-generator`, `resume-cold-email-writer`, `resume-linkedin-profile-optimizer`, `resume-interview-prep-generator`, `resume-salary-negotiation-prep`, `resume-offer-comparison-analyzer`, `resume-reference-list-builder`, `resume-portfolio-case-study-writer`
 
 ### domain: content
 
