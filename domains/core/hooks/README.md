@@ -19,7 +19,7 @@ Shell-хуки Claude Code для домена `core`. Ставятся installe
 ## memory-bank-logger
 
 - No-op без `jq`, `claude`, `.memory-bank/index.md`, транскрипта и для сессий короче 3 пользовательских промптов.
-- Возвращается сразу: `claude -p` стартует отвязанным процессом (`--permission-mode acceptEdits`, инструменты `Read Glob Grep Edit Write`), лог — `.claude/sessions/memory-bank-logger.log`. Правит только `.memory-bank/`; нечего добавлять — ничего не меняет.
+- Возвращается сразу: `claude -p` стартует отвязанным процессом (`--permission-mode dontAsk`, инструменты `Read Glob Grep Edit Write Skill` плюс read-only `git log|show|diff|status|describe|rev-parse|ls-files` (без `git -C <dir>`: wildcard перед подкомандой пропускает `-c`/`--exec-path`, то есть произвольный код); всё остальное отклоняется молча, без запроса разрешения), лог — `.claude/sessions/memory-bank-logger.log`. Правит только `.memory-bank/`; нечего добавлять — ничего не меняет.
 - Защита от рекурсии: дочерний процесс идёт с `MEMORY_BANK_LOGGER=1`, его собственный SessionEnd хук пропускает. Одна сессия логируется один раз (`.claude/sessions/<session_id>.mblogged`), параллельный запуск блокирует lock-каталог (протухает через 10 минут).
 - Платный: каждая подходящая сессия = один headless-вызов модели.
 

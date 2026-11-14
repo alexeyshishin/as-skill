@@ -38,8 +38,10 @@ Read it and apply the memory-bank skill: update files under .memory-bank/ only w
 (
   cd "$ROOT"
   MEMORY_BANK_LOGGER=1 claude -p "$PROMPT" \
-    --permission-mode acceptEdits \
+    --permission-mode dontAsk \
     --allowedTools "Read" "Glob" "Grep" "Edit" "Write" "Skill" \
+      "Bash(git log *)" "Bash(git show *)" "Bash(git diff *)" "Bash(git status *)" \
+      "Bash(git describe *)" "Bash(git rev-parse *)" "Bash(git ls-files *)" \
     --add-dir "$(dirname "$TRANSCRIPT")" \
     >>"$SESS_DIR/memory-bank-logger.log" 2>&1 </dev/null || true
   : >"$DONE"
