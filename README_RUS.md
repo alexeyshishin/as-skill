@@ -54,6 +54,7 @@ as-skill/
 │   ├── core/    {manifest, skills, hooks}
 │   ├── devops/  {manifest, agents}
 │   ├── docs/    {manifest, rules, skills, agents}
+│   ├── resume/  {manifest, skills}
 │   └── university/ {manifest, rules, skills, agents}
 │
 ├── tools/
