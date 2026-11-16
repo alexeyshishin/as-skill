@@ -20,7 +20,7 @@ run the code-init skill
 
 ## Step 1. Guard against clobbering
 
-Platforms: read `.claude/skills-lock.json`; each entry's `platforms` lists where it was
+Platforms: read `.as-skill/lock.json` (older installs: `.claude/skills-lock.json`); each entry's `platforms` lists where it was
 installed, an entry without `platforms` means `claude`. A **claude install exists** when
 any entry has `claude`, or no lock file / no `platforms` info exists.
 

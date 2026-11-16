@@ -626,7 +626,7 @@ func TestDialogOverwriteNoAbortsWritingNothing(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "overwrite")
-	if exists(filepath.Join(p, ".claude", "skills-lock.json")) {
+	if exists(lockfile.Path(p)) {
 		t.Error("lockfile written")
 	}
 	ents, _ := os.ReadDir(filepath.Join(p, ".claude", "skills"))
@@ -719,7 +719,7 @@ func TestYesForeignConflictFailsBeforeWrite(t *testing.T) {
 					t.Errorf("error lacks %q: %v", w, err)
 				}
 			}
-			if exists(filepath.Join(p, ".claude", "skills", "advanced-search")) || exists(filepath.Join(p, ".claude", "skills-lock.json")) || exists(filepath.Join(p, ".claude", "hooks")) {
+			if exists(filepath.Join(p, ".claude", "skills", "advanced-search")) || exists(lockfile.Path(p)) || exists(filepath.Join(p, ".claude", "hooks")) {
 				t.Error("partial write before the conflict")
 			}
 		})

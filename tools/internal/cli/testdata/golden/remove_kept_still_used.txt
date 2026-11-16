@@ -85,12 +85,12 @@ done -> <P>/.cursor
 .agents/skills/alpha-one/SKILL.md
 .agents/skills/alpha-two/README.md
 .agents/skills/alpha-two/SKILL.md
-.claude/skills-lock.json
+.as-skill/lock.json
 .codex/agents/alpha-agent.toml
 .codex/agents/plain.toml
 .codex/hooks/gate.sh
 AGENTS.md
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {
@@ -212,9 +212,4 @@ uninstalled    <P>/.codex/hooks/gate.sh
 done -> <P>/.codex
 
 ### tree
-.claude/skills-lock.json
-### file .claude/skills-lock.json
-{
-  "entries": []
-}
 

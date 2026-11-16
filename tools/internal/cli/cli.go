@@ -55,7 +55,7 @@ Usage:
   as-skill add <name...> -p <path> -y   add domains and/or skills (symlinks by default);
                                          a name is a domain, else a skill; `+"`all`"+` = every domain
   as-skill remove <name...> -p <path> -y
-                                         remove what `+"`add`"+` placed (driven by skills-lock.json)
+                                         remove what `+"`add`"+` placed (driven by .as-skill/lock.json)
   as-skill list [domains|skills|platforms]
                                          show what's installable; entries installed in -p are
                                          marked; `+"`platforms`"+` prints the platform x kind matrix

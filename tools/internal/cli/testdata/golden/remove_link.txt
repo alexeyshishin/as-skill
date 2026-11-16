@@ -47,10 +47,10 @@ uninstalled    <P>/.claude/hooks/gate.sh
 done -> <P>/.claude
 
 ### tree
+.as-skill/lock.json
 .claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
 .claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {
@@ -105,9 +105,4 @@ uninstalled    <P>/.claude/agents/beta-agent.md
 done -> <P>/.claude
 
 ### tree
-.claude/skills-lock.json
-### file .claude/skills-lock.json
-{
-  "entries": []
-}
 

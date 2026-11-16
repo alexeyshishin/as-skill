@@ -34,7 +34,7 @@ func TestDialogAddFullOrderAndMultiDomain(t *testing.T) {
 		t.Fatal(err)
 	}
 	fp.wantAsked("project", "domains", "customize", "platforms", "mode", "hooks", "confirm")
-	for _, s := range []string{".claude/skills/git-conventional-commits", ".claude/skills/memory-bank", ".claude/skills-lock.json"} {
+	for _, s := range []string{".claude/skills/git-conventional-commits", ".claude/skills/memory-bank", lockfile.Path(".")} {
 		if !exists(filepath.Join(p, s)) {
 			t.Errorf("missing %s (out: %s)", s, out)
 		}
@@ -75,7 +75,7 @@ func TestDialogPreAnswersSkipExactlyTheirQuestion(t *testing.T) {
 				t.Fatal(err)
 			}
 			fp.wantAsked(want...)
-			if !exists(filepath.Join(p, ".claude", "skills-lock.json")) {
+			if !exists(lockfile.Path(p)) {
 				t.Fatal("nothing installed")
 			}
 		})

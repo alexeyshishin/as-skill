@@ -1,5 +1,6 @@
 /as-skill
 /tools/as-skill
+/.as-skill
 .claude
 !tools/**/testdata/**
 swarm-report/

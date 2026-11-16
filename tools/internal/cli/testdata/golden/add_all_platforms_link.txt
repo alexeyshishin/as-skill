@@ -73,6 +73,7 @@ done -> <P>/.opencode
 .agents/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .agents/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
 .agents/skills/beta-one -> <H>/domains/beta/skills/beta-one
+.as-skill/lock.json
 .claude/agents/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
 .claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
 .claude/agents/plain.md -> <H>/domains/alpha/agents/plain.md
@@ -82,7 +83,6 @@ done -> <P>/.opencode
 .claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .claude/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
 .claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
-.claude/skills-lock.json
 .codex/agents/alpha-agent.toml
 .codex/agents/beta-agent.toml
 .codex/agents/plain.toml
@@ -96,7 +96,7 @@ done -> <P>/.opencode
 .opencode/agents/beta-agent.md
 .opencode/agents/plain.md
 AGENTS.md
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

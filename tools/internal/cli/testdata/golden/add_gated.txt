@@ -38,6 +38,7 @@ skill "gated-one" belongs to domain "gated", which is gated: $GOLDEN_GATE_VAR is
 == combined ==
 
 ### tree
+.as-skill/lock.json
 .claude/agents/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
 .claude/agents/beta-agent.md -> <H>/domains/beta/agents/beta-agent.md
 .claude/agents/plain.md -> <H>/domains/alpha/agents/plain.md
@@ -47,8 +48,7 @@ skill "gated-one" belongs to domain "gated", which is gated: $GOLDEN_GATE_VAR is
 .claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .claude/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
 .claude/skills/beta-one -> <H>/domains/beta/skills/beta-one
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

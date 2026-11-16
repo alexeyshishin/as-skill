@@ -65,7 +65,10 @@ func treeDump(t *testing.T, root string) string {
 	var b strings.Builder
 	_ = filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		r, _ := filepath.Rel(root, p)
-		if r == "." || r == filepath.Join(".claude", "skills-lock.json") {
+		if r == lockfile.Dir {
+			return filepath.SkipDir
+		}
+		if r == "." {
 			return nil
 		}
 		if d.Type()&fs.ModeSymlink != 0 {

@@ -29,10 +29,10 @@ installed     beta     skill   -> <P>/.claude/skills/beta-one (1 file)
 done -> <P>/.claude
 
 ### tree
+.as-skill/lock.json
 .claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .claude/skills/beta-one/SKILL.md
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

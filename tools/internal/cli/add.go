@@ -72,6 +72,9 @@ func runAdd(args []string, d Deps) error {
 			}
 			return fmt.Errorf("saving lockfile: %w", err)
 		}
+		if len(lock.Entries) > 0 && !install.GitIgnored(projectRoot, lockfile.Dir) {
+			fmt.Fprintf(ios.Stderr(), "as-skill: warning: %s/ is not git-ignored; the lockfile holds absolute paths, add %s/ to .gitignore\n", lockfile.Dir, lockfile.Dir)
+		}
 	}
 	if runErr == nil {
 		runErr = registerSelected(in, pl)

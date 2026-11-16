@@ -260,6 +260,7 @@ func (st *removeState) problems() error {
 }
 
 func (in *Installer) applyRemove(p *Plan) error {
+	defer in.pruneEmptyDirs()
 	st := p.rm
 	for _, op := range p.Ops {
 		u := op.rm
@@ -287,6 +288,27 @@ func (in *Installer) applyRemove(p *Plan) error {
 		}
 	}
 	return nil
+}
+
+func (in *Installer) pruneEmptyDirs() {
+	roots := PlatformRoots(in.ProjectRoot)
+	underRoot := func(dir string) bool {
+		for _, r := range roots {
+			if dir == r || fsys.StrictlyInside(r, dir) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, p := range in.removed {
+		for dir := filepath.Dir(p); underRoot(dir); dir = filepath.Dir(dir) {
+			fi, err := os.Lstat(dir)
+			if err != nil || !fi.IsDir() || os.Remove(dir) != nil {
+				break
+			}
+		}
+	}
+	in.removed = nil
 }
 
 func (in *Installer) uninstallDomain(reg *harness.Registry, name string) error {
@@ -417,6 +439,7 @@ func (in *Installer) uninstallOne(domain string, kind lockfile.Kind, name, dst s
 		fmt.Fprintf(in.Stderr(), "as-skill: warning: failed removing %s: %v\n", dst, removeErr)
 		return false
 	}
+	in.removed = append(in.removed, dst)
 	in.Lock.RemoveAllAt(dst)
 	fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", dst)
 	return true
@@ -508,6 +531,7 @@ func (in *Installer) removeEntry(e lockfile.Entry) bool {
 		fmt.Fprintf(in.Stderr(), "as-skill: warning: failed removing %s: %v\n", e.Path, rerr)
 		return false
 	}
+	in.removed = append(in.removed, e.Path)
 	in.Lock.RemoveAt(e.Domain, e.Kind, e.Name, e.Path)
 	fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", e.Path)
 	return true
@@ -598,6 +622,7 @@ func (in *Installer) removeRow(st *removeState, e lockfile.Entry) {
 			clean = false
 			continue
 		}
+		in.removed = append(in.removed, p)
 		fmt.Fprintf(in.Stdout(), "uninstalled    %s\n", p)
 		if e.Kind == lockfile.KindHooks {
 			goneHooks = append(goneHooks, filepath.Base(p))

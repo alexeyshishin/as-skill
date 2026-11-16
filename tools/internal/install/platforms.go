@@ -168,7 +168,7 @@ func (in *Installer) unignored(c gitCache, root string) bool {
 	}
 	ok, done := c[root]
 	if !done {
-		ok = gitIgnored(in.ProjectRoot, root)
+		ok = GitIgnored(in.ProjectRoot, root)
 		c[root] = ok
 	}
 	return !ok
@@ -196,7 +196,7 @@ func (in *Installer) guard(c gitCache, dst string) error {
 	return nil
 }
 
-func gitIgnored(project, root string) bool {
+func GitIgnored(project, root string) bool {
 	if _, err := exec.LookPath("git"); err != nil {
 		return true
 	}

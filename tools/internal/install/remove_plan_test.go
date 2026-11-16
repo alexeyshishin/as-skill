@@ -114,6 +114,33 @@ func TestRemoveKeepsForeignFileInSharedDir(t *testing.T) {
 	}
 }
 
+func TestRemovePrunesEmptiedDirsOnly(t *testing.T) {
+	proj := t.TempDir()
+	skill := filepath.Join(proj, ".agents", "skills", "s")
+	agent := filepath.Join(proj, ".codex", "agents", "a.toml")
+	foreign := filepath.Join(proj, ".agents", "rules", "mine.md")
+	rmWrite(t, filepath.Join(skill, "SKILL.md"), "x")
+	rmWrite(t, agent, "x")
+	rmWrite(t, foreign, "keep")
+	rows := []lockfile.Entry{
+		{Domain: "d", Kind: lockfile.KindSkills, Name: "s", Mode: lockfile.ModeCopy, Path: skill, Platforms: []string{"codex"}},
+		{Domain: "d", Kind: lockfile.KindAgents, Name: "a.toml", Mode: lockfile.ModeCopy, Path: agent, Platforms: []string{"codex"}},
+	}
+	in := rmInstaller(proj, rows)
+	in.Platforms = []platform.ID{platform.Codex}
+	if _, err := rmApply(t, in, RemoveTarget{Name: "d", Domain: true, Rows: rows}); err != nil {
+		t.Fatal(err)
+	}
+	for _, gone := range []string{filepath.Join(proj, ".agents", "skills"), filepath.Join(proj, ".codex")} {
+		if rmExists(gone) {
+			t.Errorf("%s left behind", gone)
+		}
+	}
+	if !rmExists(foreign) {
+		t.Fatal("foreign file removed")
+	}
+}
+
 func TestRemoveLinkRowOverRealDirSkipped(t *testing.T) {
 	proj := rmProject(t)
 	skill := filepath.Join(proj, ".claude", "skills", "s")
