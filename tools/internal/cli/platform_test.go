@@ -210,8 +210,11 @@ func TestDoctorUnverifiedFiresForNonClaude(t *testing.T) {
 	if err != nil {
 		t.Fatalf("warnings must not fail doctor: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "codex agents capability is unverified") {
+	if !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "codex hooks capability is unverified") {
 		t.Fatalf("no UNVERIFIED warning:\n%s", out)
+	}
+	if strings.Contains(out, "codex agents capability is unverified") {
+		t.Fatalf("codex agents are verified:\n%s", out)
 	}
 	claude := t.TempDir()
 	installPlatforms(t, harness, claude, "--copy")

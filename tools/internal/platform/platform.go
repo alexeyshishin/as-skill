@@ -73,6 +73,8 @@ type Platform struct {
 
 const verifiedDate = "2026-10-27"
 
+const codexVerifiedDate = "2026-11-16"
+
 var order = []ID{Claude, Codex, Cursor, OpenCode}
 
 var table = map[ID]Platform{
@@ -104,7 +106,7 @@ var table = map[ID]Platform{
 			EventMap:   map[string][]string{},
 		},
 		InstructionFile:    "AGENTS.md",
-		Verified:           map[string]string{"skills": "", "agents": "", "rules": "", "hooks": ""},
+		Verified:           map[string]string{"skills": codexVerifiedDate, "agents": codexVerifiedDate, "rules": "", "hooks": ""},
 		ReservedAgentNames: []string{"default", "worker", "explorer"},
 	},
 	Cursor: {

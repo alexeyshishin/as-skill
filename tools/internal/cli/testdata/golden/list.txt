@@ -62,8 +62,8 @@ claude    skills  .claude/skills                     link         verified 2026-
 claude    agents  .claude/agents                     link         verified 2026-10-27
 claude    rules   .claude/rules                      link         verified 2026-10-27
 claude    hooks   .claude/hooks -> .claude/settings.json link         verified 2026-10-27
-codex     skills  .agents/skills                     link         unverified
-codex     agents  .codex/agents                      render       unverified
+codex     skills  .agents/skills                     link         verified 2026-11-16
+codex     agents  .codex/agents                      render       verified 2026-11-16
 codex     rules   .agents/rules + AGENTS.md          block        unverified
 codex     hooks   .codex/hooks -> .codex/hooks.json  link         unverified
 cursor    skills  .agents/skills                     link         unverified
@@ -83,8 +83,8 @@ claude    skills  .claude/skills                     link         verified 2026-
 claude    agents  .claude/agents                     link         verified 2026-10-27
 claude    rules   .claude/rules                      link         verified 2026-10-27
 claude    hooks   .claude/hooks -> .claude/settings.json link         verified 2026-10-27
-codex     skills  .agents/skills                     link         unverified
-codex     agents  .codex/agents                      render       unverified
+codex     skills  .agents/skills                     link         verified 2026-11-16
+codex     agents  .codex/agents                      render       verified 2026-11-16
 codex     rules   .agents/rules + AGENTS.md          block        unverified
 codex     hooks   .codex/hooks -> .codex/hooks.json  link         unverified
 cursor    skills  .agents/skills                     link         unverified
