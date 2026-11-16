@@ -40,7 +40,7 @@ A repository of templates for agents, skills, rules and hooks for AI coding agen
 
 ## Repository structure
 
-```
+```text
 as-skill/
 ├── domains/                 # Single Source of Truth
 │   ├── obsidian/
