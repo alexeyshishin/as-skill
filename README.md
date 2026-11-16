@@ -118,6 +118,7 @@ A dialog opens: project → domains → platforms → mode → confirmation. All
 - **Invocation:** `/code-plan` — Claude and Cursor, `$code-plan` — Codex. In OpenCode the agent picks up a skill by its description; `/` invocation is not described in its documentation.
 - **Hooks.** Codex: after `hooks enable`, confirm the hooks via `/hooks` (trust). Cursor: `stop` cannot block, so `followup_message` is used, at most 2 times. opencode: hooks are not supported. It is worth adding session directories (`.claude/sessions` and the like) to `.gitignore`.
 - **Guard for link installs.** Symlink entries point to this copy of the repository: add `/.agents /.codex /.cursor /.opencode` (one per line) to the target project's `.gitignore`, or install with `--copy`.
+- **Lockfile.** `as-skill` records what it installed in `<project>/.as-skill/lock.json` (any platform; an old `.claude/skills-lock.json` moves there on the next `add`/`remove`). It holds absolute paths — add `/.as-skill` to `.gitignore`. `remove` deletes the lockfile with its last entry, along with any directories it leaves empty.
 - **Known issue:** `doctor` shows DRIFTED after a `--copy` install of two or more domains.
 
 ## Contributing and security
