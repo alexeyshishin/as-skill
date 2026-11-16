@@ -25,6 +25,7 @@ as-skill/
     ├── content/
     ├── core/
     ├── devops/
+    ├── docs/
     ├── git/
     ├── obsidian/
     ├── resume/
@@ -48,6 +49,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, Russian-text humanizing |
 | `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
+| `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution; C4 diagrams stubbed |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
 | `resume` | — | Resume review and job search — ATS optimization, bullets, tailoring, cover letters, interview prep (22 skills adapted from Paramchoudhary/ResumeSkills, MIT) |
@@ -128,6 +130,7 @@ Not a single blanket rule — it's domain-dependent:
 - **`content`, `obsidian`**: output is in Russian, technical terms stay in English (`SRE`, `Kubernetes`, `goroutine`, `Pod`); informal "you" or impersonal phrasing; personal, authorial voice — not Wikipedia, not corporate copy. See `content-voice.md` / `content-style.md`.
 - **`university`**: thesis text and review findings are in Russian, technical terms stay in English; formal impersonal academic register, not an authorial voice. See `university-gost.md`.
 - **`code`, `git`, `devops`**: output is in English, terse and technical (commit subjects, PR descriptions, YAML, agent findings as `path:line — SEVERITY: problem. fix.`). See each domain's own rule/agent files.
+- **`docs`**: `README.md` in English, `README_RUS.md` its Russian translation with technical terms in English; review findings as `path:line — SEVERITY: problem. fix.`. See `docs-conventions.md`.
 
 ### Don't, in any domain
 
@@ -180,6 +183,22 @@ In these cases follow both domains' rules — they complement, not contradict, e
 
 **Agents:**
 - `git-flow` — orchestrates branch → commits → PR → merge, calling the three skills above at the right moments
+
+### domain: docs
+
+**Rules:** `docs-conventions` — README section order and checklist, EN ↔ RU sync (EN is the source), license text verbatim only, license file layout, third-party attribution
+
+**Skills:**
+- `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`
+- `docs-license` — license questionnaire → SPDX, canonical text copied from `references/licenses/` (15 bundled, else `gh api /licenses` / SPDX), placeholders only; third-party attribution + compatibility table; checks via `scripts/check-license.py`
+- `docs-c4` — stub, not implemented (C4 model diagrams)
+
+**Agents:**
+- `docs-readme-writer` — write/update/sync via `docs-readme`; fix mode applies approved reviewer findings, EN and RU together
+- `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code and EN ↔ RU meaning; ship/rework with severity-tagged findings
+- `docs-license-writer` — choose/write/attribute via `docs-license`; fix mode applies approved reviewer findings, recopies text instead of patching
+- `docs-license-reviewer` — read-only; runs the checker, audits borrowed code, attribution, compatibility; ship/rework with severity-tagged findings
+- `docs-c4-writer`, `docs-c4-reviewer` — stubs, not implemented
 
 ### domain: university
 

@@ -33,13 +33,14 @@ A repository of templates for agents, skills, rules and hooks for AI coding agen
 | [**`devops`**](domains/devops/)     | —                    | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium agents (architecture, security, SRE, diagnostics; read-only, advisory) and Executing agents (CI, Helm, K8s; write pipelines, charts and manifests).              |
 | [**`resume`**](domains/resume/)     | —                    | Resume review and job search — ATS optimization, bullet rewrites, tailoring to a vacancy, cover letters, interview and salary prep. Skills adapted from ResumeSkills (MIT). |
 | [**`university`**](domains/university/) | —                    | Graduation thesis (ВКР) — a writer agent, a reviewer agent, and a skill that turns a Markdown thesis into a GOST 7.32 `.docx` (title page, TOC, page numbers, figure and table captions) and checks it. |
+| [**`docs`**](domains/docs/)         | —                    | README and licenses — `README.md` plus its Russian translation `README_RUS.md` written from the code, a license chosen and copied verbatim, third-party attribution; writer/reviewer agents and linters for both. |
 
 
 `obsidian` is installed only when `OBSIDIAN_VAULT` is set — the path to the vault root (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, for example in `~/.zshrc`). Without it, `install all` skips the domain with a warning, while an explicit `install domain obsidian` fails with an error. The other domains are always installed.
 
 ## Repository structure
 
-```
+```text
 as-skill/
 ├── domains/                 # Single Source of Truth
 │   ├── obsidian/
@@ -52,6 +53,8 @@ as-skill/
 │   ├── code/    {manifest, skills, agents, hooks}
 │   ├── core/    {manifest, skills, hooks}
 │   ├── devops/  {manifest, agents}
+│   ├── docs/    {manifest, rules, skills, agents}
+│   ├── resume/  {manifest, skills}
 │   └── university/ {manifest, rules, skills, agents}
 │
 ├── tools/
