@@ -252,5 +252,5 @@ Domain-independent utility skills — not tied to any other domain, but installe
 **Skills:**
 - `caveman` — ultra-compressed communication mode (lite/full/ultra, plus wenyan variants)
 - `memory-bank` — maintains a lightweight project encyclopedia in `.memory-bank/`; first bootstrap seeds from `ast-index map`/`conventions` when ast-index is available
-- `memory-bank-defrag` — folds accumulated `.memory-bank/` patches into clean current-state docs
+- `memory-bank-defrag` — actualizes `.memory-bank/` against changes since the last run (baseline in `.memory-bank/.defrag.yaml`, git optional) and compacts the whole bank: folds amendment trails, collapses finished tasks and closed questions, cuts narrative to current-state facts
 - `advanced-search` (`/advanced-search`) — OSINT-style fact-checked web research: fresh authoritative sources, bold one-line verdict, tables, links to primary sources

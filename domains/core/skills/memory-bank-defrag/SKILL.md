@@ -1,42 +1,44 @@
 ---
 name: memory-bank-defrag
 description: >
-  Defragment and re-actualize a project memory bank (the .assistant/ knowledge
-  base + the project's auto-memory). Reads everything that changed in the repo
-  since the last defrag, finds where the memory bank has gone stale or
-  accumulated amendment-on-amendment "patches", folds the patches into clean
-  current-state docs, closes resolved questions, and updates the auto-memory —
-  then shows a diff for review. Use when the user says "defrag the memory bank",
+  Defragment and re-actualize a project memory bank (`.memory-bank/` + the
+  host's auto-memory, if any). Two phases every run: actualize — check what
+  changed in the repo since the last defrag (baseline kept in
+  `.memory-bank/.defrag.yaml`, works with or without git) and fix stale facts;
+  compact — sweep the whole bank, fold amendment trails, collapse finished
+  tasks and closed questions, cut narrative down to current-state facts. Then
+  shows a diff for review. Use when the user says "defrag the memory bank",
   "привести memory bank в порядок", "дефрагментация памяти", "актуализируй
-  .assistant", "причеши базу знаний", or runs /memory-bank-defrag.
+  memory bank", "причеши базу знаний", or runs /memory-bank-defrag.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
-argument-hint: "[baseline-ref]  (optional: e.g. HEAD~20 or a commit SHA to override auto-detected baseline)"
+argument-hint: "[ref|date]  (optional: a commit or YYYY-MM-DD that overrides the baseline from .memory-bank/.defrag.yaml)"
 ---
 
 # Memory Bank Defrag
 
-Bring a project's memory bank back in sync with reality and remove cruft. The
-memory bank is three things:
+Bring a project's memory bank back in sync with reality and cut it down to
+current state. The memory bank is three things:
 
-1. **`.assistant/`** in the repo — the durable, version-controlled knowledge
-   base (project context, requirements, decisions/ADRs, scope, open questions,
-   stakeholders, glossary). Structure varies per project; operate on whatever
-   files exist, don't assume a fixed layout.
-2. **Auto-memory** — the cross-session memory at
-   `~/.claude/projects/<slugified-cwd>/memory/` (Claude Code only — skip on other hosts; an `MEMORY.md` index plus one
-   file per fact). Local only — **absent on cloud/headless runs**; skip silently
-   if the directory doesn't exist.
-3. **Repo current-state docs** — files that assert *what is true now* and drift
-   the same way: `README.md`, `AGENTS.md`/`CLAUDE.md`, design specs, proposals.
-   Update these when a recent commit makes them stale. Do **not** touch raw
-   source records that capture *what happened* — meeting transcripts, chat
-   dumps, extracted board content — those are evidence; keep them verbatim
-   (translate only by adding a summary alongside, never by overwriting).
+1. **`.memory-bank/`** in the repo — the project encyclopedia the `memory-bank`
+   skill maintains: `index.md`, `product-overview/`, `steerings/`,
+   `tech-details/`, `tasks/`. Operate on whatever files exist; don't create
+   folders the project doesn't use.
+2. **Auto-memory** — the host's cross-session memory (Claude Code: a
+   `MEMORY.md` index plus one file per fact). Take its path from the session
+   context; don't guess it. Skip silently if the context names none or the
+   directory doesn't exist (cloud/headless runs, other hosts).
+3. **Repo current-state docs** — files that assert *what is true now*:
+   `README.md`, `AGENTS.md`/`CLAUDE.md`, design specs. Update them only when a
+   change proves a statement stale. Do **not** touch raw source records that
+   capture *what happened* — transcripts, chat dumps, extracted content — those
+   are evidence; keep them verbatim.
 
-The job is **defragmentation**, not rewriting: same facts, fewer patches.
-Amendment-on-amendment trails collapse into one current-state statement;
-resolved questions get closed; stale facts get corrected against the actual
-code/docs; new durable facts from recent commits get captured.
+Every run has two phases:
+
+- **Actualize** — what changed in the repo since the last defrag → stale facts,
+  dangling references, uncaptured decisions.
+- **Compact** — the whole memory bank, regardless of what changed → same facts,
+  less text.
 
 ## Non-negotiables
 
@@ -44,217 +46,185 @@ code/docs; new durable facts from recent commits get captured.
   assert a fact as current, **verify it against the live repo** (file exists,
   symbol not renamed, deadline not passed, stack matches code). If a memory
   claim contradicts current code, trust the code and fix the memory.
-- **Fold, don't lose.** When collapsing patches, preserve every substantive
-  fact. A reversal that carries decision-relevant context (why we moved off X)
-  stays as a short supersession note — that's history, not a patch.
+- **Compact the form, never the facts.** Every substantive fact survives: what
+  is true now, where it lives, why it was decided (when the reason isn't
+  obvious from the code). Narrative goes: how we got there, step-by-step logs,
+  debugging history, "first we tried X". A reversal that carries
+  decision-relevant context (why we moved off X) stays as one supersession
+  line — that's history, not a patch.
+- **Don't rephrase for style.** Text that already states a current fact tersely
+  stays as is. Edit only to remove something (patch, narrative, duplicate) or
+  fix something (stale, dangling). This keeps a repeat run on an unchanged
+  bank a no-op.
 - **Only substantive facts — no process noise.** The memory bank records the
-  *project*, not your maintenance of it. Do **not** add "actualized on <date>",
-  "switched to English", "synced the docs" timeline/history entries, and do not
-  repeat the same standing rule (e.g. "working language is English") across many
-  files — state it once in its authoritative home and link to it. When a sync
-  you just did makes an old "needs updating" caveat stale, delete the caveat;
-  don't leave a trail.
+  *project*, not your maintenance of it. Do **not** add "actualized on <date>"
+  or "synced the docs" entries, and do not repeat the same standing rule across
+  many files — state it once in its authoritative home and link to it. When a
+  sync makes an old "needs updating" caveat stale, delete the caveat.
 - **Don't invent.** No facts, paths, dates, or decisions that aren't in the
-  commits, the code, or the existing memory. Unknown stays unknown.
-- **Review before commit.** Make the edits, then show the diff and a summary. Do
-  **not** auto-commit unless the user asks (interactive) or the unattended rules
-  below apply. Auto-memory files live outside the repo and are written directly
-  (not committed).
+  changes, the code, or the existing memory. Unknown stays unknown.
+- **Review before commit.** Make the edits, then show the diff and a summary.
+  Do **not** auto-commit unless the user asks (interactive) or the unattended
+  rules below apply. Auto-memory files live outside the repo and are written
+  directly (not committed).
 - **Convert relative dates to absolute** (use the current date from context).
+
+## State: `.memory-bank/.defrag.yaml`
+
+```yaml
+date: <YYYY-MM-DD>
+ref: <full commit SHA>
+```
+
+- `date` — the last defrag that changed something; `ref` — `git rev-parse HEAD`
+  at that run, omitted when the project has no git.
+- Machine state, not knowledge: never link it from `index.md`, never mention it
+  in memory files. The `memory-bank-load` hook lists only `*.md` files, so it
+  stays out of session context.
+- Write it only on a run that changed content. A run with no edits leaves it
+  untouched — a state-only diff is noise.
+- It's committed together with the defrag edits when `.memory-bank/` is
+  tracked; otherwise it stays local.
 
 ## Workflow
 
-### 1. Locate the baseline (last defrag)
+### 1. Resolve the baseline
 
-Find the commit of the previous defrag so you only process what changed since.
+First match wins:
+
+1. The `[ref|date]` argument, if passed.
+2. `ref` from `.defrag.yaml`, if git is present and the commit still exists:
+   `git cat-file -e "<ref>^{commit}"`.
+3. `date` from `.defrag.yaml` — the ref was rewritten away (rebase, squash) or
+   never recorded. Turn it into a ref: `git rev-list -1 --before=<date> HEAD`.
+4. No git — the mtime of `.defrag.yaml` marks the last defrag.
+5. No state file (first run) — no baseline. Actualize verifies every claim
+   against the current tree instead of a change set. Don't fall back to an
+   arbitrary "last N commits".
+
+### 2. Gather what changed
+
+With a ref (baseline vs working tree, so uncommitted work counts too):
 
 ```bash
-# Preferred: explicit trailer this skill writes on its own commits
-git log -1 --grep='^Memory-Defrag:' --format='%H %cI %s'
-# Fallback: the conventional subject line
-git log -1 --grep='actualize memory bank' --format='%H %cI %s'
+git log <ref>..HEAD --format='%h %cI %s'
+git diff <ref> --stat -- . ':(exclude).memory-bank'
+git status --short -- . ':(exclude).memory-bank'
 ```
 
-- If the user passed a `baseline-ref` argument, use it instead.
-- If neither is found (first ever run), say so and propose a sensible range
-  (e.g. last 20 commits, or since the memory bank dir was created:
-  `git log --diff-filter=A -1 --format=%H -- .assistant`). Confirm with the user
-  before processing a large history (interactive) or just use it (unattended).
-
-### 2. Gather what changed since baseline — and bail early if nothing did
+Without git:
 
 ```bash
-git log <baseline>..HEAD --format='%h %cI %s'           # commit subjects
-git diff <baseline>..HEAD --stat -- . ':(exclude).assistant'  # what code/docs moved
+find . -type f -newer .memory-bank/.defrag.yaml \
+  -not -path './.memory-bank/*' -not -path '*/node_modules/*' \
+  -not -path '*/vendor/*' -not -path '*/dist/*' -not -path '*/build/*' \
+  -not -path '*/.venv/*'
 ```
 
-**No-op guard:** if `<baseline>..HEAD` is empty (no commits since the last
-defrag), there is nothing to do. Stop here — no edits, no commit, no PR. Report
-"nothing changed since the last defrag" and exit. (This is what keeps a daily
-schedule cheap and quiet.)
-
-Otherwise read the actual diffs (or the changed files) for anything that
-changes a fact the memory bank records: stack/dependency changes, renamed or
-deleted files, new integrations, resolved decisions, changed config, new
-constraints. Ignore pure formatting / lockfile churn — if the only changes are
-cosmetic, treat it as a no-op too.
+Read the actual diffs (or the changed files) for anything that changes a fact
+the memory bank records: stack/dependency changes, renamed or deleted files,
+new integrations, resolved decisions, changed config, new constraints. Ignore
+pure formatting and lockfile churn. An empty or cosmetic-only change set means
+actualize has nothing to do — compaction still runs.
 
 ### 3. Read the current memory bank
 
-- `ls` and read every file under `.assistant/`.
-- If auto-memory exists, read its `MEMORY.md` and the referenced files. (On
-  cloud/headless runs this directory won't exist — skip it.)
+- `ls` and read every file under `.memory-bank/`.
+- If auto-memory exists, read its `MEMORY.md` and the referenced files.
 
-### 4. Detect divergences
+### 4. Actualize — detect divergences
 
-Build a list, each tagged with evidence (commit SHA, file:line):
+Build a list, each tagged with evidence (commit SHA, `file:line`):
 
 - **Stale facts** — memory says X, current code/docs say Y.
-- **Patches to fold** — multiple "Amendment <date>" blocks on one decision,
-  superseded-but-still-described content, the same fact stated three ways across
-  files. Collapse to current state + one supersession note where a reversal
-  happened.
-- **Resolvable questions** — open questions the recent commits actually answered.
-- **Dangling references** — memory cites a file/symbol/flag that no longer exists.
-- **Uncaptured facts** — durable decisions/constraints in recent commits not yet
+- **Dangling references** — memory cites a file/symbol/flag that no longer
+  exists.
+- **Resolved questions, finished tasks** — open questions the changes answered,
+  tasks the changes completed.
+- **Uncaptured facts** — durable decisions/constraints in the change set not yet
   in the memory bank.
 
-If divergences are large or ambiguous in an interactive run, surface the list
-and confirm direction before mass-editing. In an unattended run, proceed and let
+Without a baseline, check stale facts and dangling references for every claim
+and skip the uncaptured-facts sweep — capturing new facts is the `memory-bank`
+skill's job.
+
+### 5. Compact — sweep the whole bank
+
+Over every file, whatever the baseline:
+
+- **Amendment trails** — several "Amendment <date>" / "Update:" blocks on one
+  decision, superseded-but-still-described content → one current-state
+  statement, plus one supersession line where the reversal matters.
+- **Narrative** — cut to the facts (see non-negotiables).
+- **Finished tasks** in `tasks/` — move the outcome (what now exists, where,
+  why) into its home file in `tech-details/`, `steerings/` or
+  `product-overview/`. The task shrinks in place to one line, in whatever form
+  `tasks/` already uses: what was done + a link to the home file
+  (`- [x] <what was done> → [<topic>](../tech-details/<file>.md)`).
+- **Closed questions** — the answer moves into the file it belongs to; the
+  question is removed.
+- **Duplicates** — one fact, one home; other files link to it instead of
+  restating it.
+- **Index** — `index.md` links every file; no orphan files, no dead links. Keep
+  it under 16 KB (the `memory-bank-load` hook truncates it there): over budget,
+  move detail out of `index.md` into the linked files.
+
+If the edit list is large or ambiguous in an interactive run, surface it and
+confirm direction before mass-editing. In an unattended run, proceed and let
 the PR be the review surface.
 
-### 5. Apply the edits
+### 6. Apply the edits
 
-Edit `.assistant/`, the repo current-state docs (README and the like), and
-auto-memory to current state:
-
-- Rewrite patched sections as clean current-state; keep a one-line
-  "superseded by … because …" only where the reversal matters.
-- Close resolved questions in place (mark resolved + the answer + the commit),
-  matching the file's existing convention.
-- Correct stale facts; fix or drop dangling references.
-- Capture new durable facts in the right file.
+- Edit `.memory-bank/`, the repo current-state docs, and auto-memory per steps
+  4–5.
 - Auto-memory (skip if absent): update the relevant fact file (don't duplicate —
   edit the existing one), refresh its `MEMORY.md` index line, delete memories
   proven wrong. Link related memories with `[[name]]`.
+- If anything changed, write `.defrag.yaml`: `date` = today, `ref` =
+  `git rev-parse HEAD` (omit without git).
 
-### 6. Verify
+### 7. Verify
 
-- `grep` the memory bank for leftovers of anything you retired (old vendor,
-  old path, old decision) — catch half-updated mentions.
+- `grep` the memory bank for leftovers of anything you retired (old vendor, old
+  path, old decision) — catch half-updated mentions.
 - Re-check internal consistency: a table row and the prose around it agree; a
-  closed question isn't still referenced as open elsewhere.
+  closed question or finished task isn't still referenced as open elsewhere;
+  every link in `index.md` resolves.
 
-### 7. Report + commit
+### 8. Report + commit
 
-Summary: files touched, patches folded, questions closed, facts corrected,
-anything you deliberately left alone.
+Summary: files touched, patches folded, tasks collapsed, questions closed,
+facts corrected, anything you deliberately left alone.
 
-- **Interactive run:** show the diff (`git diff`); commit only when the user asks.
+- **Interactive run:** show the diff (`git diff`, or the list of edited files
+  without git); commit only when the user asks.
 - **Unattended run:** see below.
 
-Commit subject + trailer (the trailer is what the next run's baseline detection
-finds — always include it):
+The commit message follows the project's commit convention; by default a
+one-line Conventional Commit, no body, no trailer:
+`docs(memory-bank): <one-line theme>`. The baseline lives in `.defrag.yaml`, so
+the message carries nothing machine-readable.
 
-```
-docs(assistant): actualize memory bank — <one-line theme>
-
-<what was folded/closed/corrected>
-
-Memory-Defrag: <YYYY-MM-DD>
-```
-
-## Unattended / scheduled runs (cloud routine)
+## Unattended / scheduled runs
 
 When there is no human to review mid-run (a scheduled routine, CI, headless):
 
 - **Open a pull request, never push to `main`.** Create a branch
-  (`memory-defrag/<YYYY-MM-DD>`), commit with the trailer above, push it, and
-  open a PR whose body is the step-7 summary. A human merges. This keeps the
-  baseline-trailer in history once merged, and keeps the knowledge base reviewed.
-- **If the no-op guard fired (step 2), do nothing** — no branch, no PR. A quiet
-  run is the correct outcome on a day with no relevant commits.
-- **Don't loop on yourself.** Your own defrag commit carries the `Memory-Defrag:`
-  trailer and becomes the next baseline, so the following run sees no new
-  substantive commits and no-ops. Never treat a prior defrag commit as a change
-  to process.
+  (`docs/memory-bank-defrag-<YYYY-MM-DD>`), commit the edits together with
+  `.defrag.yaml`, push it, and open a PR whose body is the step-8 summary. A
+  human merges.
+- **No edits → nothing.** No branch, no commit, no PR. A quiet run is the
+  correct outcome when the repo and the bank are already in sync.
+- **Don't loop on yourself.** `.memory-bank/` is excluded from the change set,
+  and a run without edits doesn't touch the state, so the next run on an
+  unchanged repo is a no-op. Docs you edited outside `.memory-bank/` reappear in
+  the next change set — they're already consistent and produce no edits.
 - Auto-memory is local-only and absent here — operate on the repo alone.
-- **Announce the PR in Mattermost** (next section) once it's open, so a human
-  knows there's a knowledge-base diff to review. Skip entirely on a no-op run.
-
-### Notify Mattermost (after the PR is opened)
-
-When a PR was opened, post a short report to Mattermost via incoming webhook so a
-reviewer can open the PR and leave comments there. **Only after a successful PR —
-never on a no-op run** (a quiet day stays quiet).
-
-- Webhook: read it from env `MM_DEFRAG_WEBHOOK` — never hardcode a hook URL in
-  the skill or the repo (it's a write credential). Skip the whole notify step if
-  the var is unset.
-- Channel: whichever channel the run instructions name, else env `MM_DEFRAG_CHANNEL`
-  (each project targets its own channel). Use the channel **name/slug** (the URL
-  handle), not the 26-char channel ID — the webhook override rejects IDs. If neither
-  is set, omit `channel` and the post lands in the webhook's default.
-
-**Language** — write the message in the **project's working language** (the one
-its `CLAUDE.md`/`AGENTS.md` mandates). Don't default to English on a project that
-works in another language.
-
-**Message content** — write it for a human skimming chat, not a changelog dump.
-Keep it short and scannable:
-
-1. **Title** — the one-line run theme; links to the PR (`title_link`).
-2. **Folded / corrected** — 2–4 grouped bullets of what you tidied (patches
-   folded, facts corrected, questions closed). Summarize, don't list every file.
-3. **Heads-up** — gaps you noticed that a human or the client should check or
-   confirm. Include only items that genuinely need someone — if there are none
-   this run, say so in one line rather than padding.
-4. **Call to action** (always last) — make clear you don't read replies in the
-   channel; you act on PR review comments and edit reactively, so they should
-   comment inline on the PR and keep the thread there.
-
-**Formatting** — use a Mattermost attachment (colored bar + clickable PR title)
-with markdown in the body. Build the JSON with `jq` so the summary text can't
-break the payload — never hand-concatenate summary text into JSON:
-
-```bash
-PR_URL="<from gh pr create>"
-TITLE="Memory bank defrag — <one-line theme>"
-BODY=$(cat <<'EOF'
-Tidied up the `.assistant/` knowledge base after <N> commits — docs only.
-
-**Folded / corrected**
-- <grouped bullet>
-- <grouped bullet>
-
-**Heads-up**
-- <gap to check / confirm with client — or: "nothing needs input this run">
-
-:point_right: **I don't read replies in this channel.** I act on the PR review
-comments and make edits reactively — drop your notes inline on the PR and let's
-keep the thread there.
-EOF
-)
-
-curl -fsS -X POST -H 'Content-Type: application/json' \
-  --data "$(jq -n \
-    --arg ch "${MM_DEFRAG_CHANNEL:-}" --arg title "$TITLE" \
-    --arg link "$PR_URL" --arg body "$BODY" \
-    '{username:"Memory Bank",
-      attachments:[{color:"#2eb886", title:$title, title_link:$link, text:$body,
-                    fallback:("Memory bank defrag — review the PR: "+$link)}]}
-     + (if $ch=="" then {} else {channel:$ch} end)')" \
-  "$MM_DEFRAG_WEBHOOK"
-```
-
-The webhook post is best-effort: if it fails (non-2xx, network), log it in the
-run summary but don't fail the run — the PR is the source of truth, the ping is
-convenience.
 
 ## Notes
 
 - This skill changes documentation/knowledge only — it never edits product code.
-- If the project's `CLAUDE.md`/`AGENTS.md` defines a memory-update protocol or a
-  working-language rule, follow it.
+- If the project's `CLAUDE.md`/`AGENTS.md` defines a memory-update protocol, a
+  working-language rule, or commit conventions, follow them.
 - Keep the memory bank's existing tone and structure; match it, don't impose a
   new one.
