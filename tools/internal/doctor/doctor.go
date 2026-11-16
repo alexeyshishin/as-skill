@@ -80,7 +80,7 @@ func FilterEntries(entries []lockfile.Entry, plats []string) []lockfile.Entry {
 
 func PrintEntryTable(w io.Writer, entries []lockfile.Entry, healthOf func(lockfile.Entry) string) {
 	if len(entries) == 0 {
-		fmt.Fprintln(w, "no entries tracked in skills-lock.json")
+		fmt.Fprintln(w, "no entries tracked in "+lockfile.Dir+"/"+lockfile.File)
 		return
 	}
 	fmt.Fprintf(w, "%-10s %-8s %-24s %-6s %-11s %-22s %s\n", "DOMAIN", "KIND", "NAME", "MODE", "HEALTH", "PLATFORMS", "PATH")

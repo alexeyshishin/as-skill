@@ -217,7 +217,7 @@ func (c *gcase) tree() {
 		return nil
 	})
 	fmt.Fprintf(&c.out, "### tree\n%s\n", c.norm(strings.Join(lines, "\n")))
-	for _, f := range []string{".claude/settings.json", ".codex/hooks.json", ".cursor/hooks.json", ".claude/skills-lock.json"} {
+	for _, f := range []string{".claude/settings.json", ".codex/hooks.json", ".cursor/hooks.json", ".as-skill/lock.json"} {
 		if b, err := os.ReadFile(filepath.Join(c.p, f)); err == nil {
 			fmt.Fprintf(&c.out, "### file %s\n%s\n", f, c.norm(string(b)))
 		}

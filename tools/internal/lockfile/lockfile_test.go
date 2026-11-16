@@ -71,12 +71,74 @@ func TestRealLockfileRoundTripsByteIdentical(t *testing.T) {
 	if err := lf.Save(root); err != nil {
 		t.Fatal(err)
 	}
-	got, err := os.ReadFile(filepath.Join(root, ".claude", "skills-lock.json"))
+	got, err := os.ReadFile(Path(root))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(got) != string(orig) {
 		t.Fatal("re-saved lockfile differs from original bytes")
+	}
+	if _, err := os.Lstat(filepath.Join(root, ".claude")); !os.IsNotExist(err) {
+		t.Fatalf("legacy .claude/ left behind: %v", err)
+	}
+}
+
+func TestSaveKeepsNonEmptyLegacyDir(t *testing.T) {
+	root := t.TempDir()
+	claude := filepath.Join(root, ".claude")
+	if err := os.MkdirAll(filepath.Join(claude, "skills"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(legacyPath(root), []byte(`{"entries":[{"domain":"d","kind":"skills","name":"s","mode":"link","path":"/p/s","source":"/s","installed_at":"2024-01-01T00:00:00Z"}]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lf, err := Load(root)
+	if err != nil || len(lf.Entries) != 1 {
+		t.Fatalf("legacy load: %+v %v", lf, err)
+	}
+	if err := lf.Save(root); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(legacyPath(root)); !os.IsNotExist(err) {
+		t.Fatalf("legacy lockfile not removed: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(claude, "skills")); err != nil {
+		t.Fatalf(".claude/ content lost: %v", err)
+	}
+	if _, err := os.Stat(Path(root)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadPrefersNewPath(t *testing.T) {
+	root := t.TempDir()
+	for p, name := range map[string]string{Path(root): "new", legacyPath(root): "old"} {
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(`{"entries":[{"domain":"d","kind":"skills","name":"`+name+`","mode":"link","path":"/p","source":"/s","installed_at":"2024-01-01T00:00:00Z"}]}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	lf, err := Load(root)
+	if err != nil || len(lf.Entries) != 1 || lf.Entries[0].Name != "new" {
+		t.Fatalf("Load = %+v %v, want the .as-skill entry", lf, err)
+	}
+}
+
+func TestSaveEmptyRemovesLockfile(t *testing.T) {
+	root := t.TempDir()
+	lf := &Lockfile{}
+	lf.Record(Entry{Domain: "d", Kind: "skills", Name: "s", Mode: "link", Path: "/p/s"})
+	if err := lf.Save(root); err != nil {
+		t.Fatal(err)
+	}
+	lf.RemoveAllAt("/p/s")
+	if err := lf.Save(root); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Lstat(filepath.Join(root, Dir)); !os.IsNotExist(err) {
+		t.Fatalf("%s/ left after last entry removed: %v", Dir, err)
 	}
 }
 

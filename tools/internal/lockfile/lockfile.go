@@ -51,13 +51,26 @@ type Lockfile struct {
 	Entries []Entry `json:"entries"`
 }
 
-func path(projectRoot string) string {
+const (
+	Dir  = ".as-skill"
+	File = "lock.json"
+)
+
+func Path(projectRoot string) string {
+	return filepath.Join(projectRoot, Dir, File)
+}
+
+func legacyPath(projectRoot string) string {
 	return filepath.Join(projectRoot, ".claude", "skills-lock.json")
 }
 
 func Load(projectRoot string) (*Lockfile, error) {
-	p := path(projectRoot)
+	p := Path(projectRoot)
 	data, err := os.ReadFile(p)
+	if os.IsNotExist(err) {
+		p = legacyPath(projectRoot)
+		data, err = os.ReadFile(p)
+	}
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &Lockfile{}, nil
@@ -231,8 +244,13 @@ func (lf *Lockfile) RemoveAt(domain string, kind Kind, name string, path string)
 }
 
 func (lf *Lockfile) Save(projectRoot string) error {
-	dir := filepath.Join(projectRoot, ".claude")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if len(lf.Entries) == 0 {
+		if err := removeWithDir(Path(projectRoot)); err != nil {
+			return err
+		}
+		return removeWithDir(legacyPath(projectRoot))
+	}
+	if err := os.MkdirAll(filepath.Join(projectRoot, Dir), 0o755); err != nil {
 		return err
 	}
 	out := &Lockfile{Entries: make([]Entry, len(lf.Entries))}
@@ -247,5 +265,21 @@ func (lf *Lockfile) Save(projectRoot string) error {
 		return err
 	}
 	data = append(data, '\n')
-	return os.WriteFile(path(projectRoot), data, 0o644)
+	if err := os.WriteFile(Path(projectRoot), data, 0o644); err != nil {
+		return err
+	}
+	return removeWithDir(legacyPath(projectRoot))
+}
+
+func removeWithDir(p string) error {
+	if err := os.Remove(p); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	if fi, err := os.Lstat(filepath.Dir(p)); err == nil && fi.IsDir() {
+		os.Remove(filepath.Dir(p))
+	}
+	return nil
 }

@@ -83,6 +83,7 @@ alpha      skills   alpha-one                link   OK          claude          
 alpha      skills   alpha-two                link   OK          claude                 <P>/.claude/skills/alpha-two
 
 ### tree
+.as-skill/lock.json
 .claude/agents/alpha-agent.md -> <H>/domains/alpha/agents/alpha-agent.md
 .claude/agents/plain.md -> <H>/domains/alpha/agents/plain.md
 .claude/hooks/claude-only.sh -> <H>/domains/alpha/hooks/claude-only.sh
@@ -90,8 +91,7 @@ alpha      skills   alpha-two                link   OK          claude          
 .claude/rules/alpha-rule.md -> <H>/domains/alpha/rules/alpha-rule.md
 .claude/skills/alpha-one -> <H>/domains/alpha/skills/alpha-one
 .claude/skills/alpha-two -> <H>/domains/alpha/skills/alpha-two
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

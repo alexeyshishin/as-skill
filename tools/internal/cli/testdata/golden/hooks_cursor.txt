@@ -46,7 +46,7 @@ UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cur
 .agents/skills/alpha-one/SKILL.md
 .agents/skills/alpha-two/README.md
 .agents/skills/alpha-two/SKILL.md
-.claude/skills-lock.json
+.as-skill/lock.json
 .cursor/agents/alpha-agent.md
 .cursor/agents/plain.md
 .cursor/hooks/gate.sh
@@ -65,7 +65,7 @@ UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cur
   }
 }
 
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {
@@ -186,7 +186,7 @@ unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
 .agents/skills/alpha-one/SKILL.md
 .agents/skills/alpha-two/README.md
 .agents/skills/alpha-two/SKILL.md
-.claude/skills-lock.json
+.as-skill/lock.json
 .cursor/agents/alpha-agent.md
 .cursor/agents/plain.md
 .cursor/hooks/gate.sh
@@ -197,7 +197,7 @@ unregistered   gate.sh (stop) in <P>/.cursor/hooks.json
   "version": 1
 }
 
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

@@ -48,7 +48,10 @@ func snapshotInstall(t *testing.T, mode string) string {
 			return err
 		}
 		r := rel(p, project)
-		if r == "." || r == filepath.Join(".claude", "skills-lock.json") {
+		if r == lockfile.Dir {
+			return filepath.SkipDir
+		}
+		if r == "." {
 			return nil
 		}
 		if d.Type()&fs.ModeSymlink != 0 {
@@ -75,7 +78,7 @@ func snapshotInstall(t *testing.T, mode string) string {
 	}
 	sort.Strings(lines)
 
-	raw, err := os.ReadFile(filepath.Join(project, ".claude", "skills-lock.json"))
+	raw, err := os.ReadFile(lockfile.Path(project))
 	if err != nil {
 		t.Fatal(err)
 	}

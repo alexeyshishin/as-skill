@@ -21,7 +21,7 @@ func snapshotTree(t *testing.T, root string) map[string]string {
 			return err
 		}
 		rel, _ := filepath.Rel(root, p)
-		if rel == "." || rel == filepath.Join(".claude", "skills-lock.json") {
+		if rel == "." || rel == lockfile.Path(".") {
 			return nil
 		}
 		switch {

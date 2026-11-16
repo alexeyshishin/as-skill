@@ -129,6 +129,7 @@ unknown hooks verb "bogus" (want enable|disable)
 .agents/skills/alpha-one/SKILL.md
 .agents/skills/alpha-two/README.md
 .agents/skills/alpha-two/SKILL.md
+.as-skill/lock.json
 .claude/agents/alpha-agent.md
 .claude/agents/plain.md
 .claude/hooks/claude-only.sh
@@ -139,7 +140,6 @@ unknown hooks verb "bogus" (want enable|disable)
 .claude/skills/alpha-one/SKILL.md
 .claude/skills/alpha-two/README.md
 .claude/skills/alpha-two/SKILL.md
-.claude/skills-lock.json
 .codex/agents/alpha-agent.toml
 .codex/agents/plain.toml
 .codex/hooks/gate.sh
@@ -151,7 +151,7 @@ AGENTS.md
 ### file .codex/hooks.json
 {}
 
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

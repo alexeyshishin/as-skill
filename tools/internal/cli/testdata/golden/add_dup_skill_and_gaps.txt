@@ -68,6 +68,7 @@ done -> <P>/.codex
 .agents/skills/alpha-one/SKILL.md
 .agents/skills/alpha-two/README.md
 .agents/skills/alpha-two/SKILL.md
+.as-skill/lock.json
 .claude/agents/alpha-agent.md
 .claude/agents/plain.md
 .claude/hooks/claude-only.sh
@@ -77,7 +78,6 @@ done -> <P>/.codex
 .claude/skills/alpha-one/SKILL.md
 .claude/skills/alpha-two/README.md
 .claude/skills/alpha-two/SKILL.md
-.claude/skills-lock.json
 .codex/agents/alpha-agent.toml
 .codex/agents/plain.toml
 .codex/hooks/gate.sh
@@ -86,7 +86,7 @@ done -> <P>/.codex
 .cursor/hooks/gate.sh -> <H>/domains/alpha/hooks/gate.sh
 .cursor/rules/alpha-rule.mdc
 AGENTS.md
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

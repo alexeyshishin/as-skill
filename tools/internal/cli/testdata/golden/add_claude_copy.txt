@@ -20,6 +20,7 @@ installed     beta     agents  -> <P>/.claude/agents (1 file)
 done -> <P>/.claude
 
 ### tree
+.as-skill/lock.json
 .claude/agents/alpha-agent.md
 .claude/agents/beta-agent.md
 .claude/agents/plain.md
@@ -31,8 +32,7 @@ done -> <P>/.claude
 .claude/skills/alpha-two/README.md
 .claude/skills/alpha-two/SKILL.md
 .claude/skills/beta-one/SKILL.md
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {

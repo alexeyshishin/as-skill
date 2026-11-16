@@ -43,9 +43,4 @@ uninstalled    <P>/.codex/hooks/gate.sh
 done -> <P>/.codex
 
 ### tree
-.claude/skills-lock.json
-### file .claude/skills-lock.json
-{
-  "entries": []
-}
 

@@ -74,7 +74,8 @@ mode it was recorded under), never foreign content. Uninstalling a domain's `hoo
 also drops their registrations from the project's `.claude/settings.json` (only
 entries pointing at the hook files it just removed; `settings.local.json` is
 never touched). Both modes write to the same
-per-project `<project>/.claude/skills-lock.json`, so `status`/`doctor` can tell
+per-project `<project>/.as-skill/lock.json` (platform-neutral; a legacy
+`.claude/skills-lock.json` moves there on the next `add`/`remove`), so `status`/`doctor` can tell
 owned-vs-foreign and mode apart even when a project mixes the two across runs.
 
 - `${CLAUDE_HOME}` in every manifest resolves to `<project>/.claude/`, where

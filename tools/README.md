@@ -101,7 +101,9 @@ Shared by `add`/`remove` unless noted otherwise:
 | `-y` | accept the defaults: no questions or confirmations (required without a terminal unless `--dry-run`) | off |
 | `--dry-run` | writes nothing, only prints the plan | off |
 
-The default platform is determined from the existing `.codex/`, `.cursor/`, `.opencode/`, `.claude/` (unless it contains only `skills-lock.json`) and from the platforms in the lockfile; if there is nothing, it is `claude`. The output prints the source (`platforms: detected from ...`).
+The default platform is determined from the existing `.codex/`, `.cursor/`, `.opencode/`, `.claude/` (unless it contains only a legacy `skills-lock.json`) and from the platforms in the lockfile; if there is nothing, it is `claude`. The output prints the source (`platforms: detected from ...`).
+
+The lockfile is `<project>/.as-skill/lock.json`, whatever the platforms. It holds absolute paths, so keep `.as-skill/` git-ignored — `add` warns when it is not. A legacy `.claude/skills-lock.json` is read while the new file is missing and is moved on the next `add`/`remove` (a `.claude/` left empty is removed too); when the last entry is removed, the lockfile and `.as-skill/` are deleted.
 
 Link mode for `.agents`, `.codex`, `.cursor`, `.opencode` inside a git repository requires the directory to be in `.gitignore` (`git check-ignore`); otherwise it is refused — add the directory or install with `--copy` (`--force` bypasses it). `add -y` does a dry run of the install first and on any conflict (including foreign untracked paths) fails with a hint (`-a claude`, `--copy` or remove the paths) without writing anything.
 

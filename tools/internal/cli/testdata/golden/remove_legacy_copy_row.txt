@@ -12,9 +12,9 @@ platforms: .claude
 as-skill: warning: skipping <P>/.claude/skills — legacy copy row has no item list and its source is gone
 
 ### tree
+.as-skill/lock.json
 .claude/skills/beta-one/SKILL.md
-.claude/skills-lock.json
-### file .claude/skills-lock.json
+### file .as-skill/lock.json
 {
   "entries": [
     {
@@ -43,9 +43,4 @@ uninstalled    <P>/.claude/skills/beta-one
 done -> <P>/.claude
 
 ### tree
-.claude/skills-lock.json
-### file .claude/skills-lock.json
-{
-  "entries": []
-}
 
