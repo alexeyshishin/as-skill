@@ -32,6 +32,7 @@
 | [**`core`**](domains/core/)         | —                    | Скиллы, не завязанные на конкретную область: ультра-сжатый режим общения (`caveman`), project memory bank, дефрагментация memory bank, фактчекинг-поиск в вебе (`advanced-search`).          |
 | [**`devops`**](domains/devops/)     | —                    | Kubernetes, Helm, GitLab CI, ArgoCD — Consilium-агенты (архитектура, security, SRE, диагностика; read-only, советуют) и Executing-агенты (CI, Helm, K8s; пишут пайплайны, чарты, манифесты). |
 | [**`university`**](domains/university/) | —                    | ВКР — агент-писатель, агент-рецензент и скилл, который превращает Markdown-работу в `.docx` по ГОСТ 7.32 (титульный лист, содержание, номера страниц, подписи к рисункам и таблицам) и проверяет его. |
+| [**`docs`**](domains/docs/)         | —                    | README и лицензии — `README.md` и его русский перевод `README_RUS.md` по коду проекта, подбор лицензии и её дословный текст, атрибуция чужого кода; агенты-писатели/ревьюеры и линтеры для того и другого. |
 
 
 `obsidian` ставится только при заданном `OBSIDIAN_VAULT` — путь до корня хранилища (`export OBSIDIAN_VAULT="$HOME/path/to/vault"`, например в `~/.zshrc`). Без неё `install all` пропускает домен с предупреждением, явный `install domain obsidian` падает с ошибкой. Остальные домены ставятся всегда.
@@ -51,6 +52,7 @@ as-skill/
 │   ├── code/    {manifest, skills, agents, hooks}
 │   ├── core/    {manifest, skills, hooks}
 │   ├── devops/  {manifest, agents}
+│   ├── docs/    {manifest, rules, skills, agents}
 │   └── university/ {manifest, rules, skills, agents}
 │
 ├── tools/

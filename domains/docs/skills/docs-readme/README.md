@@ -1,0 +1,33 @@
+# docs-readme
+
+Пишет или обновляет `README.md` (английский, источник) и `README_RUS.md` (полный перевод) по реальному коду проекта.
+
+## Когда срабатывает
+
+«Напиши README», «обнови README», «переведи README на русский», «синхронизируй README_RUS».
+
+## Что делает
+
+Определяет тип проекта (library / CLI / service / monorepo) по манифестам и подбирает набор секций: что это, зачем, установка, использование, документация, лицензия. Команды берёт только из `Makefile`, скриптов, CI и манифестов; read-only команды вроде `--help` запускает, чтобы снять настоящий вывод. Чего в коде нет — спрашивает одним сообщением, не выдумывает.
+
+Русская версия — перевод той же структуры: те же заголовки, таблицы, картинки, тот же код (переводятся только комментарии и `<плейсхолдеры>` внутри блоков), термины на английском, переключатель языка вверху обоих файлов. При правке EN синхронизирует только изменившиеся куски RU.
+
+Порядок секций и чеклист — в правиле [`docs-conventions`](../../rules/docs-conventions.md), собраны по [Utrecht University: README files](https://utrechtuniversity.github.io/workshop-computational-reproducibility/chapters/readme-files.html) и [README best practices](https://markdownpreviewlive.com/blog/readme-best-practices/).
+
+## Границы
+
+Не трогает `LICENSE` — это `docs-license`. Не пишет туториалы и статьи — это `content-documentation` / `content-article-draft`. Ревью готового README — агент `docs-readme-reviewer`, правки по ревью — `docs-readme-writer`. Не коммитит.
+
+## Чем укомплектован
+
+[`references/readme-skeletons.md`](references/readme-skeletons.md) — признаки типа проекта, секции по типам, соответствие заголовков EN ↔ RU, каркас пары файлов.
+
+[`scripts/check-readme.py`](scripts/check-readme.py) — линтер одного README или пары EN + RU. По файлу: блок кода без языка или незакрытый, `$` в bash-блоках, нет заголовка или вводной строки, приветствие вместо описания, больше 3 бейджей, картинка без alt, битые относительные ссылки и якоря, пустые секции, пропуски уровней заголовков, нет Install / Usage / License или они не по порядку, `TODO`, маркетинг без цифр. По паре: переключатель языка, одинаковые заголовки, таблицы, картинки, внешние ссылки, код (без учёта комментариев), непереведённые строки, ссылки на `_RUS`-версии. Без зависимостей, Python 3.8+.
+
+```bash
+python3 scripts/check-readme.py                 # README.md + README_RUS.md рядом
+python3 scripts/check-readme.py docs/README.md --no-ru
+python3 scripts/check-readme.py README.md --ru README.ru.md --json
+```
+
+Коды выхода: 0 — чисто, 2 — есть ошибки (с `--strict` ещё и предупреждения), 1 — ошибка вызова. Проверяет форму, не истину: работают ли команды и верна ли вводная строка, решает модель.

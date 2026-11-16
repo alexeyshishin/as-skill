@@ -1,0 +1,13 @@
+# Docs domain — README (English source + Russian translation) and license files.
+# Requires nothing from the environment; the linters need python3, the license fetch fallback needs gh or network.
+# rules, skills, agents go to the target project's platform dirs (see `as-skill add -a`).
+
+name: docs
+description: README.md + README_RUS.md and LICENSE files — writing and review skills and agents.
+
+requires_env: []
+
+targets:
+  rules:  ${CLAUDE_HOME}/rules
+  skills: ${CLAUDE_HOME}/skills
+  agents: ${CLAUDE_HOME}/agents
