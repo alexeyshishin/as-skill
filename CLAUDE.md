@@ -70,7 +70,7 @@ writes a static snapshot, independent of this checkout's lifetime — for sharin
 or for projects that shouldn't depend on a harness checkout sticking around.
 In a terminal, bare `as-skill add` (or `remove`) opens an interactive dialog (project → domains → customize skills → platforms → mode → conflicts → hooks → summary + confirm); names/flags pre-answer their question and `-y` takes all defaults with no prompts — the dialog needs stdin and stderr both terminals (`add git | cat` still opens it); `</dev/null`, `2>file`, `CI`, `TERM=dumb` are non-interactive and still need names and `-y` (or `--dry-run`). `as-skill remove ...` is lockfile-driven and removes only
 what a prior `add`/`add --copy` placed (symlink or files, matching the
-mode it was recorded under), never foreign content. Uninstalling a domain's `hooks`
+mode it was recorded under) plus the directories that leaves empty, never foreign content. Uninstalling a domain's `hooks`
 also drops their registrations from the project's `.claude/settings.json` (only
 entries pointing at the hook files it just removed; `settings.local.json` is
 never touched). Both modes write to the same

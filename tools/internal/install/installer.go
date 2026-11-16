@@ -25,6 +25,8 @@ type Installer struct {
 
 	ExcludeSkills map[string]bool
 	Overwrite     map[string]bool
+
+	removed []string
 }
 
 func (in *Installer) place(domain string, kind lockfile.Kind, name, src, dst string) (int, error) {
