@@ -20,8 +20,7 @@
   --subtitle-overlap: -27px;
   --mark-gap: 28px;
 
-  --emoji-heading: 125px;
-  --emoji-body: 72px;
+  --emoji-size: 150px;
   --emoji-gap: 12px;
   --emoji-glyph-ratio: 1;
   --emoji-shift: 0.04;
@@ -47,8 +46,8 @@ body {
 .emoji {
   display: inline-block;
   position: relative;
-  width: var(--s);
-  height: var(--s);
+  width: var(--emoji-size);
+  height: var(--emoji-size);
   flex: none;
 }
 
@@ -59,8 +58,8 @@ body {
   align-items: center;
   justify-content: center;
   font-family: 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Emoji', sans-serif;
-  font-size: calc(var(--s) / var(--emoji-glyph-ratio));
+  font-size: calc(var(--emoji-size) / var(--emoji-glyph-ratio));
   line-height: 1;
   font-weight: 400;
-  transform: translateY(calc(var(--s) * var(--emoji-shift)));
+  transform: translateY(calc(var(--emoji-size) * var(--emoji-shift)));
 }

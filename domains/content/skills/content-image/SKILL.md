@@ -48,12 +48,12 @@ Take the author's wording as is. Don't rewrite it and don't invent text. If the 
 ## Step 3. Render
 
 ```bash
-python3 scripts/render.py title --heading "digest" --emoji "🧊" --emoji-size 150 -o out/february.png
+python3 scripts/render.py title --heading "digest" --emoji "🧊" -o out/february.png
 python3 scripts/render.py title --heading "obsidian" --subtitle "daily" --icon assets/logo.svg -o out/obsidian-daily.png
 python3 scripts/render.py text --file post.txt --handle "@name" -o out/post.png
 ```
 
-`scripts/` is relative to this skill's directory. Emoji size: `125` by default (headings), `150` for the digest-style cards; body emoji are always `72`.
+`scripts/` is relative to this skill's directory. Every emoji, in headings and in body text, is rendered at 150×150 px (`--emoji-size` in `references/tokens.css`).
 
 Output path: ask where to put it; if the author has no preference, use `post-images/<slug>.png` in the current directory. Create the folder, don't overwrite an existing file without saying so.
 
