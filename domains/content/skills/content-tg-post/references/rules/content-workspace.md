@@ -1,0 +1,1 @@
+../../../../rules/content-workspace.md

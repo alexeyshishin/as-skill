@@ -137,7 +137,7 @@ Thresholds and scope of applicability are in [`references/tells-ru.md`](referenc
 
 **Step 2. Voice calibration.**
 
-If the user gave samples of their own writing, run a structured analysis:
+Samples: what the user gave, or, in a content workspace (`CONTENT.md` in the current directory or in `content/`), the files in its `voice/`. If there are samples, run a structured analysis:
 
 - **Rhythm:** average sentence length, variability (short/long), favorite constructions
 - **Vocabulary:** formality (1-10), jargon, professional terms, colloquialisms

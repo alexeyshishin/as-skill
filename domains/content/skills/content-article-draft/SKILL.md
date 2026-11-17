@@ -16,10 +16,11 @@ Before starting, read:
 
 - `references/rules/content-voice.md`
 - `references/rules/content-formatting.md` — the articles section
+- `references/rules/content-workspace.md` — where the draft is saved, if the project has a content workspace (`CONTENT.md`)
 
 ## Step 1. Context
 
-Ask:
+In a content workspace, take the audience and the platforms from `CONTENT.md` and ask only for what's missing. Otherwise ask:
 
 - **the topic** in one sentence
 - **the audience**: technical specialists at a certain level? Managers? Beginners?
@@ -120,7 +121,9 @@ Ask:
 
 ## Step 8. Save
 
-Ask where to save it. If there's an Obsidian-vault or blog-repo convention, ask for the path. Otherwise suggest `drafts/YYYY-MM-DD-<short-slug>.md` next to the current working context.
+In a content workspace — save to `drafts/<slug>.md` with the rule's frontmatter (`format: article`, `platform` from Step 1), without asking for a path; if the article grew from `ideas/<slug>.md`, move that file instead of creating a new one.
+
+Without a workspace — ask where to save it. If there's an Obsidian-vault or blog-repo convention, ask for the path. Otherwise suggest `drafts/YYYY-MM-DD-<short-slug>.md` next to the current working context.
 
 ## What not to do
 
