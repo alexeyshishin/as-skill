@@ -66,7 +66,7 @@ Nothing to vary — render once and say why:
 ## Step 3. Render
 
 ```bash
-python3 scripts/render.py title --heading "digest" --emoji "🧊" --workspace content --slug february-digest -o content/images/february-digest/variants/cover-1.png
+python3 scripts/render.py title --heading "digest" --emoji "🧊" --workspace content --slug february-digest -o content/images/february-digest/cover-1.png
 python3 scripts/render.py title --heading "obsidian" --subtitle "daily" --icon assets/logo.svg -o out/obsidian-daily.png
 python3 scripts/render.py text --file post.txt --handle "@name" -o out/post.png
 ```
@@ -74,7 +74,7 @@ python3 scripts/render.py text --file post.txt --handle "@name" -o out/post.png
 `scripts/` is relative to this skill's directory. Every emoji, in headings and in body text, is rendered at 150×150 px (`--emoji-size` in `references/tokens.css`).
 
 Output path in a content workspace (`references/rules/content-workspace.md`), where `<slug>` is the post's slug:
-- title card variants: `images/<slug>/variants/cover-1.png`, `cover-2.png`, `cover-3.png`. When the author picks one, move it to `images/<slug>/cover.png`, then ask whether to delete the other two — delete only on the author's word
+- title card variants: `images/<slug>/cover-1.png`, `cover-2.png`, `cover-3.png`, straight into the post's folder. When the author picks one, rename it to `images/<slug>/cover.png`, then ask whether to delete the other two — delete only on the author's word
 - text pages: `images/<slug>/01.png`, `02.png`… directly
 - every emoji on a picked or rendered image goes into `images/<slug>/emoji.txt`, one per line, no duplicates. This file is what keeps later posts from reusing the emoji
 - if the post's file exists, add the final path to its `images:` list
