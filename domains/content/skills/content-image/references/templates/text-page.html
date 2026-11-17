@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+{{fonts}}
+{{tokens}}
+
+body {
+  position: relative;
+}
+
+.text {
+  position: absolute;
+  top: var(--margin);
+  left: var(--margin);
+  width: calc(var(--canvas) - 2 * var(--margin));
+  font-size: var(--body-size);
+  font-weight: var(--weight-light);
+}
+
+.text p + p {
+  margin-top: var(--paragraph-gap);
+}
+
+.text strong {
+  font-weight: var(--weight-medium);
+}
+
+.text .emoji {
+  --s: var(--emoji-body);
+}
+
+.text .emoji:not(:first-child) {
+  margin-left: var(--emoji-gap);
+}
+
+.text .emoji + .emoji {
+  margin-left: 0;
+}
+
+.handle {
+  position: absolute;
+  top: var(--handle-top);
+  left: var(--margin);
+  font-size: var(--handle-size);
+  font-weight: var(--weight-light);
+  color: var(--muted);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<main class="text">
+{{body}}
+</main>
+{{handle}}
+</body>
+</html>

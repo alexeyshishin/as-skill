@@ -1,0 +1,66 @@
+:root {
+  --canvas: 1920px;
+  --bg: #ffffff;
+  --fg: #000000;
+  --muted: #919191;
+
+  --font: 'Roboto', sans-serif;
+  --weight-light: 300;
+  --weight-medium: 500;
+  --line-height: 1.1719;
+
+  --heading-size: 220px;
+  --subtitle-size: 160px;
+  --body-size: 100px;
+  --handle-size: 60px;
+
+  --margin: 145px;
+  --handle-top: 1645px;
+  --paragraph-gap: 117px;
+  --subtitle-overlap: -27px;
+  --mark-gap: 28px;
+
+  --emoji-heading: 125px;
+  --emoji-body: 72px;
+  --emoji-gap: 12px;
+  --emoji-glyph-ratio: 1;
+  --emoji-shift: 0.04;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: var(--canvas);
+  height: var(--canvas);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  line-height: var(--line-height);
+}
+
+.emoji {
+  display: inline-block;
+  position: relative;
+  width: var(--s);
+  height: var(--s);
+  flex: none;
+}
+
+.emoji > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Emoji', sans-serif;
+  font-size: calc(var(--s) / var(--emoji-glyph-ratio));
+  line-height: 1;
+  font-weight: 400;
+  transform: translateY(calc(var(--s) * var(--emoji-shift)));
+}
