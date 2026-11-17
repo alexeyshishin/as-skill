@@ -31,26 +31,26 @@ CHROME_CANDIDATES = [
 ]
 
 EMOJI_PRESENTATION = (
-    r'⌚⌛⏩-⏬⏰⏳◽◾☔☕♈-♓'
-    r'♿⚓⚡⚪⚫⚽⚾⛄⛅⛎⛔⛪'
-    r'⛲⛳⛵⛺⛽✅✊✋✨❌❎'
-    r'❓-❕❗➕-➗➰➿⬛⬜⭐⭕'
+    r'\u231a\u231b\u23e9-\u23ec\u23f0\u23f3\u25fd\u25fe\u2614\u2615\u2648-\u2653'
+    r'\u267f\u2693\u26a1\u26aa\u26ab\u26bd\u26be\u26c4\u26c5\u26ce\u26d4\u26ea'
+    r'\u26f2\u26f3\u26f5\u26fa\u26fd\u2705\u270a\u270b\u2728\u274c\u274e'
+    r'\u2753-\u2755\u2757\u2795-\u2797\u27b0\u27bf\u2b1b\u2b1c\u2b50\u2b55'
 )
 EMOJI_TEXT_DEFAULT = (
-    r'©®‼⁉™ℹ↔-↙↩↪⌨⏏'
-    r'⏭-⏯⏱⏲⏸-⏺Ⓜ▪▫▶◀'
-    r'◻-◾☀-➿⤴⤵⬅-⬇⬛⬜⭐⭕'
-    r'〰〽㊗㊙'
+    r'\u00a9\u00ae\u203c\u2049\u2122\u2139\u2194-\u2199\u21a9\u21aa\u2328\u23cf'
+    r'\u23ed-\u23ef\u23f1\u23f2\u23f8-\u23fa\u24c2\u25aa\u25ab\u25b6\u25c0'
+    r'\u25fb-\u25fe\u2600-\u27bf\u2934\u2935\u2b05-\u2b07\u2b1b\u2b1c\u2b50\u2b55'
+    r'\u3030\u303d\u3297\u3299'
 )
 EMOJI_ELEMENT = (
     rf'(?:[{EMOJI_PRESENTATION}\U0001F000-\U0001FAFF]'
-    rf'|[{EMOJI_TEXT_DEFAULT}]️)'
-    r'[\U0001F3FB-\U0001F3FF]?️?'
+    rf'|[{EMOJI_TEXT_DEFAULT}]\ufe0f)'
+    r'[\U0001F3FB-\U0001F3FF]?\ufe0f?'
 )
 EMOJI_RE = re.compile(
     r'[\U0001F1E6-\U0001F1FF]{2}'
-    r'|[0-9#*]️?⃣'
-    rf'|{EMOJI_ELEMENT}(?:‍{EMOJI_ELEMENT})*'
+    r'|[0-9#*]\ufe0f?\u20e3'
+    rf'|{EMOJI_ELEMENT}(?:\u200d{EMOJI_ELEMENT})*'
 )
 INLINE_EMOJI_RE = re.compile(rf'[ \t]*({EMOJI_RE.pattern})')
 BOLD_RE = re.compile(r'\*\*(.+?)\*\*', re.DOTALL)
