@@ -7,7 +7,7 @@
 - **Хуки** — запускаются агентом (Claude Code, Codex, Cursor) сами, по событию сессии. Ставятся только вместе со своим доменом и работают, только если зарегистрированы (явным выбором в диалоге `as-skill add`, через `/code-init` с согласия или `as-skill hooks enable`) в `.claude/settings.json`, `.codex/hooks.json` или `.cursor/hooks.json` проекта. Codex дополнительно требует подтвердить хуки через `/hooks`. Адаптеры для Codex и Cursor написаны по документации и не проверены на реальных CLI. Все fail-open: любая внутренняя ошибка — тихий выход 0.
     - `code`: `test-gate.sh` (Stop — может намеренно заблокировать завершение задачи, не больше 2 раз на коммит), `prettier-format.sh` (PostToolUse — правит форматирование файлов проекта).
     - `core`: `memory-bank-load.sh` (SessionStart — читает `.memory-bank/`), `memory-bank-logger.sh` (SessionEnd — см. «Сеть» ниже).
-- **Скрипты скиллов** — запускает модель по инструкции из `SKILL.md`, в рамках обычных разрешений сессии: `git-conventional-commits/scripts/lint-commit-msg.py`, `git-release-tag/scripts/release.py`, `content-humanizer/scripts/`, `code-init/scripts/register-hooks.sh`.
+- **Скрипты скиллов** — запускает модель по инструкции из `SKILL.md`, в рамках обычных разрешений сессии: `git-conventional-commits/scripts/lint-commit-msg.py`, `git-release-tag/scripts/release.py`, `content-humanizer/scripts/`, `docs-humanizer/scripts/`, `docs-readme/scripts/check-readme.py`, `docs-license/scripts/check-license.py`, `code-init/scripts/register-hooks.sh`. Все три скрипта `docs` только читают файлы и в сеть не ходят.
 
 Поверхность атаки:
 
@@ -33,6 +33,7 @@
 - `git clone/pull` самого `as-skill`.
 - **`memory-bank-logger.sh`** (SessionEnd, домен `core`) — после каждой сессии (от 3 промптов пользователя) запускает в фоне headless `claude -p`, который читает транскрипт сессии и обновляет `.memory-bank/`. То есть транскрипт **автоматически, без отдельного подтверждения** уходит в Anthropic API — тем же путём, что и любая сессия Claude Code, но это лишний запрос с полным содержимым сессии. Дочерняя сессия идёт с `--permission-mode acceptEdits` и инструментами `Read`/`Glob`/`Grep`/`Edit`/`Write`; ограничение «править только `.memory-bank/`» задано промптом, а не песочницей. Лог — `.claude/sessions/memory-bank-logger.log`. В диалоге `add` этот хук помечен предупреждением (в подписи пункта и строкой `warning:` в сводке); по умолчанию не выбирается. Не нужно — не регистрируй хук (или сними его из `settings.json`); без `claude`, `jq` или `.memory-bank/index.md` он ничего не делает. Рекурсия исключена через `MEMORY_BANK_LOGGER=1`.
 - **`git-release-tag`** — ходит в GitHub через `gh` (`gh run list`, `gh release create`), push и создание релиза — только после подтверждения.
+- **`docs-license`** — текст лицензии, которой нет среди 15 вшитых, модель скачивает по инструкции из `SKILL.md`: `gh api /licenses/<key>`, запасной вариант — `curl` с `raw.githubusercontent.com/spdx/license-list-data`. Только GET, данные проекта не отправляются. Для третьесторонней атрибуции — так же `gh api repos/<owner>/<repo>/license`.
 
 ## Что скиллы делают с твоими данными
 
