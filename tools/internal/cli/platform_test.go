@@ -87,7 +87,7 @@ func TestHooksVerbDryRunAndOpenCode(t *testing.T) {
 	out, err = capture(t, func() error {
 		return runCLI([]string{"hooks", "enable", "all", "--platform", "codex", "--project", project})
 	})
-	if err != nil || !strings.Contains(out, "UNVERIFIED") {
+	if err != nil || strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "/hooks") {
 		t.Fatalf("enable: %v\n%s", err, out)
 	}
 	if _, err := os.Stat(filepath.Join(project, ".codex", "hooks.json")); err != nil {
@@ -205,22 +205,21 @@ func TestLintAgentNames(t *testing.T) {
 func TestDoctorUnverifiedFiresForNonClaude(t *testing.T) {
 	harness, _ := agentHarness(t)
 	project := t.TempDir()
-	installPlatforms(t, harness, project, "--platform", "codex", "--copy")
+	installPlatforms(t, harness, project, "--platform", "cursor", "--copy")
 	out, err := doctorCmd(t, harness, project)
 	if err != nil {
 		t.Fatalf("warnings must not fail doctor: %v\n%s", err, out)
 	}
-	if !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "codex hooks capability is unverified") {
+	if !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "cursor hooks capability is unverified") {
 		t.Fatalf("no UNVERIFIED warning:\n%s", out)
 	}
-	if strings.Contains(out, "codex agents capability is unverified") {
-		t.Fatalf("codex agents are verified:\n%s", out)
-	}
-	claude := t.TempDir()
-	installPlatforms(t, harness, claude, "--copy")
-	out, _ = doctorCmd(t, harness, claude)
-	if strings.Contains(out, "UNVERIFIED") {
-		t.Fatalf("claude must be verified:\n%s", out)
+	for _, args := range [][]string{{"--copy"}, {"--platform", "codex", "--copy"}} {
+		verified := t.TempDir()
+		installPlatforms(t, harness, verified, args...)
+		out, _ = doctorCmd(t, harness, verified)
+		if strings.Contains(out, "UNVERIFIED") {
+			t.Fatalf("%v must be verified:\n%s", args, out)
+		}
 	}
 }
 
