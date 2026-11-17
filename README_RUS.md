@@ -111,7 +111,7 @@ as-skill add
 | Платформа | skills                  | agents                      | rules                                | hooks                                         | Статус                                                                            |
 | --------- | ----------------------- | --------------------------- | ------------------------------------ | --------------------------------------------- | --------------------------------------------------------------------------------- |
 | claude    | `.claude/skills` (link) | `.claude/agents` (link)     | `.claude/rules` (link)               | `.claude/hooks` -> `.claude/settings.json` | проверено 2026-10-27                                                              |
-| codex     | `.agents/skills` (link) | `.codex/agents` (render)    | `.agents/rules` + блок в `AGENTS.md` | `.codex/hooks` -> `.codex/hooks.json`      | skills, agents проверены 2026-11-16 на реальном Codex CLI; rules, hooks — нет     |
+| codex     | `.agents/skills` (link) | `.codex/agents` (render)    | `.agents/rules` + блок в `AGENTS.md` | `.codex/hooks` -> `.codex/hooks.json`      | проверено на реальном Codex CLI: skills, agents 2026-11-16; rules, hooks 2026-11-17 |
 | cursor    | `.agents/skills` (link) | `.cursor/agents` (render)   | `.cursor/rules` (render, `.mdc`)     | `.cursor/hooks` -> `.cursor/hooks.json`    | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
 | opencode  | `.agents/skills` (link) | `.opencode/agents` (render) | `.agents/rules` + блок в `AGENTS.md` | не поддерживается                             | не проверено — по документации вендоров на 2026-10-27, реальный CLI не запускался |
 

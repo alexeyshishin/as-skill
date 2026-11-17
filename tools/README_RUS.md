@@ -55,7 +55,7 @@ as-skill remove code -p <path> -y                    # снять
 
 | Команда | Что делает |
 |---------|-----------|
-| `as-skill hooks enable\|disable [<имя>...\|all] [-d D[,D]] -a P` | Регистрирует/снимает хуки в `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`; чужие записи не трогает. С `--domain` имена берутся из исходников доменов, `enable --dry-run --domain` печатает `would register`; без `--domain` — из `.<платформа>/hooks` проекта. Codex/cursor — по документации, не проверено |
+| `as-skill hooks enable\|disable [<имя>...\|all] [-d D[,D]] -a P` | Регистрирует/снимает хуки в `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`; чужие записи не трогает. С `--domain` имена берутся из исходников доменов, `enable --dry-run --domain` печатает `would register`; без `--domain` — из `.<платформа>/hooks` проекта. Codex проверен на реальном CLI; cursor — по документации, не проверено |
 | `as-skill check` | Валидирует `domains/*/manifest.yaml` и `skills/*/SKILL.md`; имена скиллов уникальны между доменами и не равны имени домена и `all` |
 
 Копия репозитория находится автоматически: `--harness-root` → вверх от cwd → вверх от реального пути бинаря. Бинарь, собранный в чекауте, работает из любого проекта. `-p` — проект, который вы оснащаете.
