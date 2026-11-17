@@ -189,14 +189,14 @@ In these cases follow both domains' rules — they complement, not contradict, e
 **Rules:** `docs-conventions` — README section order and checklist, EN ↔ RU sync (EN is the source), license text verbatim only, license file layout, third-party attribution
 
 **Skills:**
-- `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`
+- `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`, clears AI slop via `docs-humanizer`
 - `docs-license` — license questionnaire → SPDX, canonical text copied from `references/licenses/` (15 bundled, else `gh api /licenses` / SPDX), placeholders only; third-party attribution + compatibility table; checks via `scripts/check-license.py`
 - `docs-humanizer` — README mode: AI-slop scan of README.md + README_RUS.md (EN + RU catalogs, `scripts/scan-tells.py`, gate 1.5 per 100 words), spot fixes in a technical register; full mode: de-AI-ifies Russian-language text (based on `content-humanizer`, which stays in `content` for posts and articles)
 - `docs-c4` — stub, not implemented (C4 model diagrams)
 
 **Agents:**
 - `docs-readme-writer` — write/update/sync via `docs-readme`; fix mode applies approved reviewer findings, EN and RU together
-- `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code and EN ↔ RU meaning; ship/rework with severity-tagged findings
+- `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code, EN ↔ RU meaning and AI slop; ship/rework with severity-tagged findings
 - `docs-license-writer` — choose/write/attribute via `docs-license`; fix mode applies approved reviewer findings, recopies text instead of patching
 - `docs-license-reviewer` — read-only; runs the checker, audits borrowed code, attribution, compatibility; ship/rework with severity-tagged findings
 - `docs-c4-writer`, `docs-c4-reviewer` — stubs, not implemented

@@ -12,6 +12,8 @@
 
 Русская версия — перевод той же структуры: те же заголовки, таблицы, картинки, тот же код (переводятся только комментарии и `<плейсхолдеры>` внутри блоков), термины на английском, переключатель языка вверху обоих файлов. При правке EN синхронизирует только изменившиеся куски RU.
 
+Перед показом прогоняет оба файла через `docs-humanizer` в README-режиме: находит нейрослоп, правит только помеченные фрагменты и держит плотность маркеров ниже 1.5 на 100 слов в каждом файле.
+
 Порядок секций и чеклист — в правиле [`docs-conventions`](../../rules/docs-conventions.md), собраны по [Utrecht University: README files](https://utrechtuniversity.github.io/workshop-computational-reproducibility/chapters/readme-files.html) и [README best practices](https://markdownpreviewlive.com/blog/readme-best-practices/).
 
 ## Границы

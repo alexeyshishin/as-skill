@@ -39,6 +39,7 @@ Project type adds sections in their natural place: configuration table (service,
 - Relative links to repo files must resolve; anchor links must match a heading.
 - Plain language. Define jargon or cut it. Don't assume the reader knows the environment.
 - No marketing without a measured number: "blazing fast", "seamless", "revolutionary", "powerful" are cut.
+- No AI slop: signposting ("it's worth noting"), "not just X, but Y", summary paragraphs, chatbot leftovers, emoji in headings and bullets, walls of `**Label:**` bullets. Checked by `docs-humanizer` in README mode; each file stays under 1.5 tells per 100 words.
 - A table of contents only when there are more than ~8 `##` sections.
 
 ### Anti-patterns
