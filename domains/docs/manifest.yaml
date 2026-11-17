@@ -1,9 +1,9 @@
-# Docs domain — README (English source + Russian translation) and license files.
-# Requires nothing from the environment; the linters need python3, the license fetch fallback needs gh or network.
+# Docs domain — README (English source + Russian translation), license files and C4 architecture diagrams.
+# Requires nothing from the environment; the linters need python3, the license fetch fallback needs gh or network, C4 PNG export needs Chrome.
 # rules, skills, agents go to the target project's platform dirs (see `as-skill add -a`).
 
 name: docs
-description: README.md + README_RUS.md and LICENSE files — writing and review skills and agents.
+description: README.md + README_RUS.md, LICENSE files and C4 architecture diagrams — writing and review skills and agents.
 
 requires_env: []
 

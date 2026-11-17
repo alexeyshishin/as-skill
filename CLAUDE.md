@@ -49,7 +49,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `content` | — | Content — a workspace with status folders for posts, Telegram posts, articles, post images, Russian-text humanizing |
 | `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
-| `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution, AI-slop check of both READMEs, Russian-text humanizing; C4 diagrams stubbed |
+| `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution, AI-slop check of both READMEs, Russian-text humanizing, C4 architecture diagrams rendered from a JSON model |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
 | `resume` | — | Resume review and job search — ATS optimization, bullets, tailoring, cover letters, interview prep (22 skills adapted from Paramchoudhary/ResumeSkills, MIT) |
@@ -184,20 +184,21 @@ In these cases follow both domains' rules — they complement, not contradict, e
 
 ### domain: docs
 
-**Rules:** `docs-conventions` — README section order and checklist, EN ↔ RU sync (EN is the source), license text verbatim only, license file layout, third-party attribution
+**Rules:** `docs-conventions` — README section order and checklist, EN ↔ RU sync (EN is the source), license text verbatim only, license file layout, third-party attribution, C4 diagram levels, files, layout (caller above callee) and notation
 
 **Skills:**
 - `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`, clears AI slop via `docs-humanizer`
 - `docs-license` — license questionnaire → SPDX, canonical text copied from `references/licenses/` (15 bundled, else `gh api /licenses` / SPDX), placeholders only; third-party attribution + compatibility table; checks via `scripts/check-license.py`
 - `docs-humanizer` — README mode: AI-slop scan of README.md + README_RUS.md (EN + RU catalogs, `scripts/scan-tells.py`, gate 1.5 per 100 words), spot fixes in a technical register; full mode: de-AI-ifies Russian-language text (based on `content-humanizer`, which stays in `content` for posts and articles)
-- `docs-c4` — stub, not implemented (C4 model diagrams)
+- `docs-c4` — C4 diagrams (context/container/component) from the code: evidence per node and edge, JSON model with layers top to bottom (caller above callee), checked via `scripts/check-c4.py` (also stale SVG by model hash, EN/RU pair), rendered via `scripts/render.py` (annealed orthogonal routing, label placement, legend, relationships table; `--png` via headless Chrome)
 
 **Agents:**
 - `docs-readme-writer` — write/update/sync via `docs-readme`; fix mode applies approved reviewer findings, EN and RU together
 - `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code, EN ↔ RU meaning and AI slop; ship/rework with severity-tagged findings
 - `docs-license-writer` — choose/write/attribute via `docs-license`; fix mode applies approved reviewer findings, recopies text instead of patching
 - `docs-license-reviewer` — read-only; runs the checker, audits borrowed code, attribution, compatibility; ship/rework with severity-tagged findings
-- `docs-c4-writer`, `docs-c4-reviewer` — stubs, not implemented
+- `docs-c4-writer` — draw/update/re-render via `docs-c4`; fix mode applies approved reviewer findings to the model, EN and RU together
+- `docs-c4-reviewer` — read-only; runs the checker, then checks every node and arrow against the code, call direction, tech, level, EN ↔ RU, and the render's readability; ship/rework with severity-tagged findings
 
 ### domain: university
 

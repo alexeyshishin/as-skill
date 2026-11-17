@@ -1,6 +1,6 @@
 # docs-conventions
 
-Conventions for README files and licenses. Skills and agents in the `docs` domain reference this file as `docs-conventions`.
+Conventions for README files, licenses and C4 architecture diagrams. Skills and agents in the `docs` domain reference this file as `docs-conventions`.
 
 ## README
 
@@ -93,3 +93,40 @@ Project type adds sections in their natural place: configuration table (service,
 ### Not legal advice
 
 Skills recommend, the user decides. Every recommendation names its reason. Relicensing, CLAs, mixing copyleft with proprietary code, patent questions — say a lawyer should check.
+
+## C4 diagrams
+
+### Levels
+
+One diagram per level and scope, never two levels on one picture:
+
+| level | shows | when |
+|-------|-------|------|
+| context | the system as one box, the people who use it, the external systems around it | onboarding, the README's architecture link |
+| container | deployable units and stores inside the system, plus the people and external systems they talk to | the default architecture diagram |
+| component | parts inside one container and what they call | a container complex enough to need it |
+
+No code level: classes belong to the IDE.
+
+### Files
+
+- The model `docs/architecture/c4-<level>.json` (component level: `c4-component-<container>.json`) is the source of truth.
+- The SVG next to it, same name, is rendered by `scripts/render.py` of `docs-c4`, committed, never edited by hand. The SVG carries the model hash; `scripts/check-c4.py` flags it stale when the model changed after the render.
+- The diagram is embedded in the architecture doc (`docs/architecture.md`), with alt text that says what it shows. The README links that doc; it doesn't inline the diagram.
+- When the doc that embeds it has a `_RUS` version, the diagram has one too: `c4-<level>_RUS.json` + `.svg` — same ids, order, kinds and edges, only the text translated, terms in English.
+
+### Layout
+
+- Caller above callee. Layers top to bottom by who starts calls: people and triggering externals → entry → orchestration → services and workers → models and stores → external dependencies. Arrows point down.
+- An arrow points up only for a callback the callee starts (webhook, push into chat). A few at most; more than 20% means the layer order is wrong.
+- An arrow follows the call, not the data: a read from a database is service → database, a queue consumer points at the queue.
+- No arrows inside one layer: the callee moves a layer down.
+- Similar nodes of one layer (workers) go into a boundary; one arrow from the boundary replaces the same arrow from every member.
+- Readable size: up to ~30 arrows and 6 nodes per layer; beyond that, split by scope.
+
+### Notation
+
+- Every box: name and technology (language, product, runtime); kind by shape and color — person, our service, model, storage (cylinder), supporting, external (dashed). The legend is generated.
+- Every arrow: a number, a short label — what the call does, verb first, from the caller's side — and `[format/transport]` (`JSON/HTTPS`, `gRPC/Protobuf`, `SQL/TCP`). The full description and protocol go to the numbered relationships table under the diagram.
+- A line under the title says how to read it (caller above, which arrows point up); one more line for what arrows can't show (long-poll, fan-out).
+- Every box and arrow traces to the code or to the user; nothing is drawn from memory or by analogy.
