@@ -39,16 +39,6 @@ Don't use `#` headings — Telegram doesn't render them as markdown, they show u
 - **Images and diagrams** — alt text every time. This matters both for accessibility and for SEO.
 - **TL;DR** at the top is fine for articles longer than 5000 characters.
 
-## Technical tutorials
-
-- **State the tutorial's goal in the first line.** "After this tutorial you'll be able to deploy a K8s cluster with a TLS cert-manager on bare metal."
-- **Prerequisites** as an explicit list: versions, access, environment.
-- **Number the steps.** Each step = one action + the expected result.
-- **Commands must be copy-pasteable** (see also `sre-runbook-template`).
-- **Verification commands** after every non-trivial step: "confirm the pod is Ready: `kubectl get pod ...`".
-- **A Troubleshooting section** at the end with common errors.
-- **Cleanup** — how to roll everything back if needed.
-
 ## General rules
 
 - **English terms** stay in English, don't transliterate them (`pod`, not a transliterated form; conversationally a transliteration is fine, but in written text English is better).

@@ -27,4 +27,4 @@ Python 3 и Chrome или Chromium. Если Chrome лежит в нестанд
 
 Шрифт Roboto лежит в `references/fonts/` под лицензией Apache 2.0 (`LICENSE-Roboto`).
 
-Текст поста — `content-tg-post`, статья — `content-article-draft`, пакет форматов из одного источника — `content-zavod`.
+Текст поста — `content-tg-post`, статья — `content-article-draft`.

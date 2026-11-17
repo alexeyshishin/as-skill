@@ -2,9 +2,9 @@
 name: content-editor
 description: >
   Orchestrates the content pipeline from idea to publication: choosing the
-  format (post / article / tutorial) → drafting via the corresponding skill →
-  edits → image → publication. Invokes content-tg-post, content-article-draft,
-  content-tutorial-structure, content-image. Use when "shape this thought," "I have an idea —
+  format (post / article) → drafting via the corresponding skill → edits →
+  image → publication. Invokes content-tg-post, content-article-draft,
+  content-image. Use when "shape this thought," "I have an idea —
   what do I do with it," "help me get this ready to publish," "content on this
   topic," "editor for my channel/blog."
 ---
@@ -31,12 +31,10 @@ If the author brings "I have an idea, what do I do with it" — **help choose th
 |-------------------|--------|-------|
 | A single point, personal observation, short breakdown | Telegram post | `content-tg-post` |
 | An extended point with arguments, experience, a technology deep-dive | Article | `content-article-draft` |
-| A repeatable scenario, instructions, how-to | Tutorial | `content-tutorial-structure` |
 | Several points on one topic | **A series** of posts / articles | one skill per part |
 
 If it's unclear — ask the author:
 - "Is this a one-off thought (TG post) or a bigger piece (article)?"
-- "Is the goal to share or to teach step by step?"
 
 ## Step 3. Invoke the skill
 
@@ -54,7 +52,7 @@ Read the draft as an editor and check:
 - **specificity** — are there numbers, examples, code, links?
 - **authorial voice** — recognizable or generic?
 - **clichés** — any "let's dive in," "represents," "as is well known"? — cut them
-- **length** — within format? (TG: 500-1500, article: 3-10k, tutorial: as long as it needs to be)
+- **length** — within format? (TG: 500-1500, article: 3-10k)
 - **ending** — natural or artificial?
 
 If there are issues — name them as a **list of specific edits**, not general remarks. Not "the text is boring," but "the first sentence is a vague phrase, replace it with the concrete example from paragraph 2."
@@ -64,14 +62,12 @@ If there are issues — name them as a **list of specific edits**, not general r
 If there's a lot of material and it doesn't fit one format — **suggest a series**:
 - 2-3 related Telegram posts with an explicit "part 1/3" at the start
 - an article + an accompanying TG announcement
-- an article + a tutorial for the practical part
 
 ## Step 6. Publication
 
 Ask where we're publishing:
 - TG: does the author publish themselves via the client, or is there a bot / API?
 - Article: Habr / Medium / personal blog / GitHub Pages?
-- Tutorial: repo README / a separate article?
 
 **Don't publish it yourself**, even if you have the technical ability to. This is the author's content, not yours.
 

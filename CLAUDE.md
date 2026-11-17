@@ -46,7 +46,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | Domain | requires_env | What it does |
 |--------|--------------|--------------|
 | `code` | — | Dev-loop harness — plan → build → review → debug, installable into any target project |
-| `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, post images, Russian-text humanizing |
+| `content` | — | Content — Telegram posts, articles, post images, Russian-text humanizing |
 | `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
 | `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution, AI-slop check of both READMEs, Russian-text humanizing; C4 diagrams stubbed |
@@ -145,8 +145,6 @@ Not a single blanket rule — it's domain-dependent:
 Examples:
 - **Incident root-cause (devops's `devops-sre`/`devops-diagnostic` agents)** → write it up and ingest it into the **knowledge base (obsidian)** via `obsidian-ingest`.
 - **A PR or release (`git-flow`)** → can become a **Telegram post (`content-tg-post`)** announcing it.
-- **A tutorial (`content-documentation`)** → may embed runbook logic reviewed by devops's `devops-sre` Consilium agent.
-- **An article (`content-article-draft`)** → can expand into a full package via **`content-factory`**.
 
 In these cases follow both domains' rules — they complement, not contradict, each other.
 
@@ -220,13 +218,11 @@ No `rules/` or `agents/` — skills only, prefixed `resume-`. Adapted from [Para
 
 ### domain: content
 
-**Rules:** `content-voice` (authorial voice, Russian + English terms) · `content-formatting` (per-platform formatting: Telegram, articles, tutorials)
+**Rules:** `content-voice` (authorial voice, Russian + English terms) · `content-formatting` (per-platform formatting: Telegram, articles)
 
 **Skills:**
 - `content-tg-post` — idea/raw text → Telegram post, 500–1500 characters, thesis-first
 - `content-article-draft` — idea/notes → article draft (Habr / Medium / personal blog)
-- `content-documentation` — technical-tutorial skeleton: prerequisites, numbered steps, troubleshooting, cleanup
-- `content-factory` (trigger `/content-zavod`) — one source → 6-file content package (article, threads, Reels scripts, posts, carousels, plan)
 - `content-humanizer` — de-AI-ifies Russian-language text (Russian only); README/docs slop check is `docs-humanizer`
 - `content-image` — heading/text → 1920×1920 PNG in the author's Figma-derived style (title card with an always-English lowercase heading, text page in the author's language) via `scripts/render.py` + headless Chrome; tokens in `references/tokens.css`, Roboto bundled; Figma is not needed at run time
 

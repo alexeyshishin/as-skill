@@ -9,7 +9,7 @@ description: >
   user wants to "write a README", "update the README", "make a README for this
   repo", "translate the README into Russian", "sync README_RUS", "напиши
   README", "обнови README", "переведи README на русский". Not for tutorials or
-  articles (content-documentation, content-article-draft); a review of an
+  articles (content-article-draft); a review of an
   existing README is docs-readme-reviewer.
 ---
 
