@@ -56,10 +56,15 @@ Applying `content-voice.md`:
 - specifics > generalizations
 - short sentences, short paragraphs
 
-Applying `content-formatting.md`:
-- technical terms in `backticks`
-- code blocks with a language tag
-- no `#` headings — Telegram doesn't render them
+Formatting whitelist — this overrides the wider Telegram list in `content-formatting.md`. Allowed, nothing else:
+- **bold** — for the thesis or a key phrase, sparingly
+- `inline code` — technical terms, commands, file names
+- quote (`>` / `<blockquote>`) — a citation, a log line, someone else's words
+- bullet list (`-`) — only when the content really is a list
+
+Forbidden: headings of any level (`#`, `##`, bold-line-as-heading), italic, strikethrough, spoilers, code blocks, text links (a bare URL as plain text is fine).
+
+Applying `content-formatting.md` otherwise:
 - MarkdownV2 escape characters (or use HTML formatting if the channel supports it)
 
 ## Step 5. Self-check
@@ -68,6 +73,7 @@ Before showing it to the user:
 - **length** — within the 500-1500 range? If longer — cut it. If shorter — maybe it's a tweet, not a post.
 - **thesis in the first line** — if you remove the first 1-3 sentences, is meaning lost? If not — cut the intro.
 - **specifics** — is there at least one example / number / command / link?
+- **formatting** — only bold, `inline code`, quote, bullet list? Any heading → rewrite it as the first sentence of its paragraph.
 - **personality** — could anyone have written this? If so — add a personal observation.
 - **ending** — does it have one at all? Or does the text just cut off? Either is fine, as long as it's not "thus."
 
@@ -88,6 +94,7 @@ Ask:
 
 - don't write posts longer than 1500 characters "because there's a lot to say" — split into a series
 - don't use emoji as bullet markers
+- don't use headings — not `#`, not a bold line standing alone as a section title
 - don't invent numbers and examples — if the user doesn't have them, ask
 - don't glue 2 theses into one post — that's always worse than 2 separate posts
 - don't write "as I wrote before" — Telegram is non-linear, the reader may not have seen the previous post
