@@ -228,7 +228,7 @@ No `rules/` or `agents/` — skills only, prefixed `resume-`. Adapted from [Para
 - `content-documentation` — technical-tutorial skeleton: prerequisites, numbered steps, troubleshooting, cleanup
 - `content-factory` (trigger `/content-zavod`) — one source → 6-file content package (article, threads, Reels scripts, posts, carousels, plan)
 - `content-humanizer` — de-AI-ifies Russian-language text (Russian only); README/docs slop check is `docs-humanizer`
-- `content-image` — heading/text → 1920×1920 PNG in the author's Figma-derived style (title card, text page) via `scripts/render.py` + headless Chrome; tokens in `references/tokens.css`, Roboto bundled; Figma is not needed at run time
+- `content-image` — heading/text → 1920×1920 PNG in the author's Figma-derived style (title card with an always-English lowercase heading, text page in the author's language) via `scripts/render.py` + headless Chrome; tokens in `references/tokens.css`, Roboto bundled; Figma is not needed at run time
 
 **Agents:**
 - `content-editor` — content pipeline from idea to publication; picks the format, calls the matching skill, and `content-image` when a picture is needed

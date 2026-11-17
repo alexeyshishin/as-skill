@@ -2,7 +2,7 @@
 name: content-image
 description: >
   Renders post images (1920x1920 PNG) in the author's visual style: a title
-  card (big heading + emoji or logo, optional subtitle) or a text page
+  card (big English heading + emoji or logo, optional subtitle) or a text page
   (paragraphs with bold spans, inline emoji, the author's handle). Fills an
   HTML template and screenshots it with headless Chrome — no Figma at run
   time. Use when the user wants "make an image for the post", "a cover for the
@@ -30,14 +30,15 @@ If it's unclear which one — ask: "a cover with a heading or a card with text?"
 
 ## Step 2. Get the content
 
-Take the author's wording as is. Don't rewrite it and don't invent text. If the author asks to write the text itself — do that first with `content-tg-post` or ask for the text.
+Take the author's wording as is. Don't rewrite it and don't invent text. If the author asks to write the text itself — do that first with `content-tg-post` or ask for the text. The one exception is a title card heading and subtitle, see below.
 
-**title**
-- heading: one line, short — roughly up to 14 characters at the default size (`introduction` fits). Longer — the renderer refuses; shorten it or ask for a shorter variant
-- subtitle (optional): one short word under the heading (`daily`)
+**title** — heading and subtitle are always in English, whatever language the post is in
+- heading: English, lowercase like every frame in the Figma file (`introduction`, `obsidian`, `digest`), one line, short — roughly up to 14 characters at the default size (`introduction` fits). Longer — the renderer refuses; shorten it or ask for a shorter variant
+- subtitle (optional): one short English word under the heading (`daily`, `soon`)
+- if the author gives a Russian heading or subtitle, translate it into the shortest natural English word yourself (`лонгриды` → `longreads`, `скоро` → `soon`) and name the translation in your report. The renderer rejects any Cyrillic in the heading and subtitle
 - mark (optional): one emoji (`--emoji`) or a logo file (`--icon path.png|svg`), not both
 
-**text**
+**text** — the body keeps the author's language (Russian as is)
 - paragraphs are separated by a blank line, a single newline is a line break
 - `**bold**` for emphasis, nothing else is parsed
 - emoji go inline; a space before it is not needed (the renderer sets the gap)
@@ -61,6 +62,7 @@ On failure the script exits non-zero with a one-line reason (`content does not f
 ## Step 4. Check the result
 
 Open the PNG (Read tool) and look at it before showing it:
+- the heading and the subtitle are English and lowercase
 - the heading and the emoji sit on one line, centered on the canvas
 - nothing is clipped, the text does not touch the handle
 - emoji rendered as pictures, not as empty boxes
@@ -74,6 +76,8 @@ Edit `references/tokens.css` — sizes, colors, offsets live there as variables,
 
 ## What not to do
 
+- don't put Russian, or any Cyrillic, into a title card heading or subtitle; Russian belongs only in the body of a text page
+- don't uppercase a heading — the Figma frames are all lowercase
 - don't render without looking at the result
 - don't shrink font sizes to squeeze more text in — split the text or shorten it
 - don't add colors, gradients, shadows or other fonts that are not in the Figma design system

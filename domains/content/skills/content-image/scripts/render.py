@@ -17,6 +17,7 @@ REFERENCES = ROOT / 'references'
 CANVAS = 1920
 HANDLE_ENV = 'CONTENT_IMAGE_HANDLE'
 CHROME_ENV = 'CHROME_BIN'
+CYRILLIC_RE = re.compile(r'[\u0400-\u052f]')
 
 CHROME_CANDIDATES = [
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -146,10 +147,16 @@ def fill(template_name, values):
     return page
 
 
+def require_english(label, value):
+    if CYRILLIC_RE.search(value):
+        fail(f'{label} must be in English, translate it first (got {value!r})')
+
+
 def build_title(args):
     heading = args.heading.strip()
     if not heading:
         fail('--heading is empty')
+    require_english('heading', heading)
     if args.emoji and args.icon:
         fail('--emoji and --icon are mutually exclusive')
     mark = ''
@@ -164,6 +171,7 @@ def build_title(args):
         line_class = 'has-icon'
     subtitle = ''
     if args.subtitle:
+        require_english('subtitle', args.subtitle)
         subtitle = f'<div class="subtitle">{html.escape(args.subtitle.strip(), quote=False)}</div>'
     return fill('title-card.html', {
         'heading': html.escape(heading, quote=False),
