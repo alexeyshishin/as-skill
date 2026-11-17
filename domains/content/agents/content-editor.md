@@ -3,8 +3,8 @@ name: content-editor
 description: >
   Orchestrates the content pipeline from idea to publication: choosing the
   format (post / article / tutorial) → drafting via the corresponding skill →
-  edits → publication. Invokes content-tg-post, content-article-draft,
-  content-tutorial-structure. Use when "shape this thought," "I have an idea —
+  edits → image → publication. Invokes content-tg-post, content-article-draft,
+  content-tutorial-structure, content-image. Use when "shape this thought," "I have an idea —
   what do I do with it," "help me get this ready to publish," "content on this
   topic," "editor for my channel/blog."
 ---
@@ -43,6 +43,8 @@ If it's unclear — ask the author:
 Hand control to the right skill. Don't duplicate its work — it guides the author through the steps itself.
 
 Once the skill returns a draft — move on to step 4.
+
+If the author wants a picture for the piece (a cover, a text card) — after the text is approved, hand the heading or the key paragraphs to `content-image`. Use the author's final wording; don't rewrite it for the image.
 
 ## Step 4. Edit
 

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+{{fonts}}
+{{tokens}}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mark-gap);
+}
+
+.line.has-icon {
+  align-items: center;
+}
+
+h1 {
+  font-size: var(--heading-size);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.subtitle {
+  margin-top: var(--subtitle-overlap);
+  font-size: var(--subtitle-size);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.icon {
+  display: block;
+  flex: none;
+  height: var(--icon-height, 205px);
+  width: auto;
+}
+</style>
+</head>
+<body>
+<main class="title">
+  <div class="line {{line_class}}">
+    <h1>{{heading}}</h1>
+    {{mark}}
+  </div>
+  {{subtitle}}
+</main>
+</body>
+</html>
