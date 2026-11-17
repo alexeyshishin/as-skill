@@ -1,0 +1,50 @@
+{
+  "title": "Bookshop — containers",
+  "level": "container",
+  "lang": "en",
+  "layers": [
+    {"label": "People", "nodes": ["customer", "staff"]},
+    {"label": "Frontends", "nodes": ["storefront", "backoffice"]},
+    {"label": "Entry", "nodes": ["api"]},
+    {"label": "Workers", "nodes": ["orders", "mailer"]},
+    {"label": "Storage", "nodes": ["postgres", "redis", "s3"]},
+    {"label": "External systems", "nodes": ["payments", "email"]}
+  ],
+  "nodes": {
+    "customer": {"name": "Customer", "tech": "web browser", "kind": "person"},
+    "staff": {"name": "Shop staff", "tech": "web browser", "kind": "person"},
+    "storefront": {"name": "Storefront", "tech": "Next.js", "kind": "svc"},
+    "backoffice": {"name": "Back office", "tech": "React SPA", "kind": "svc"},
+    "api": {"name": "Shop API", "tech": "Go", "kind": "svc"},
+    "orders": {"name": "Order worker", "tech": "Go", "kind": "svc"},
+    "mailer": {"name": "Mailer", "tech": "Python", "kind": "svc"},
+    "postgres": {"name": "PostgreSQL", "tech": "orders, catalog", "kind": "db"},
+    "redis": {"name": "Redis", "tech": "job queue", "kind": "db"},
+    "s3": {"name": "Object storage", "tech": "S3: product images", "kind": "db"},
+    "payments": {"name": "Payment provider", "tech": "Stripe", "kind": "ext"},
+    "email": {"name": "Email service", "tech": "SendGrid", "kind": "ext"}
+  },
+  "boundaries": [
+    {"id": "workers", "name": "Workers", "nodes": ["orders", "mailer"]}
+  ],
+  "edges": [
+    {"from": "customer", "to": "storefront", "label": "Browses, places orders", "tech": "HTML/HTTPS"},
+    {"from": "staff", "to": "backoffice", "label": "Edits catalog, refunds", "tech": "HTML/HTTPS"},
+    {"from": "storefront", "to": "api", "label": "Catalog, cart, checkout", "tech": "JSON/HTTPS",
+     "description": "Reads the catalog, keeps the cart, starts checkout", "protocol": "HTTPS, REST"},
+    {"from": "backoffice", "to": "api", "label": "Catalog edits, refunds", "tech": "JSON/HTTPS"},
+    {"from": "storefront", "to": "s3", "label": "Loads product images", "tech": "S3/HTTPS"},
+    {"from": "api", "to": "postgres", "label": "Reads and writes orders", "tech": "SQL/TCP"},
+    {"from": "api", "to": "redis", "label": "Enqueues order jobs", "tech": "RESP/TCP"},
+    {"from": "api", "to": "s3", "label": "Stores product images", "tech": "S3/HTTPS"},
+    {"from": "api", "to": "payments", "label": "Creates payment intents", "tech": "JSON/HTTPS"},
+    {"from": "payments", "to": "api", "label": "Payment webhooks", "tech": "JSON/HTTPS",
+     "description": "Reports succeeded and failed payments", "protocol": "HTTPS, signed webhook"},
+    {"from": "orders", "to": "redis", "label": "Takes jobs, queues emails", "tech": "RESP/TCP"},
+    {"from": "orders", "to": "postgres", "label": "Updates order status", "tech": "SQL/TCP"},
+    {"from": "mailer", "to": "redis", "label": "Takes email jobs", "tech": "RESP/TCP"},
+    {"from": "mailer", "to": "email", "label": "Sends receipts", "tech": "JSON/HTTPS"}
+  ],
+  "callers": ["api", "orders", "mailer"],
+  "layout": {"seed": 1}
+}
