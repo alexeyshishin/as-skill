@@ -94,7 +94,7 @@ done -> <P>/.claude
       "mode": "copy",
       "path": "<P>/.claude/skills",
       "source": "<H>/domains/git/skills",
-      "sha256": "e668d7b654195a07a82eba4268ddb6c71c3eabac4cbca8bea4e0f438da521892",
+      "sha256": "ebb8f170c7733188379a9ba04620b1a115bac91c9669f23d335e975b86b47364",
       "platforms": [
         "claude"
       ],

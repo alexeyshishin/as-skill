@@ -104,7 +104,6 @@ A docs-only change filed under `chore` or `feat`.
 | actual | should have been |
 |--------|------------------|
 | `chore: update README.md` (`as-practice`, ×2) | `docs: …` + what changed |
-| `chore: update content-documentation skill` (`as-skill`) | `docs(content): …` |
 | `feat: update note` (`project-school-hq`) | `docs(notes): …` — the shape the author later got right in `docs(notes): add note for 05.10.2026` |
 | `feat: translate all md files into English` (`as-skill`) | `docs: translate all md files into English` |
 | `chore(docs): rename note` (`project-school-hq`) | `docs(notes): rename …` |

@@ -18,7 +18,7 @@
 
 ## Границы
 
-Не трогает `LICENSE` — это `docs-license`. Не пишет туториалы и статьи — это `content-documentation` / `content-article-draft`. Ревью готового README — агент `docs-readme-reviewer`, правки по ревью — `docs-readme-writer`. Не коммитит.
+Не трогает `LICENSE` — это `docs-license`. Не пишет туториалы и статьи — это `content-article-draft`. Ревью готового README — агент `docs-readme-reviewer`, правки по ревью — `docs-readme-writer`. Не коммитит.
 
 ## Чем укомплектован
 

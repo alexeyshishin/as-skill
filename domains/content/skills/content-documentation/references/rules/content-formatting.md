@@ -1,1 +1,0 @@
-../../../../rules/content-formatting.md

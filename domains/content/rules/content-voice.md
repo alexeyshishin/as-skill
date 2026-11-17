@@ -1,6 +1,6 @@
 # content-voice
 
-Authorial voice and tone for content (Telegram, articles, tutorials). Skills in the `content` domain reference this as `content-voice`.
+Authorial voice and tone for content (Telegram, articles). Skills in the `content` domain reference this as `content-voice`.
 
 ## Basic principles
 
@@ -27,14 +27,13 @@ Authorial voice and tone for content (Telegram, articles, tutorials). Skills in 
 
 - **Short paragraphs.** 1-4 sentences. On a phone screen, a long paragraph is a wall of text.
 - **Minimal bullet points.** Prose is better where possible. Use bullets only for a genuine list of 3+ parallel items.
-- **Subheadings** in articles/tutorials. Usually unnecessary in Telegram.
+- **Subheadings** in articles. Usually unnecessary in Telegram.
 - **Code blocks with a language tag**: ` ```go`, ` ```bash`. Syntax highlighting matters.
 
 ## Length
 
 - **Telegram post**: 500-1500 characters. One point, one idea, no "introductions."
 - **Article**: 3-10k characters. Thesis → arguments → example → implication.
-- **Tutorial**: as long as it needs to be to reproduce the result. No longer.
 
 ## Structure of thought
 

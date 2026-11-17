@@ -116,8 +116,8 @@ def embedded_fonts():
     return re.sub(r'url\(([^)]+\.woff2)\)', inline, css)
 
 
-def emoji_span(glyph, size):
-    return f'<span class="emoji" style="--s:{size}px"><span>{glyph}</span></span>'
+def emoji_span(glyph):
+    return f'<span class="emoji"><span>{glyph}</span></span>'
 
 
 def wrap_emoji(text):
@@ -162,7 +162,7 @@ def build_title(args):
     mark = ''
     line_class = ''
     if args.emoji:
-        mark = emoji_span(html.escape(args.emoji.strip(), quote=False), args.emoji_size)
+        mark = emoji_span(html.escape(args.emoji.strip(), quote=False))
     elif args.icon:
         icon = Path(args.icon)
         if not icon.is_file():
@@ -268,7 +268,6 @@ def parse_args(argv):
     title.add_argument('--subtitle')
     title.add_argument('--emoji')
     title.add_argument('--icon')
-    title.add_argument('--emoji-size', type=int, default=125)
     title.add_argument('-o', '--out', required=True)
 
     text = sub.add_parser('text', help='text page with bold spans, inline emoji and a handle')

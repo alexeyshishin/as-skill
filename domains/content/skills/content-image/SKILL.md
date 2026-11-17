@@ -42,20 +42,20 @@ Take the author's wording as is. Don't rewrite it and don't invent text. If the 
 - paragraphs are separated by a blank line, a single newline is a line break
 - `**bold**` for emphasis, nothing else is parsed
 - emoji go inline; a space before it is not needed (the renderer sets the gap)
-- capacity: about 10-12 lines of ~25-30 characters; longer text is refused — split it into several images
-- handle: `--handle @name`, or the `CONTENT_IMAGE_HANDLE` environment variable; `--handle ""` turns it off. If neither is set, ask the author once and suggest putting the variable into their shell profile
+- capacity: about 10-12 lines of ~25-30 characters; a line with a 150 px emoji is taller than a plain one, so emoji-heavy text fits fewer lines; longer text is refused — split it into several images
+- handle: `--handle @name`; otherwise the image handle from `CONTENT.md` in a content workspace, passed as `--handle`; otherwise the `CONTENT_IMAGE_HANDLE` environment variable; `--handle ""` turns it off. If none is set, ask the author once and suggest putting the variable into their shell profile
 
 ## Step 3. Render
 
 ```bash
-python3 scripts/render.py title --heading "digest" --emoji "🧊" --emoji-size 150 -o out/february.png
+python3 scripts/render.py title --heading "digest" --emoji "🧊" -o out/february.png
 python3 scripts/render.py title --heading "obsidian" --subtitle "daily" --icon assets/logo.svg -o out/obsidian-daily.png
 python3 scripts/render.py text --file post.txt --handle "@name" -o out/post.png
 ```
 
-`scripts/` is relative to this skill's directory. Emoji size: `125` by default (headings), `150` for the digest-style cards; body emoji are always `72`.
+`scripts/` is relative to this skill's directory. Every emoji, in headings and in body text, is rendered at 150×150 px (`--emoji-size` in `references/tokens.css`).
 
-Output path: ask where to put it; if the author has no preference, use `post-images/<slug>.png` in the current directory. Create the folder, don't overwrite an existing file without saying so.
+Output path in a content workspace (`references/rules/content-workspace.md`): `images/<slug>/cover.png` for a title card, `images/<slug>/01.png`, `02.png`… for text pages, where `<slug>` is the post's slug; if the post's file exists, add the path to its `images:` list. Without a workspace: ask where to put it; if the author has no preference, use `post-images/<slug>.png` in the current directory. Create the folder, don't overwrite an existing file without saying so.
 
 On failure the script exits non-zero with a one-line reason (`content does not fit the canvas…`, `Chrome/Chromium not found…`). Fix the cause; don't retry with the same input.
 

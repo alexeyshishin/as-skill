@@ -14,12 +14,13 @@ Goal: take an idea or raw text and turn it into **one** Telegram post that peopl
 Before starting, read:
 - `references/rules/content-voice.md` — authorial voice (informal "you," not Wikipedia)
 - `references/rules/content-formatting.md` — the Telegram section
+- `references/rules/content-workspace.md` — where the post is saved, if the project has a content workspace (`CONTENT.md`)
 
 ## Step 1. Understand the material
 
 Ask (or pull from context):
-- **the source**: an idea in one phrase, a note from Obsidian, a draft, bullet points
-- **the channel's theme** (if not already known): technical, personal, mixed
+- **the source**: an idea in one phrase, a note from Obsidian, a draft, bullet points, a file from `ideas/`
+- **the channel's theme** (if not already known; in a workspace — from `CONTENT.md`): technical, personal, mixed
 - **the post format**: a thesis / a breakdown / a personal story / an incident post-mortem / a brief how-to
 
 If there isn't enough material for a post — **stop and ask for specifics**: "there isn't enough for a post, I need a real-world example or some numbers."
@@ -89,6 +90,12 @@ Ask:
 3. Strengthen the thesis
 4. Add more specifics
 5. Produce variants of the title/hook
+
+## Step 7. Save
+
+After "Accept":
+- in a content workspace — save to `drafts/<slug>.md` with the rule's frontmatter (`format: tg-post`, `platform: telegram`); if the post grew from `ideas/<slug>.md`, move that file instead of creating a new one. Name the path in the report
+- without a workspace — don't save unless the author asks; then ask where
 
 ## What not to do
 
