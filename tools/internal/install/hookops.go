@@ -69,7 +69,7 @@ func (in *Installer) EnableHooks(p platform.ID, names []string) error {
 	}
 	switch p {
 	case platform.Codex:
-		fmt.Fprintln(in.Stdout(), "UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
+		fmt.Fprintln(in.Stdout(), "Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).")
 	case platform.Cursor:
 		fmt.Fprintln(in.Stdout(), "UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Cursor stop cannot block; it submits a followup_message (cap 2).")
 	}

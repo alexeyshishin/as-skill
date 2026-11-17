@@ -28,7 +28,7 @@ as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE)
 as-skill: note: cursor: agents: frontmatter edits not live (doctor reports STALE); hooks: stop cannot block
 as-skill: note: opencode: agents: frontmatter edits not live (doctor reports STALE); hooks: unsupported
 as-skill: warning: skills land in both .claude/skills and .agents/skills; cursor, opencode will see each skill twice (doctor reports DUPLICATE-SKILL)
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
 as-skill: warning: hooks unsupported on opencode
 == result ==
@@ -50,7 +50,7 @@ installed     alpha    agents  -> <P>/.cursor/agents (2 files)
 installed     alpha    agents  -> <P>/.opencode/agents (2 files)
 installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
 installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 installed     alpha    hooks   -> <P>/.cursor/hooks (1 file)
 as-skill: warning: hooks on cursor: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
 as-skill: warning: hooks unsupported on opencode

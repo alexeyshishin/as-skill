@@ -12,7 +12,7 @@ done -> <P>/.claude
 done -> <P>/.codex
 == stderr ==
 as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 == result ==
 ok
 == combined ==
@@ -25,7 +25,7 @@ would install alpha    agents  -> <P>/.claude/agents (2 files)
 would install alpha    agents  -> <P>/.codex/agents (2 files)
 would install alpha    hooks   -> <P>/.claude/hooks (2 files)
 would install alpha    hooks   -> <P>/.codex/hooks (1 file)
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 done -> <P>/.claude
 done -> <P>/.codex
 
@@ -43,7 +43,7 @@ done -> <P>/.claude
 done -> <P>/.codex
 == stderr ==
 as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 == result ==
 ok
 == combined ==
@@ -56,7 +56,7 @@ installed     alpha    agents  -> <P>/.claude/agents (2 files)
 installed     alpha    agents  -> <P>/.codex/agents (2 files)
 installed     alpha    hooks   -> <P>/.claude/hooks (2 files)
 installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 done -> <P>/.claude
 done -> <P>/.codex
 

@@ -84,7 +84,7 @@ installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
 done -> <P>/.codex
 == stderr ==
 as-skill: note: codex: agents: frontmatter edits not live (doctor reports STALE); hooks: needs trust via /hooks
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 == result ==
 ok
 == combined ==
@@ -93,19 +93,19 @@ installed     alpha    rules   -> <P>/.agents/rules (1 file)
 installed     alpha    skills  -> <P>/.agents/skills (2 files)
 installed     alpha    agents  -> <P>/.codex/agents (2 files)
 installed     alpha    hooks   -> <P>/.codex/hooks (1 file)
-as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)
+as-skill: warning: hooks on codex: files placed; run `as-skill hooks enable` to register
 done -> <P>/.codex
 
 ### step 9: hooks enable all -a codex -p <P> --harness-root <H>
 == stdout ==
 registered      gate.sh (Stop) in <P>/.codex/hooks.json
-UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).
+Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).
 == stderr ==
 == result ==
 ok
 == combined ==
 registered      gate.sh (Stop) in <P>/.codex/hooks.json
-UNVERIFIED: adapters follow vendor docs (2026-10-27), not run on a real CLI. Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).
+Codex requires trusting project hooks: review in /hooks (or --dangerously-bypass-hook-trust for one-off).
 
 ### step 10: hooks disable all -a codex -p <P> --harness-root <H>
 == stdout ==

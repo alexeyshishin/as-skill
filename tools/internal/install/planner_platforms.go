@@ -171,10 +171,11 @@ func (in *Installer) planHooks(domain, srcDir string, pf platform.Platform) (*Pl
 			p.Warnings = append(p.Warnings, Warning{Text: t, Stream: Stderr, Before: len(p.Ops), WriteOnly: true})
 		}
 	}
-	p.Warnings = append(p.Warnings, Warning{
-		Text:   fmt.Sprintf("as-skill: warning: hooks on %s: files placed; run `as-skill hooks enable` to register (UNVERIFIED adapters)", pf.ID),
-		Stream: Stderr, Before: len(p.Ops),
-	})
+	text := fmt.Sprintf("as-skill: warning: hooks on %s: files placed; run `as-skill hooks enable` to register", pf.ID)
+	if pf.Verified["hooks"] == "" {
+		text += " (UNVERIFIED adapters)"
+	}
+	p.Warnings = append(p.Warnings, Warning{Text: text, Stream: Stderr, Before: len(p.Ops)})
 	return p, nil
 }
 

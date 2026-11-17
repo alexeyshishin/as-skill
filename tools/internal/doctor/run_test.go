@@ -73,7 +73,7 @@ func TestRunUntrackedCountsAsFailure(t *testing.T) {
 }
 
 func TestRunWarningsDoNotFail(t *testing.T) {
-	lock := &lockfile.Lockfile{Entries: []lockfile.Entry{{Domain: "d", Mode: lockfile.ModeCopy, Platforms: []string{"codex"}}}}
+	lock := &lockfile.Lockfile{Entries: []lockfile.Entry{{Domain: "d", Mode: lockfile.ModeCopy, Platforms: []string{"cursor"}}}}
 	res, err := Run(Input{ProjectRoot: t.TempDir(), Lock: lock})
 	if err != nil {
 		t.Fatal(err)

@@ -661,7 +661,7 @@ func TestEnableHooksCodexCursorPublicAndPlatformsHeader(t *testing.T) {
 		t.Fatal(err)
 	}
 	out, err := captureStdout(t, func() error { return in.EnableHooks(platform.Codex, []string{"all"}) })
-	if err != nil || !strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "/hooks") {
+	if err != nil || strings.Contains(out, "UNVERIFIED") || !strings.Contains(out, "/hooks") {
 		t.Fatalf("codex: %v %q", err, out)
 	}
 	cx := readStr(t, filepath.Join(project, ".codex", "hooks.json"))

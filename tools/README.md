@@ -54,7 +54,7 @@ Advanced:
 
 | Command | What it does |
 |---------|--------------|
-| `as-skill hooks enable\|disable [<name>...\|all] [-d D[,D]] -a P` | Registers/removes hooks in `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`; does not touch foreign entries. With `--domain` the names come from the domain sources, and `enable --dry-run --domain` prints `would register`; without `--domain` — from the project's `.<platform>/hooks`. Codex/cursor — per the documentation, not verified |
+| `as-skill hooks enable\|disable [<name>...\|all] [-d D[,D]] -a P` | Registers/removes hooks in `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`; does not touch foreign entries. With `--domain` the names come from the domain sources, and `enable --dry-run --domain` prints `would register`; without `--domain` — from the project's `.<platform>/hooks`. Codex is verified on a real CLI; cursor — per the documentation, not verified |
 | `as-skill check` | Validates `domains/*/manifest.yaml` and `skills/*/SKILL.md`; skill names are unique across domains and are not equal to a domain name or `all` |
 
 The repository copy is found automatically: `--harness-root` → up from cwd → up from the binary's real path. A binary built in a checkout works from any project. `-p` is the project you are equipping.
