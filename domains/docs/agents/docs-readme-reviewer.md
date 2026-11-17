@@ -4,7 +4,8 @@ description: >
   Read-only reviewer of a project's README.md and README_RUS.md: runs the
   docs-readme checker, then reads both files against the code and the
   docs-conventions rule — install and usage commands, flags, versions, badges,
-  links, EN ↔ RU meaning and lag. Reports ship/rework with severity-tagged
+  links, EN ↔ RU meaning and lag — and scans both for AI slop through
+  docs-humanizer. Reports ship/rework with severity-tagged
   findings (path:line — SEVERITY: problem. fix.); approved fixes go to
   docs-readme-writer. Use when the user wants to "review the README", "check
   README_RUS against README", "is our README any good", "проверь README",
@@ -48,6 +49,23 @@ Read both files in full, then the code they describe.
 | RU lag | `git log -1 --format='%h %cs' -- README.md` vs `-- README_RUS.md`; EN edited later → diff EN since RU's last commit and list what RU lacks |
 
 Don't verify what you can't: a claim with nothing in the repo to check it against is flagged «not verifiable from the repo», not «wrong».
+
+## Pass 3. AI slop
+
+Run `docs-humanizer` in README mode, steps 1–2 only — scan and read, no fixes:
+
+```bash
+python3 scripts/scan-tells.py README.md
+python3 scripts/scan-tells.py README_RUS.md
+```
+
+(`scripts/scan-tells.py` in the `docs-humanizer` skill's directory.) Map:
+- a file at 3.5+ tells per 100 words → one MAJOR on line 1: the README reads as generated, with its density
+- each weight-3 tell, and each reading-pass finding (claim without evidence, Features of adjectives, Why restating the title) → MINOR
+- weight 1–2 tells → NIT, grouped per file in one line
+- a flagged word that is the right term → not a finding
+
+Finding text names the tell and the match: `README.md:12 — MINOR: tell C1 «seamlessly». Say what it integrates with and how.`
 
 ## Output format
 

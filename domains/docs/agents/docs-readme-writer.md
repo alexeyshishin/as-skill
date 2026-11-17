@@ -25,7 +25,7 @@ Before starting, read rule `docs-conventions`.
 
 ## Write mode
 
-Hand control to the `docs-readme` skill; it gathers facts from the code, asks for the gaps, writes EN then RU, lints and shows the result. Don't duplicate its steps.
+Hand control to the `docs-readme` skill; it gathers facts from the code, asks for the gaps, writes EN then RU, lints, clears AI slop through `docs-humanizer` and shows the result. Don't duplicate its steps.
 
 When it returns, offer one line: an independent check is `docs-readme-reviewer`.
 
@@ -34,13 +34,15 @@ When it returns, offer one line: an independent check is `docs-readme-reviewer`.
 Input: findings in the form `path:line — SEVERITY: problem. fix.`, already approved by the user. Apply only those.
 
 1. Group by file; EN first, then the same change mirrored in RU — a fix in one language is never left out of the other.
-2. Targeted edits, not a rewrite: the author's structure and voice stay.
+2. Targeted edits, not a rewrite: the author's structure and voice stay. Slop findings (a tell code or «reads as generated») go through `docs-humanizer` README mode, step 3 onward — limited to the listed findings.
 3. A finding that needs a fact the code doesn't give (a version, the audience, a screenshot) — ask; don't fill it.
 4. A finding you disagree with — don't apply it; say why in one line.
-5. Re-run the checker that ships with `docs-readme`:
+5. Re-run the checker that ships with `docs-readme`; if slop findings were fixed, also the `docs-humanizer` gate on both files:
 
 ```bash
 python3 scripts/check-readme.py README.md
+python3 scripts/scan-tells.py README.md --max-density 1.5
+python3 scripts/scan-tells.py README_RUS.md --max-density 1.5
 ```
 
 6. Report: per finding — fixed / skipped (why) / needs input; then `git diff --stat -- README.md README_RUS.md`.

@@ -49,7 +49,7 @@ Dependencies run top-down: an agent knows about a skill, a skill knows about a r
 | `content` | — | Content — Telegram posts, articles, technical documentation, a content factory, Russian-text humanizing |
 | `core` | — | Domain-independent utility skills, always installable: ultra-compressed output mode, project memory bank, memory bank defrag, fact-checked web search |
 | `devops` | — | Kubernetes, Helm, GitLab CI, ArgoCD — advisory (Consilium) and executing agents |
-| `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution; C4 diagrams stubbed |
+| `docs` | — | README.md + README_RUS.md and licenses — writer and reviewer agents, skills with linters, third-party attribution, AI-slop check of both READMEs, Russian-text humanizing; C4 diagrams stubbed |
 | `git` | — | Git workflow — Conventional Commits, PR descriptions, semver releases |
 | `obsidian` | `OBSIDIAN_VAULT` | Obsidian PKB on PARA — ingest, inbox triage, note critique, splitting, hub untangling |
 | `resume` | — | Resume review and job search — ATS optimization, bullets, tailoring, cover letters, interview prep (22 skills adapted from Paramchoudhary/ResumeSkills, MIT) |
@@ -189,13 +189,14 @@ In these cases follow both domains' rules — they complement, not contradict, e
 **Rules:** `docs-conventions` — README section order and checklist, EN ↔ RU sync (EN is the source), license text verbatim only, license file layout, third-party attribution
 
 **Skills:**
-- `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`
+- `docs-readme` — README.md + README_RUS.md from the code: project type → sections, commands only from manifests/scripts/CI, EN → RU sync; lints via `scripts/check-readme.py`, clears AI slop via `docs-humanizer`
 - `docs-license` — license questionnaire → SPDX, canonical text copied from `references/licenses/` (15 bundled, else `gh api /licenses` / SPDX), placeholders only; third-party attribution + compatibility table; checks via `scripts/check-license.py`
+- `docs-humanizer` — README mode: AI-slop scan of README.md + README_RUS.md (EN + RU catalogs, `scripts/scan-tells.py`, gate 1.5 per 100 words), spot fixes in a technical register; full mode: de-AI-ifies Russian-language text (based on `content-humanizer`, which stays in `content` for posts and articles)
 - `docs-c4` — stub, not implemented (C4 model diagrams)
 
 **Agents:**
 - `docs-readme-writer` — write/update/sync via `docs-readme`; fix mode applies approved reviewer findings, EN and RU together
-- `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code and EN ↔ RU meaning; ship/rework with severity-tagged findings
+- `docs-readme-reviewer` — read-only; runs the checker, then checks README against the code, EN ↔ RU meaning and AI slop; ship/rework with severity-tagged findings
 - `docs-license-writer` — choose/write/attribute via `docs-license`; fix mode applies approved reviewer findings, recopies text instead of patching
 - `docs-license-reviewer` — read-only; runs the checker, audits borrowed code, attribution, compatibility; ship/rework with severity-tagged findings
 - `docs-c4-writer`, `docs-c4-reviewer` — stubs, not implemented
@@ -225,8 +226,8 @@ No `rules/` or `agents/` — skills only, prefixed `resume-`. Adapted from [Para
 - `content-tg-post` — idea/raw text → Telegram post, 500–1500 characters, thesis-first
 - `content-article-draft` — idea/notes → article draft (Habr / Medium / personal blog)
 - `content-documentation` — technical-tutorial skeleton: prerequisites, numbered steps, troubleshooting, cleanup
-- `content-humanizer` — de-AI-ifies Russian-language text (Russian only)
 - `content-factory` (trigger `/content-zavod`) — one source → 6-file content package (article, threads, Reels scripts, posts, carousels, plan)
+- `content-humanizer` — de-AI-ifies Russian-language text (Russian only); README/docs slop check is `docs-humanizer`
 
 **Agents:**
 - `content-editor` — content pipeline from idea to publication; picks the format and calls the matching skill

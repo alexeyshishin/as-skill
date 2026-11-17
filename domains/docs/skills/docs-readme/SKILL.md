@@ -4,7 +4,8 @@ description: >
   Writes or updates a project's README.md (English, the source of truth) and
   README_RUS.md (its full Russian translation) from the actual code: detects the
   project type, picks the sections, takes every command from the project's own
-  manifests, scripts and CI, keeps EN and RU in sync, lints both. Use when the
+  manifests, scripts and CI, keeps EN and RU in sync, lints both and clears AI
+  slop through docs-humanizer. Use when the
   user wants to "write a README", "update the README", "make a README for this
   repo", "translate the README into Russian", "sync README_RUS", "напиши
   README", "обнови README", "переведи README на русский". Not for tutorials or
@@ -21,6 +22,7 @@ Before starting, read `references/rules/docs-conventions.md` — sections README
 Assets:
 - [`references/readme-skeletons.md`](references/readme-skeletons.md) — project-type detection, sections per type, EN ↔ RU heading map, a skeleton pair.
 - [`scripts/check-readme.py`](scripts/check-readme.py) — mechanical checker for one README or an EN + RU pair (Step 6).
+- the `docs-humanizer` skill, README mode — AI-slop scan and spot fixes for both files (Step 6.5).
 
 ## Step 1. Pick the mode
 
@@ -81,9 +83,15 @@ It pairs `README_RUS.md` automatically (`--ru PATH` for another name, `--no-ru` 
 
 The checker sees form, not truth: whether the commands work and the opening line is accurate stays your judgment.
 
+## Step 6.5. AI slop
+
+Run `docs-humanizer` in README mode on both files: scan, fix only the flagged passages in a technical register, re-scan, gate at 1.5 tells per 100 words per file. Then re-run `check-readme.py` — a slop fix must not break EN/RU parity.
+
+A draft that fails the gate is not shown; a finding kept on purpose is listed with its reason.
+
 ## Step 7. Show and ask
 
-New files — show them. Updates — show `git diff -- README.md README_RUS.md`. Ask:
+New files — show them. Updates — show `git diff -- README.md README_RUS.md`. Include the slop density per file. Ask:
 1. Accept
 2. Adjust (what)
 3. Add (screenshot, configuration table, more examples)

@@ -1,6 +1,6 @@
 ---
 name: content-humanizer
-description: "A skill for humanizing Russian-language text. Removes signs of AI generation, makes the text feel alive. ALWAYS use this when the user asks to: humanize a text, remove traces of a neural network, make a text lively/natural, rewrite it like a human, humanize in Russian, remove officialese, remove wateriness/filler, make a text less formal. Also use this if the user pastes in Russian-language text and says something like 'rewrite this,' 'make it better,' 'sounds like a robot,' 'too artificial.' Works ONLY with the Russian language. For English, use the original humanizer. Do NOT use this for: translation, writing from scratch, grammar, code."
+description: "A skill for humanizing Russian-language text. Removes signs of AI generation, makes the text feel alive. ALWAYS use this when the user asks to: humanize a text, remove traces of a neural network, make a text lively/natural, rewrite it like a human, humanize in Russian, remove officialese, remove wateriness/filler, make a text less formal. Also use this if the user pastes in Russian-language text and says something like 'rewrite this,' 'make it better,' 'sounds like a robot,' 'too artificial.' Works ONLY with the Russian language. For English, use the original humanizer. For an AI-slop check of README.md / README_RUS.md or other repository docs, use docs-humanizer. Do NOT use this for: translation, writing from scratch, grammar, code."
 ---
 
 # Humanizer
