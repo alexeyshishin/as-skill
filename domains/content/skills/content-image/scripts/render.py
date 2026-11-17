@@ -55,6 +55,8 @@ EMOJI_RE = re.compile(
 )
 INLINE_EMOJI_RE = re.compile(rf'[ \t]*({EMOJI_RE.pattern})')
 BOLD_RE = re.compile(r'\*\*(.+?)\*\*', re.DOTALL)
+EMOJI_MODIFIERS_RE = re.compile(r'[\ufe0f\U0001F3FB-\U0001F3FF]')
+POST_FOLDERS = ('drafts', 'ready', 'published', 'archive')
 
 
 FIT_SCRIPT = '''<script>
@@ -147,6 +149,33 @@ def fill(template_name, values):
     return page
 
 
+def normalize_emoji(glyph):
+    return EMOJI_MODIFIERS_RE.sub('', glyph)
+
+
+def post_slug(path):
+    return re.sub(r'^\d{4}-\d{2}-\d{2}-', '', path.stem)
+
+
+def post_body(text):
+    parts = text.split('---', 2)
+    return parts[2] if text.startswith('---') and len(parts) == 3 else text
+
+
+def used_emoji(root, slug=None):
+    found = set()
+    for sidecar in (root / 'images').glob('*/emoji.txt'):
+        if sidecar.parent.name != slug:
+            lines = sidecar.read_text(encoding='utf-8').splitlines()
+            found.update(normalize_emoji(line.strip()) for line in lines if line.strip())
+    for folder in POST_FOLDERS:
+        for post in (root / folder).rglob('*.md'):
+            if post_slug(post) != slug:
+                body = post_body(post.read_text(encoding='utf-8'))
+                found.update(normalize_emoji(match.group(0)) for match in EMOJI_RE.finditer(body))
+    return found
+
+
 def require_english(label, value):
     if CYRILLIC_RE.search(value):
         fail(f'{label} must be in English, translate it first (got {value!r})')
@@ -159,6 +188,10 @@ def build_title(args):
     require_english('heading', heading)
     if args.emoji and args.icon:
         fail('--emoji and --icon are mutually exclusive')
+    if args.emoji and args.workspace:
+        glyph = args.emoji.strip()
+        if normalize_emoji(glyph) in used_emoji(Path(args.workspace), args.slug):
+            fail(f'emoji {glyph} is already used in another post, pick a different one')
     mark = ''
     line_class = ''
     if args.emoji:
@@ -268,6 +301,8 @@ def parse_args(argv):
     title.add_argument('--subtitle')
     title.add_argument('--emoji')
     title.add_argument('--icon')
+    title.add_argument('--workspace', help='content workspace root; refuses an emoji already used in another post')
+    title.add_argument('--slug', help='the current post, left out of the emoji check')
     title.add_argument('-o', '--out', required=True)
 
     text = sub.add_parser('text', help='text page with bold spans, inline emoji and a handle')
@@ -277,11 +312,18 @@ def parse_args(argv):
     text.add_argument('--handle', help=f'overrides ${HANDLE_ENV}; empty string disables it')
     text.add_argument('-o', '--out', required=True)
 
+    used = sub.add_parser('used', help='list emoji already used in a content workspace')
+    used.add_argument('root', help='content workspace root')
+    used.add_argument('--slug', help='the current post, left out of the list')
+
     return parser.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(argv)
+    if args.kind == 'used':
+        print('\n'.join(sorted(used_emoji(Path(args.root), args.slug))))
+        return
     page = build_title(args) if args.kind == 'title' else build_text(args)
     print(screenshot(page, Path(args.out)))
 

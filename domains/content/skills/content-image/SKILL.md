@@ -3,9 +3,9 @@ name: content-image
 description: >
   Renders post images (1920x1920 PNG) in the author's visual style: a title
   card (big English heading + emoji or logo, optional subtitle) or a text page
-  (paragraphs with bold spans, inline emoji, the author's handle). Fills an
-  HTML template and screenshots it with headless Chrome — no Figma at run
-  time. Use when the user wants "make an image for the post", "a cover for the
+  (paragraphs with bold spans, inline emoji, the author's handle). Title cards
+  come as 3 variants whose emoji never repeat another post's. Fills an HTML
+  template and screenshots it with headless Chrome — no Figma at run time. Use when the user wants "make an image for the post", "a cover for the
   post", "a card with text", "picture for the channel", "post image".
 ---
 
@@ -36,7 +36,7 @@ Take the author's wording as is. Don't rewrite it and don't invent text. If the 
 - heading: English, lowercase like every frame in the Figma file (`introduction`, `obsidian`, `digest`), one line, short — roughly up to 14 characters at the default size (`introduction` fits). Longer — the renderer refuses; shorten it or ask for a shorter variant
 - subtitle (optional): one short English word under the heading (`daily`, `soon`)
 - if the author gives a Russian heading or subtitle, translate it into the shortest natural English word yourself (`лонгриды` → `longreads`, `скоро` → `soon`) and name the translation in your report. The renderer rejects any Cyrillic in the heading and subtitle
-- mark (optional): one emoji (`--emoji`) or a logo file (`--icon path.png|svg`), not both
+- mark: one emoji (`--emoji`) or a logo file (`--icon path.png|svg`), not both. By default an emoji, chosen under "Emoji and variants" below
 
 **text** — the body keeps the author's language (Russian as is)
 - paragraphs are separated by a blank line, a single newline is a line break
@@ -45,17 +45,41 @@ Take the author's wording as is. Don't rewrite it and don't invent text. If the 
 - capacity: about 10-12 lines of ~25-30 characters; a line with a 150 px emoji is taller than a plain one, so emoji-heavy text fits fewer lines; longer text is refused — split it into several images
 - handle: `--handle @name`; otherwise the image handle from `CONTENT.md` in a content workspace, passed as `--handle`; otherwise the `CONTENT_IMAGE_HANDLE` environment variable; `--handle ""` turns it off. If none is set, ask the author once and suggest putting the variable into their shell profile
 
+## Emoji and variants
+
+Two standing rules for every title card.
+
+**Never repeat an emoji from another post.** In a content workspace, list what is taken before choosing:
+
+```bash
+python3 scripts/render.py used <workspace-root> --slug <slug>
+```
+
+It prints every emoji found in the other posts' text (`drafts/`, `ready/`, `published/`, `archive/`) and in their `images/<slug>/emoji.txt`. A skin-tone or variation-selector form counts as the same emoji. Pick only from what is not listed. `render.py title --workspace <root> --slug <slug>` refuses a taken emoji too. Without a workspace nothing records earlier posts: say the check could not run, ask the author which emoji are taken, and suggest `content-init`.
+
+**Always render 3 different variants.** Three title cards with the same heading and subtitle, each with its own emoji that fits the heading: three different pictures, not tones or genders of one emoji, none taken by another post. Show all three and let the author pick; don't pick for them. If the author named an emoji, it is variant 1 when it's free — if another post has it, name that post and offer a fresh one instead; variants 2 and 3 are yours.
+
+Nothing to vary — render once and say why:
+- a logo (`--icon`) or an author who asked for no emoji
+- a text page: the author's wording, emoji included, is never swapped; if an emoji in it is already used in another post, name that post and let the author decide
+
 ## Step 3. Render
 
 ```bash
-python3 scripts/render.py title --heading "digest" --emoji "🧊" -o out/february.png
+python3 scripts/render.py title --heading "digest" --emoji "🧊" --workspace content --slug february-digest -o content/images/february-digest/variants/cover-1.png
 python3 scripts/render.py title --heading "obsidian" --subtitle "daily" --icon assets/logo.svg -o out/obsidian-daily.png
 python3 scripts/render.py text --file post.txt --handle "@name" -o out/post.png
 ```
 
 `scripts/` is relative to this skill's directory. Every emoji, in headings and in body text, is rendered at 150×150 px (`--emoji-size` in `references/tokens.css`).
 
-Output path in a content workspace (`references/rules/content-workspace.md`): `images/<slug>/cover.png` for a title card, `images/<slug>/01.png`, `02.png`… for text pages, where `<slug>` is the post's slug; if the post's file exists, add the path to its `images:` list. Without a workspace: ask where to put it; if the author has no preference, use `post-images/<slug>.png` in the current directory. Create the folder, don't overwrite an existing file without saying so.
+Output path in a content workspace (`references/rules/content-workspace.md`), where `<slug>` is the post's slug:
+- title card variants: `images/<slug>/variants/cover-1.png`, `cover-2.png`, `cover-3.png`. When the author picks one, move it to `images/<slug>/cover.png`, then ask whether to delete the other two — delete only on the author's word
+- text pages: `images/<slug>/01.png`, `02.png`… directly
+- every emoji on a picked or rendered image goes into `images/<slug>/emoji.txt`, one per line, no duplicates. This file is what keeps later posts from reusing the emoji
+- if the post's file exists, add the final path to its `images:` list
+
+Without a workspace: ask where to put it; if the author has no preference, use `post-images/<slug>-1.png`, `-2`, `-3` for variants (the pick becomes `post-images/<slug>.png`) and `post-images/<slug>.png` for a text page, in the current directory. Create the folder, don't overwrite an existing file without saying so.
 
 On failure the script exits non-zero with a one-line reason (`content does not fit the canvas…`, `Chrome/Chromium not found…`). Fix the cause; don't retry with the same input.
 
@@ -67,8 +91,9 @@ Open the PNG (Read tool) and look at it before showing it:
 - nothing is clipped, the text does not touch the handle
 - emoji rendered as pictures, not as empty boxes
 - the handle is correct
+- title cards: all three variants were opened, their emoji differ from each other and none is in the `used` output
 
-Report the file path and what was rendered. Ask whether to adjust the text or make the next image in the series.
+Report the file paths and which emoji each variant carries. For variants, ask which one to keep. Otherwise ask whether to adjust the text or make the next image in the series.
 
 ## Changing the style
 
@@ -78,6 +103,8 @@ Edit `references/tokens.css` — sizes, colors, offsets live there as variables,
 
 - don't put Russian, or any Cyrillic, into a title card heading or subtitle; Russian belongs only in the body of a text page
 - don't uppercase a heading — the Figma frames are all lowercase
+- don't reuse an emoji that another post already carries
+- don't render fewer than 3 title card variants unless one of the listed reasons applies
 - don't render without looking at the result
 - don't shrink font sizes to squeeze more text in — split the text or shorten it
 - don't add colors, gradients, shadows or other fonts that are not in the Figma design system

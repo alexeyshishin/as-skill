@@ -17,7 +17,7 @@ The workspace root is the directory that holds `CONTENT.md`. Look in the current
 ├── ready/               edited and approved, waiting to be published
 ├── published/<YYYY>/    published, by year
 ├── archive/             dropped or postponed, kept
-└── images/<slug>/       the post's images
+└── images/<slug>/       the post's images, emoji.txt, variants/
 ```
 
 ## Status is the folder
@@ -41,6 +41,8 @@ Drafting from an idea moves `ideas/<slug>.md` to `drafts/<slug>.md` and replaces
 - `ideas/`, `drafts/`, `ready/`, `archive/`: `<slug>.md`
 - `published/`: `published/<YYYY>/<YYYY-MM-DD>-<slug>.md`, the date is the publish date
 - images: `images/<slug>/cover.png` for a title card, `images/<slug>/01.png`, `02.png`… for text pages
+- `images/<slug>/variants/` — title card variants the author hasn't picked from yet, `cover-1.png`…`cover-3.png`
+- `images/<slug>/emoji.txt` — emoji on the post's images, one per line; `content-image` reads it so no emoji repeats across posts
 - a slug already taken in any folder — add a suffix (`-2`), don't overwrite
 
 ## Frontmatter
