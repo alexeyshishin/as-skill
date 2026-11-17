@@ -225,7 +225,7 @@ No `rules/` or `agents/` — skills only, prefixed `resume-`. Adapted from [Para
 - `content-tg-post` — idea/raw text → Telegram post, 500–1500 characters, thesis-first; in a workspace saves to `drafts/`
 - `content-article-draft` — idea/notes → article draft (Habr / Medium / personal blog); in a workspace saves to `drafts/`
 - `content-humanizer` — de-AI-ifies Russian-language text (Russian only), takes voice samples from the workspace's `voice/`; README/docs slop check is `docs-humanizer`
-- `content-image` — heading/text → 1920×1920 PNG in the author's Figma-derived style (title card with an always-English lowercase heading, text page in the author's language) via `scripts/render.py` + headless Chrome; tokens in `references/tokens.css`, Roboto bundled; Figma is not needed at run time; in a workspace saves to `images/<slug>/`
+- `content-image` — heading/text → 1920×1920 PNG in the author's Figma-derived style (title card with an always-English lowercase heading, always 3 variants whose emoji never repeat another post's; text page in the author's language) via `scripts/render.py` + headless Chrome; tokens in `references/tokens.css`, Roboto bundled; Figma is not needed at run time; in a workspace saves to `images/<slug>/`
 
 **Agents:**
 - `content-editor` — content pipeline from idea to publication; picks the format, calls the matching skill, and `content-image` when a picture is needed; in a workspace moves approved posts to `ready/` and published ones to `published/<YYYY>/`
