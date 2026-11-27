@@ -7,9 +7,18 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
+type Tone int
+
+const (
+	ToneNone Tone = iota
+	ToneGood
+	ToneWarn
+)
+
 type Option struct {
 	Value, Label string
 	Selected     bool
+	Tone         Tone
 }
 
 type Prompter interface {

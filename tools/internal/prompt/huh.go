@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -197,12 +198,42 @@ func (p *huhPrompter) Input(id, title, def string, validate func(string) error) 
 	return v, nil
 }
 
-func huhOptions(opts []Option) []huh.Option[string] {
+func (p *huhPrompter) renderer() *lipgloss.Renderer {
+	var w io.Writer = os.Stderr
+	if p.out != nil {
+		w = p.out
+	}
+	return lipgloss.NewRenderer(w)
+}
+
+func toneColor(t Tone) (lipgloss.Color, bool) {
+	switch t {
+	case ToneGood:
+		return lipgloss.Color("2"), true
+	case ToneWarn:
+		return lipgloss.Color("3"), true
+	}
+	return "", false
+}
+
+func (p *huhPrompter) huhOptions(opts []Option) []huh.Option[string] {
+	r := p.renderer()
 	out := make([]huh.Option[string], len(opts))
 	for i, o := range opts {
-		out[i] = huh.NewOption(o.Label, o.Value).Selected(o.Selected)
+		label := o.Label
+		if c, ok := toneColor(o.Tone); ok {
+			label = r.NewStyle().Foreground(c).Render(label)
+		}
+		out[i] = huh.NewOption(label, o.Value).Selected(o.Selected)
 	}
 	return out
+}
+
+func toneTheme() *huh.Theme {
+	t := huh.ThemeCharm()
+	t.Focused.SelectedOption = t.Focused.UnselectedOption
+	t.Blurred.SelectedOption = t.Blurred.UnselectedOption
+	return t
 }
 
 func (p *huhPrompter) MultiSelect(id, title string, opts []Option, validate func([]string) error) ([]string, error) {
@@ -218,14 +249,18 @@ func (p *huhPrompter) multiSelect(title string, opts []Option, validate func([]s
 	var ms *huh.MultiSelect[string]
 	hovered := ""
 	preselected := optional
+	toned := false
 	for _, o := range opts {
 		if o.Selected {
 			preselected = true
 		}
+		if o.Tone != ToneNone {
+			toned = true
+		}
 	}
 	ms = huh.NewMultiSelect[string]().Title(title).
 		Description("space/x toggle · enter confirm · shift+tab back").
-		Options(huhOptions(opts)...).Value(&vals).
+		Options(p.huhOptions(opts)...).Value(&vals).
 		Validate(func(v []string) error {
 			v = dedupe(v)
 			if len(v) == 0 && !preselected {
@@ -244,6 +279,9 @@ func (p *huhPrompter) multiSelect(title string, opts []Option, validate func([]s
 			}
 			return nil
 		})
+	if toned {
+		ms.WithTheme(toneTheme())
+	}
 	if err := p.run(ms, nil); err != nil {
 		return nil, err
 	}
@@ -256,7 +294,7 @@ func (p *huhPrompter) multiSelect(title string, opts []Option, validate func([]s
 
 func (p *huhPrompter) Select(id, title string, opts []Option, def string) (string, error) {
 	v := def
-	if err := p.run(huh.NewSelect[string]().Title(title).Description(backHint).Options(huhOptions(opts)...).Value(&v), nil); err != nil {
+	if err := p.run(huh.NewSelect[string]().Title(title).Description(backHint).Options(p.huhOptions(opts)...).Value(&v), nil); err != nil {
 		return "", err
 	}
 	return v, nil

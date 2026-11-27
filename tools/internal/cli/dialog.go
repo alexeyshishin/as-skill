@@ -106,10 +106,16 @@ func askDomains(p prompt.Prompter, harnessRoot string, reg *harness.Registry, lo
 		if g := gatedLabel(m); g != "" {
 			label += " (" + g + ")"
 		}
-		if domainInstalled(lock, harnessRoot, n) {
+		tone := prompt.ToneNone
+		switch st := domainState(lock, harnessRoot, n); st.State {
+		case installFull:
 			label += " [installed]"
+			tone = prompt.ToneGood
+		case installPartial:
+			label += fmt.Sprintf(" [partial %d/%d]", st.Have, st.Total)
+			tone = prompt.ToneWarn
 		}
-		opts = append(opts, prompt.Option{Value: n, Label: label, Selected: slices.Contains(prev, n)})
+		opts = append(opts, prompt.Option{Value: n, Label: label, Selected: slices.Contains(prev, n), Tone: tone})
 	}
 	validate := func(sel []string) error {
 		if len(sel) == 0 {

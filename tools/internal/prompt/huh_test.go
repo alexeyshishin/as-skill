@@ -36,7 +36,7 @@ func TestHuhConfirmHeadless(t *testing.T) {
 func TestHuhMultiSelectHeadless(t *testing.T) {
 	var out bytes.Buffer
 	p := &huhPrompter{in: strings.NewReader("\r"), out: &out}
-	opts := []Option{{"a", "A", true}, {"b", "B", false}, {"c", "C", true}}
+	opts := []Option{{Value: "a", Label: "A", Selected: true}, {Value: "b", Label: "B", Selected: false}, {Value: "c", Label: "C", Selected: true}}
 	got, err := p.MultiSelect("d", "Pick", opts, nil)
 	if err != nil {
 		t.Fatalf("err %v\n%s", err, out.String())
@@ -61,7 +61,7 @@ func TestHuhMultiSelectEnterTakesHovered(t *testing.T) {
 		}
 		return nil
 	}
-	opts := []Option{{"a", "A", false}, {"b", "B", false}, {"c", "C", false}}
+	opts := []Option{{Value: "a", Label: "A", Selected: false}, {Value: "b", Label: "B", Selected: false}, {Value: "c", Label: "C", Selected: false}}
 	for _, tc := range []struct {
 		in   string
 		want []string
@@ -99,7 +99,7 @@ func TestHuhMultiSelectPreselectedUntickAllReachesValidator(t *testing.T) {
 		}
 		return nil
 	}
-	opts := []Option{{"a", "A", true}, {"b", "B", true}}
+	opts := []Option{{Value: "a", Label: "A", Selected: true}, {Value: "b", Label: "B", Selected: true}}
 	var out bytes.Buffer
 	p := &huhPrompter{in: strings.NewReader("\x1b[B \x1b[A \r\x1b[B \r"), out: &out}
 	got, err := p.MultiSelect("d", "Pick", opts, nonEmpty)
@@ -117,7 +117,7 @@ func TestHuhMultiSelectPreselectedUntickAllReachesValidator(t *testing.T) {
 func TestHuhMultiSelectPreselectedUntickAllReturnsEmpty(t *testing.T) {
 	var out bytes.Buffer
 	p := &huhPrompter{in: strings.NewReader("\x1b[B \x1b[A \r"), out: &out}
-	got, err := p.MultiSelect("d", "Pick", []Option{{"a", "A", true}, {"b", "B", true}}, nil)
+	got, err := p.MultiSelect("d", "Pick", []Option{{Value: "a", Label: "A", Selected: true}, {Value: "b", Label: "B", Selected: true}}, nil)
 	if err != nil {
 		t.Fatalf("err %v\n%s", err, out.String())
 	}
@@ -135,7 +135,7 @@ func TestHuhMultiSelectPreselectedUntickOneKeepsRest(t *testing.T) {
 	}
 	var out bytes.Buffer
 	p := &huhPrompter{in: strings.NewReader(" \r"), out: &out}
-	got, err := p.MultiSelect("d", "Pick", []Option{{"a", "A", true}, {"b", "B", true}, {"c", "C", true}}, nonEmpty)
+	got, err := p.MultiSelect("d", "Pick", []Option{{Value: "a", Label: "A", Selected: true}, {Value: "b", Label: "B", Selected: true}, {Value: "c", Label: "C", Selected: true}}, nonEmpty)
 	if err != nil {
 		t.Fatalf("err %v\n%s", err, out.String())
 	}
@@ -145,7 +145,7 @@ func TestHuhMultiSelectPreselectedUntickOneKeepsRest(t *testing.T) {
 }
 
 func TestHuhMultiSelectOptional(t *testing.T) {
-	opts := []Option{{"a", "A", false}, {"b", "B", false}}
+	opts := []Option{{Value: "a", Label: "A", Selected: false}, {Value: "b", Label: "B", Selected: false}}
 	for _, tc := range []struct {
 		name, in string
 		want     []string
@@ -603,5 +603,55 @@ func TestHuhProjectInputShiftTabYieldsErrBack(t *testing.T) {
 	p := &huhPrompter{in: strings.NewReader("\x1b[Z"), out: &out}
 	if _, err := p.Input("project", "Project directory", "/tmp/x", nil); err != ErrBack {
 		t.Fatalf("got %v want ErrBack\n%s", err, out.String())
+	}
+}
+
+func TestToneColor(t *testing.T) {
+	if c, ok := toneColor(ToneGood); !ok || c != "2" {
+		t.Errorf("good: %q %v", c, ok)
+	}
+	if c, ok := toneColor(ToneWarn); !ok || c != "3" {
+		t.Errorf("warn: %q %v", c, ok)
+	}
+	if _, ok := toneColor(ToneNone); ok {
+		t.Error("none must not be colored")
+	}
+}
+
+func TestHuhMultiSelectTonedOptions(t *testing.T) {
+	var out bytes.Buffer
+	p := &huhPrompter{in: strings.NewReader("\r"), out: &out}
+	opts := []Option{
+		{Value: "a", Label: "A [installed]", Selected: true, Tone: ToneGood},
+		{Value: "b", Label: "B [partial 1/2]", Tone: ToneWarn},
+		{Value: "c", Label: "C"},
+	}
+	got, err := p.MultiSelect("d", "Pick", opts, nil)
+	if err != nil {
+		t.Fatalf("err %v\n%s", err, out.String())
+	}
+	if !reflect.DeepEqual(got, []string{"a"}) {
+		t.Fatalf("got %v", got)
+	}
+}
+
+func TestHuhOptionsColorOnlyToned(t *testing.T) {
+	t.Setenv("CLICOLOR_FORCE", "1")
+	t.Setenv("NO_COLOR", "")
+	var out bytes.Buffer
+	p := &huhPrompter{out: &out}
+	got := p.huhOptions([]Option{
+		{Value: "a", Label: "A", Tone: ToneGood},
+		{Value: "b", Label: "B", Tone: ToneWarn},
+		{Value: "c", Label: "C"},
+	})
+	if !strings.Contains(got[0].Key, "\x1b[32m") {
+		t.Errorf("good key %q", got[0].Key)
+	}
+	if !strings.Contains(got[1].Key, "\x1b[33m") {
+		t.Errorf("warn key %q", got[1].Key)
+	}
+	if got[2].Key != "C" {
+		t.Errorf("none key %q", got[2].Key)
 	}
 }

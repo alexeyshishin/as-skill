@@ -66,7 +66,7 @@ It opens if stdin and stderr are terminals, `CI` is not set and `TERM` is not `d
 Names and flags answer their question in advance (names — domains, `-a` — platforms, `-p` — project, `--copy` — mode); `-y` takes all defaults.
 
 1. **Project directory** — cwd by default; `~` is expanded, the path must exist, `$HOME` is rejected.
-2. **Domains to add** — multi-select with no preselection, at least one is required. Label `name — description (needs $VAR) [installed]`; domains gated by `requires_env` are rejected until the variable is set.
+2. **Domains to add** — multi-select with no preselection, at least one is required. Label `name — description (needs $VAR)` plus `[installed]` (green, every skill/agent/rule/hook is in the lockfile) or `[partial N/M]` (yellow, only some); not installed stays uncolored. Domains gated by `requires_env` are rejected until the variable is set.
 3. **Customize skills?** — Confirm, default No, if the selected domains have skills. Yes → multi-select "Skills to install from <domain>", all preselected; the domain's rules, agents and hooks are installed as usual. Dialog only: `-y` excludes nothing, separately named skills are not customized. An empty selection is rejected — to skip a domain's skills entirely, do not select the domain.
 4. **Platforms** — all four; autodetected ones are preselected and marked `(detected)`, otherwise `claude` is preselected. A platform whose link directory is not in `.gitignore` is marked `[.cursor not git-ignored]` (it will be rejected in symlink mode); with `--copy` or `--force` there is no mark.
 5. **Install mode** — `symlink` (default) or `copy`.

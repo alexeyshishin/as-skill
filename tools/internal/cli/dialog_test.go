@@ -176,6 +176,34 @@ func TestDialogInstalledLabel(t *testing.T) {
 	if strings.Contains(fp.labelOf("domains", "core"), "[installed]") {
 		t.Errorf("core label %q", fp.labelOf("domains", "core"))
 	}
+	if got := fp.toneOf("domains", "git"); got != prompt.ToneGood {
+		t.Errorf("git tone %v, want good", got)
+	}
+	if got := fp.toneOf("domains", "core"); got != prompt.ToneNone {
+		t.Errorf("core tone %v, want none", got)
+	}
+}
+
+func TestDialogPartialLabel(t *testing.T) {
+	h, p := realHarness(t), t.TempDir()
+	if _, err := run(t, "add", "git-release-tag", "-y", "-p", p, "--copy", "--harness-root", h); err != nil {
+		t.Fatal(err)
+	}
+	ans := fullAnswers(p)
+	ans["confirm"] = false
+	fp := newFake(t, ans)
+	d := enableDialog(t, fp)
+	_, _ = runD(t, d, "add", "--harness-root", h)
+	label := fp.labelOf("domains", "git")
+	if !strings.Contains(label, "[partial 1/") || strings.Contains(label, "[installed]") {
+		t.Errorf("git label %q", label)
+	}
+	if got := fp.toneOf("domains", "git"); got != prompt.ToneWarn {
+		t.Errorf("git tone %v, want warn", got)
+	}
+	if got := fp.toneOf("domains", "core"); got != prompt.ToneNone {
+		t.Errorf("core tone %v, want none", got)
+	}
 }
 
 func TestDialogPlatformPreselectionIsDetected(t *testing.T) {

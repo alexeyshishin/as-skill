@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"claude-harness/tools/internal/fsys"
@@ -182,43 +183,83 @@ func skillInstalled(lock *lockfile.Lockfile, projectRoot, name string) bool {
 	return false
 }
 
-func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
+type installState int
+
+const (
+	installNone installState = iota
+	installPartial
+	installFull
+)
+
+type domainStatus struct {
+	State       installState
+	Have, Total int
+}
+
+func rowsCover(rows []lockfile.Entry, kind lockfile.Kind, name string) bool {
+	for _, e := range rows {
+		if !(e.Kind == kind || (kind == lockfile.KindSkills && e.Kind == lockfile.KindSkill)) {
+			continue
+		}
+		if e.Name != "" {
+			if e.Name == name || e.Name == strings.TrimSuffix(name, filepath.Ext(name)) {
+				return true
+			}
+			continue
+		}
+		if len(e.Items) > 0 {
+			if slices.Contains(e.Items, name) {
+				return true
+			}
+			continue
+		}
+		if e.Source == "" {
+			return true
+		}
+		if _, err := os.Lstat(filepath.Join(e.Source, name)); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func domainState(lock *lockfile.Lockfile, harnessRoot, domain string) domainStatus {
 	if lock == nil {
-		return false
+		return domainStatus{}
 	}
 	var rows []lockfile.Entry
 	for _, e := range lock.Entries {
-		if e.Domain != domain {
-			continue
+		if e.Domain == domain {
+			rows = append(rows, e)
 		}
-		if e.Name == "" {
-			return true
-		}
-		rows = append(rows, e)
 	}
 	if len(rows) == 0 {
-		return false
+		return domainStatus{}
 	}
-	total := 0
+	var st domainStatus
 	for _, kind := range harness.DomainKinds {
 		names, err := fsys.TopNames(harness.KindDir(harnessRoot, domain, kind), kind.SkipsReadme())
 		if err != nil {
 			continue
 		}
 		for _, n := range names {
-			total++
-			covered := false
-			for _, e := range rows {
-				k := e.Kind == kind || (kind == lockfile.KindSkills && e.Kind == lockfile.KindSkill)
-				if k && (e.Name == n || e.Name == strings.TrimSuffix(n, filepath.Ext(n))) {
-					covered = true
-					break
-				}
-			}
-			if !covered {
-				return false
+			st.Total++
+			if rowsCover(rows, kind, n) {
+				st.Have++
 			}
 		}
 	}
-	return total > 0
+	switch {
+	case st.Total == 0 || st.Have == 0:
+		st.State = installNone
+	case st.Have == st.Total:
+		st.State = installFull
+	default:
+		st.State = installPartial
+	}
+	return st
+}
+
+func domainInstalled(lock *lockfile.Lockfile, harnessRoot, domain string) bool {
+	return domainState(lock, harnessRoot, domain).State == installFull
 }

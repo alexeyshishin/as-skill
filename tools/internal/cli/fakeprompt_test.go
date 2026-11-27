@@ -123,6 +123,15 @@ func (f *fakePrompt) labelOf(id, value string) string {
 	return ""
 }
 
+func (f *fakePrompt) toneOf(id, value string) prompt.Tone {
+	for _, o := range f.options[id] {
+		if o.Value == value {
+			return o.Tone
+		}
+	}
+	return prompt.ToneNone
+}
+
 func (f *fakePrompt) selected(id string) []string {
 	var out []string
 	for _, o := range f.options[id] {
