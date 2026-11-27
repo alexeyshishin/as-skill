@@ -9,3 +9,4 @@ swarm-report/
 /.cursor
 /.opencode
 .DS_Store
+__pycache__/
